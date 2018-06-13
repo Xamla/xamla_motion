@@ -1,15 +1,39 @@
 #!/usr/bin/env python
 
 from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from __builtins__ import *
+                        print_function)
+try:
+    from future_builtins import *
+except ImportError:
+    pass
 from functools import total_ordering
 
 
 @total_ordering
 class JointSet(object):
+    """
+    Class which stores a list of robot joint names 
+
+    Please make sure you never modify the _names attribute 
+    directly. Use for this purpose only the provided
+    methods.
+    """
+
     def __init__(self, names):
-        self._names: list
+        """
+        Initialization of the JointSet class
+
+        Parameters
+        ----------
+        names : str or list of strs 
+            The Joint set class is initializable in different ways.
+            -by a string which only contains one joint name
+            -by a string which contains multiple joints names
+             separated by a comma as delimiter
+            -by a list of strings where each string represents a
+             joint name
+        """
+        self._names = list()
 
         if isinstance(names, str):
             self._names = [s.strip() for s in names.split(',')]
@@ -20,33 +44,113 @@ class JointSet(object):
                              'list[str] or str with names separated '
                              'by "," are supported as attributes'))
 
-    @classmethod
-    def empty(cls):
-        cls._names = []
-        return cls
+    @staticmethod
+    def empty():
+        """
+        static method to greate a empty JointSet
+
+        Returns
+        -------
+        joint_set : JointSet
+            The created empty JointSet
+        """
+        joint_set = JointSet('')
+        joint_set._names = []
+        return joint_set
 
     def add_prefix(self, prefix):
+        """
+        Adds a prefix to every joint name in the JointSet
+
+        Parameters
+        ----------
+        prefix : str
+            Defines the prefix which is added in front of every joint name
+
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If input parameter prefix is not of type str
+
+        """
         if not isinstance(prefix, str):
-            raise TypeError('add_prefix: prefix expected type str')
+            raise TypeError('add_prefix: prefix expected type is str')
         self._names = list(map(lambda x: prefix + x, self._names))
 
-        return self
-
     def is_subset(self, other):
+        """
+        Checks if it is a subset of the JointSet in parameter other
+
+        Parameters
+        ----------
+        other : JointSet
+            JointSet which is used for comparision
+
+        Returns
+        -------
+        result : bool
+            If this JointSet is a subset of the other JointSet 
+            returns True else False
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If the parameter other is not of type JointSet
+        """
         if not isinstance(other, JointSet):
-            raise TypeError('is_subset: other expected type JointSet')
+            raise TypeError('is_subset: other expected type is JointSet')
 
         return all(name in other._names for name in self._names)
 
     def is_similar(self, other):
+        """
+        Checks if it contains the same joint names as in JoinSet other
+
+        Parameters
+        ----------
+        other : JointSet
+            JointSet which is used for comparision
+
+        Returns
+        -------
+        result : bool
+            If this JointSet the joint names and number of joint names
+            returns True else False
+
+        Raises
+        ------ 
+        TypeError : type mismatch
+            If the parameter other is not of type JointSet
+        """
         if not isinstance(other, JointSet):
-            raise TypeError('is_similar: other expected type JointSet')
+            raise TypeError('is_similar: other expected type is JointSet')
 
         return other.count == len(self._names) and self.is_subset(other)
 
     def try_get_index_of(self, name):
+        """
+        Tries to get the list index of the joint by name
+
+        Parameters
+        ----------
+        name : str
+            joint name for which it tries to find the list index
+
+        Results
+        -------
+        is_found : bool
+            If the index is found it resturns True else False
+        index : int
+            If index is found returns the index else returns None
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If parameter name is not type of str
+        """
         if not isinstance(name, str):
-            raise TypeError('try_get_index_of: name expected type str')
+            raise TypeError('try_get_index_of: name expected is type str')
 
         try:
             return True, self._names.index(name)
@@ -54,8 +158,28 @@ class JointSet(object):
             return False, None
 
     def get_index_of(self, name):
+        """
+        Returns the list index of joint name specificed paramerter name
+
+        Parameter
+        ---------
+        name : str
+            joint name for which it finds the list index
+
+        Returns
+        -------
+        index : int
+            List index of the searched joint name 
+
+        Raises:
+        ------
+        TypeError : type mismatch
+            If parameter name is not type of str
+        ValueError : value not exists
+            If joint name not exists 
+        """
         if not isinstance(name, str):
-            raise TypeError('get_index_of: name expected type str')
+            raise TypeError('get_index_of: name expected type is str')
 
         try:
             return self._names.index(name)
@@ -63,21 +187,71 @@ class JointSet(object):
             raise ValueError('get_index_of: %s', exc)
 
     def count(self):
+        """
+        Returns the number of joint names
+
+        Returns
+        -------
+        size : int
+            Number of joint names which are managed by this JointSet
+        """
         return len(self._names)
 
     def this(self, index):
-        if not isinstance(index, int):
-            raise TypeError('this: index expected type int')
+        """
+        Returns the joint name stored at index
 
-        return self._names[index]
+        Parameters
+        ----------
+        index : int
+            list index where to get the joint name from 
+
+        Returns
+        -------
+        joint_name : str
+            Retruns the joint name at list index specifed by index
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If parameter index is not type of int
+        IndexError : index out of range
+            If index is out of internal joint name list range
+        """
+        if not isinstance(index, int):
+            raise TypeError('this: index expected type is int')
+
+        try:
+            return self._names[index]
+        except IndexError as exc:
+            raise IndexError('this: index out of range')
 
     def contains(self, name):
+        """
+        Checks if this JointSet contains a specific joint name
+
+        Parameters
+        ----------
+        name : str
+            joint name for which it checks that it is available
+
+        Returns
+        -------
+        is_found : bool
+            If joint name specified by name is found retruns 
+            True else False
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If parameter name is not type of str
+        """
         if not isinstance(index, str):
-            raise TypeError('contains: name expected type str')
+            raise TypeError('contains: name expected type is str')
 
-        is_valid, _ = self.try_get_index_of(name)
+        is_found, _ = self.try_get_index_of(name)
 
-        return is_valid
+        return is_found
 
     def __iter__(self):
         return self._names.__iter__()
@@ -89,10 +263,10 @@ class JointSet(object):
         return self.__str__()
 
     def __eq__(self, other):
-        if not isinstance(other, JointSet)
+        if not isinstance(other, JointSet):
             return False
 
-        if id(other) == id(self)
+        if id(other) == id(self):
             return True
 
         for i, name in enumerate(self._names):
@@ -105,7 +279,7 @@ class JointSet(object):
         return not self.__eq__(other)
 
     def __lt__(self, other):
-        if not isinstance(other, JointSet)
+        if not isinstance(other, JointSet):
             return False
 
         if other.count != len(self._names) and self.is_subset(other):
