@@ -8,11 +8,15 @@ except ImportError:
     pass
 
 from JointSet import JointSet
+from JointValues import JointValues
 
-tmp = ['Joint1', 'Joint2']
-print(type(tmp[0]))
-tmp = JointSet(tmp)
-tmp2 = JointSet.empty()
+tmp0 = ['Joint1', 'Joint2']
+values = [1.0, 2.0]
 
-print(tmp)
-print(tmp2.count())
+tmp1 = JointSet(tmp0)
+
+tmp2 = JointValues(tmp1, values)
+
+tmp3 = tmp2.reorder(JointSet(['Joint2', 'Joint3']))
+
+print(tmp3.values)

@@ -12,11 +12,7 @@ from functools import total_ordering
 @total_ordering
 class JointSet(object):
     """
-    Class which stores a list of robot joint names 
-
-    Please make sure you never modify the _names attribute 
-    directly. Use for this purpose only the provided
-    methods.
+    Class which manages a list of robot joint names 
     """
 
     def __init__(self, names):
@@ -32,13 +28,18 @@ class JointSet(object):
              separated by a comma as delimiter
             -by a list of strings where each string represents a
              joint name
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If input parameter names is not of type str or list of strs
         """
-        self._names = list()
+        self.__names = list()
 
         if isinstance(names, str):
-            self._names = [s.strip() for s in names.split(',')]
+            self.__names = [s.strip() for s in names.split(',')]
         elif names and all(isinstance(s, str) for s in names):
-            self._names = names
+            self.__names = names
         else:
             raise TypeError(('Wrong attribute types, only '
                              'list[str] or str with names separated '
@@ -55,12 +56,12 @@ class JointSet(object):
             The created empty JointSet
         """
         joint_set = JointSet('')
-        joint_set._names = []
+        joint_set.__names = []
         return joint_set
 
     def add_prefix(self, prefix):
         """
-        Adds a prefix to every joint name in the JointSet
+        Creates new instance wid add prefix to every joint name
 
         Parameters
         ----------
@@ -73,10 +74,16 @@ class JointSet(object):
         TypeError : type mismatch
             If input parameter prefix is not of type str
 
+        Returns
+        -------
+        join_set : JointSet
+            Returns new joint set with concatenated joint names    
+
         """
         if not isinstance(prefix, str):
-            raise TypeError('add_prefix: prefix expected type is str')
-        self._names = list(map(lambda x: prefix + x, self._names))
+            raise TypeError('prefix expected type is str')
+        names = list(map(lambda x: prefix + x, self.__names))
+        return JointSet(names)
 
     def is_subset(self, other):
         """
@@ -99,9 +106,9 @@ class JointSet(object):
             If the parameter other is not of type JointSet
         """
         if not isinstance(other, JointSet):
-            raise TypeError('is_subset: other expected type is JointSet')
+            raise TypeError('other expected type is JointSet')
 
-        return all(name in other._names for name in self._names)
+        return all(name in other.__names for name in self.__names)
 
     def is_similar(self, other):
         """
@@ -124,9 +131,9 @@ class JointSet(object):
             If the parameter other is not of type JointSet
         """
         if not isinstance(other, JointSet):
-            raise TypeError('is_similar: other expected type is JointSet')
+            raise TypeError('other expected type is JointSet')
 
-        return other.count == len(self._names) and self.is_subset(other)
+        return other.count == len(self.__names) and self.is_subset(other)
 
     def try_get_index_of(self, name):
         """
@@ -150,10 +157,10 @@ class JointSet(object):
             If parameter name is not type of str
         """
         if not isinstance(name, str):
-            raise TypeError('try_get_index_of: name expected is type str')
+            raise TypeError('name expected is type str')
 
         try:
-            return True, self._names.index(name)
+            return True, self.__names.index(name)
         except ValueError as exc:
             return False, None
 
@@ -179,10 +186,10 @@ class JointSet(object):
             If joint name not exists 
         """
         if not isinstance(name, str):
-            raise TypeError('get_index_of: name expected type is str')
+            raise TypeError('name expected type is str')
 
         try:
-            return self._names.index(name)
+            return self.__names.index(name)
         except ValueError as exc:
             raise ValueError('get_index_of: %s', exc)
 
@@ -192,39 +199,10 @@ class JointSet(object):
 
         Returns
         -------
-        size : int
+        count : int
             Number of joint names which are managed by this JointSet
         """
-        return len(self._names)
-
-    def this(self, index):
-        """
-        Returns the joint name stored at index
-
-        Parameters
-        ----------
-        index : int
-            list index where to get the joint name from 
-
-        Returns
-        -------
-        joint_name : str
-            Retruns the joint name at list index specifed by index
-
-        Raises
-        ------
-        TypeError : type mismatch
-            If parameter index is not type of int
-        IndexError : index out of range
-            If index is out of internal joint name list range
-        """
-        if not isinstance(index, int):
-            raise TypeError('this: index expected type is int')
-
-        try:
-            return self._names[index]
-        except IndexError as exc:
-            raise IndexError('this: index out of range')
+        return len(self.__names)
 
     def contains(self, name):
         """
@@ -247,17 +225,47 @@ class JointSet(object):
             If parameter name is not type of str
         """
         if not isinstance(index, str):
-            raise TypeError('contains: name expected type is str')
+            raise TypeError('name expected type is str')
 
         is_found, _ = self.try_get_index_of(name)
 
         return is_found
 
+    def __getitem__(self, index):
+        """
+        Returns the joint name stored at index
+
+        Parameters
+        ----------
+        index : int
+            list index where to get the joint name from
+
+        Returns
+        -------
+        joint_name : str
+            Retruns the joint name at list index specifed by index
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If parameter index is not type of int
+        IndexError : index out of range
+            If index is out of internal joint name list range
+        """
+        if not isinstance(index, int):
+            raise TypeError('index expected type is int')
+
+        try:
+            return self.__names[index]
+        except IndexError as exc:
+            raise IndexError('index out of range')
+        return self.__names[index]
+
     def __iter__(self):
-        return self._names.__iter__()
+        return self.__names.__iter__()
 
     def __str__(self):
-        return ' '.join(self._names)
+        return ' '.join(self.__names)
 
     def __repr__(self):
         return self.__str__()
@@ -269,8 +277,8 @@ class JointSet(object):
         if id(other) == id(self):
             return True
 
-        for i, name in enumerate(self._names):
-            if other._names[i] != name:
+        for i, name in enumerate(self.__names):
+            if other.__names[i] != name:
                 return False
 
         return True
@@ -282,7 +290,7 @@ class JointSet(object):
         if not isinstance(other, JointSet):
             return False
 
-        if other.count != len(self._names) and self.is_subset(other):
+        if other.count != len(self.__names) and self.is_subset(other):
             return True
         else:
             return False
