@@ -36,7 +36,7 @@ class JointSet(object):
         if isinstance(names, str):
             self.__names = [s.strip() for s in names.split(',')]
         elif names and all(isinstance(s, str) for s in names):
-            self.__names = names
+            self.__names = list(names)
         else:
             raise TypeError(('Wrong attribute types, only '
                              'list[str] or str with names separated '
