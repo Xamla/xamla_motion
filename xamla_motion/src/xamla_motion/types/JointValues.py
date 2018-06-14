@@ -246,6 +246,27 @@ class JointValues(object):
         return JointValues(self.__joint_set, value)
 
     def select(self, names):
+        """
+        Creates a JointValue instance which only contains selected joints
+
+        Parameters
+        ----------
+        names : str or list of str
+            Joint names which should be in the new JointValues instance
+
+
+        Returns
+        -------
+        joint_values : JointValues
+            New instance of JointValues with selected joints
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If names is not of type str or list of str
+        ValueError : 
+            If name not exist in joint names
+        """
         try:
             if isinstance(names, str):
                 values = self.__values[self.__joint_set.get_index_of(name)]
@@ -258,8 +279,8 @@ class JointValues(object):
                 raise TypeError('names is not one of the expected types'
                                 ' str or list of strs')
             return JointValues(JointSet(names), values)
-        except Exception as exc:
-            raise_from(RuntimeError('select can not be performed'), exc)
+        except ValueError as exc:
+            raise_from(ValueError('name not exist in joint names'), exc)
 
     def __getitem__(self, key):
         """
