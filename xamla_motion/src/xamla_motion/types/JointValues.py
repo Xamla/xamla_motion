@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
 from __future__ import (absolute_import, division,
-                        print_function)
-try:
-    from future_builtins import *
-except ImportError:
-    pass
+                        print_function, unicode_literals)
+from future.builtins import *
+from future.utils import raise_from
 from functools import total_ordering
+import numpy as np
 
 from JointSet import JointSet
 
@@ -25,13 +24,18 @@ class JointValues(object):
         ----------
         joint_set : JoinSet
             JointSet for which also the values should be managed
-        values : float or list of floats
+        values : float / int, list of floats / ints or numpy array float/int
             The JointValue class can be initialized in different ways
-            -JointSet + float then all joint values are set to the same
+            -JointSet + float/int then all joint values are set to the same
              float value of values
-            -JointSet + list of floats then joint values and joint set
+            -JointSet + list of floats/ints then joint values and joint set
              must contain the same number of items and every joint name
              get this specific join value
+            -JointSet + one dimensional numpy array with only one value then
+             all joints are initialized with this value
+            -JointSet + one dimensinal numpy array with the same number of
+             values as joint names, then values are mapped to joint names
+             one to one
 
         Raises
         ------
@@ -40,7 +44,7 @@ class JointValues(object):
             values is not of type float or list of floats
         ValueError : not same size
             If values is list of floats and not contains the same number
-            of items as joint_set
+            of items as joint_set or numpy array hat not the correct size
         """
         self.__values = list()
 
@@ -49,17 +53,32 @@ class JointValues(object):
 
         self.__joint_set = joint_set
 
-        if isinstance(values, float):
-            self.__values = [values] * joint_set.count()
-        elif values and all(isinstance(value, float) for value in values):
+        if isinstance(values, float) or isinstance(values, int):
+            self.__values = np.fromiter([values] * joint_set.count(), float)
+        elif (values and all(isinstance(value, float) for value in values)
+              or all(isinstance(value, int) for value in values)):
             if len(values) != self.joint_set.count():
                 raise ValueError('values has not the same size'
                                  ' as JointSet')
-            self.__values = values
+            self.__values = np.fromiter(values, float)
+        elif (isinstance(values, numpy.ndarray) and
+              len(values.shape) == 1 and
+              (issubclass(values.dtype.type, np.floating) or
+               issubclass(values.dtype.type, np.integer))):
+            if(values.shape[0] == 1):
+                self.__values = np.repeat(values, self.joint_set.count())
+            elif values.shape[0] == self.joint_set.count():
+                self.__values = values
+            else:
+                raise ValueError('values is not a numpy array wiht only '
+                                 'one element or the same number of elements '
+                                 'as joint names')
+
         else:
-            raise TypeError('values is not of expected'
-                            ' types float, list[float] or'
-                            ' not of same size as JointSet')
+            raise TypeError('values is not one of the expected'
+                            ' types int, float, list[float or int] or'
+                            ' an one dimensional np.array of typ integer'
+                            ' or floating')
 
     @staticmethod
     def empty():
@@ -72,7 +91,7 @@ class JointValues(object):
             An empty instance of JointValues
         """
         joint_values = JointValues(JointSet.empty(), 0.0)
-        joint_values.__values = []
+        joint_values.__values = np.array([])
         return joint_values
 
     @staticmethod
@@ -160,7 +179,7 @@ class JointValues(object):
         Returns
         -------
         joint_values : JointValues
-            A new Instance of JointValues containing the 
+            A new Instance of JointValues containing the
             joints in the order definied by new_order
             (it is ok when new_order only holds a subset of joints)
 
@@ -168,7 +187,7 @@ class JointValues(object):
         ------
         TypeError : type mismatch
             If input parameter new_order is not of type JointSet
-        ValueError : 
+        ValueError :
             If joint name from new_order not exists
         """
 
@@ -183,19 +202,53 @@ class JointValues(object):
         return JointValues(new_order, values)
 
     def transform(self, transform_function):
-        if not callable(tranform_function):
-            raise TypeError('fransform_function is not callable')
+        """
+        Creates a transformed version of JointValues
 
-        return JointValues(self.__joint_set,
-                           list(map(transform_function, self.__values)))
+        The transformation which is applied to every value in 
+        JointValues is defined by the transform function
 
-    def __getitem__(self, item):
+        Parameters
+        ----------
+        transform_function : callable or numpy.ufunc
+            Function which is applied to every value in join values
+
+        Resturns
+        --------
+        joint_values : JointValues
+            A new Instance of JointValues with transformed 
+            joint values
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If transform function is not callable or not
+            a numpy.ufunc and if the function dont has the
+            signature input : floating , output : floating
+        """
+        if not (callable(tranform_function) or
+                isinstance(transform_function, numpy.ufunc)):
+            raise TypeError('transform_function is not callable'
+                            ' or no numpy ufunc')
+
+        try:
+            if isinstance(transform_function, numpy.ufunc):
+                values = transform_function(self.__values)
+            else:
+                values = np.fromiter(map(transform_function, self.__values),
+                                     self.__values.dtype)
+        except TypeError as exc:
+            raise_from(TypeError('wrong transform function format'), exc)
+
+        return JointValues(self.__joint_set, value)
+
+    def __getitem__(self, key):
         """
         Returns value by joint name or index
 
         Parameters
         ----------
-        item : int or str
+        key : int or str
             index of joint or joint name for which the value is requested
 
         Returns
@@ -206,23 +259,51 @@ class JointValues(object):
 
         Raises:
         TypeError : type mismatch
-            If item is not int or str
-        ValueError :  
+            If key is not int or str
+        ValueError :
             If joint name not exists
         IndexError :
             If index is out of range
 
         """
-        if isinstance(item, str):
+        if isinstance(key, str):
             try:
-                return self.__values[self.__joint_set.get_index_of(item)]
+                return self.__values[self.__joint_set.get_index_of(key)]
             except ValueError as exc:
-                raise ValueError('[], joint name not exists')
+                raise ValueError('joint name not exists')
 
-        elif isinstance(item, int):
+        elif isinstance(key, int):
             try:
-                return self.__values[item]
+                return self.__values[key]
             except IndexError as exc:
-                raise IndexError('[], index out of range')
+                raise IndexError('index out of range')
         else:
-            raise TypeError('[item] is not one of expected types int or str')
+            raise TypeError('key is not one of expected types int or str')
+
+    def __iter__(self):
+        return self.values.__iter__()
+
+    def __str__(self):
+        return ', '.join([name + ' : ' + str(self.__values[i])
+                          for i, name in enumerate(self.__joint_set)])
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        if not isinstance(other, JointValues):
+            return False
+
+        if id(other) == id(self):
+            return True
+
+        if other.join_set != self.__joint_set
+            return False
+
+        if not np.array_equal(other.values, self.__values)
+            return False
+
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
