@@ -26,3 +26,5 @@ print(tmp2/4)
 print(tmp2/(1, 2, 3, 10, 5, 1))
 print(tmp2/tmp4)
 print(tmp4/tmp2)
+
+pdb.set_trace()

@@ -9,7 +9,26 @@ from functools import total_ordering
 @total_ordering
 class JointSet(object):
     """
-    Class which manages a list of robot joint names 
+    Class which manages a list of joint names
+
+    Methods
+    -------
+    empty()
+        Creates emtpy JointSet
+    add_prefix(prefix)
+        Creates new JointSet where prefix is added to every joint name
+    is_subset(other)
+        Checks if it is a subset of the JointSet in parameter other
+    is_similar(other)
+        Checks if it contains the same joint names as in JointSet other
+    try_get_index_of(name)
+        Tries to get the list index of the joint by name
+    get_index_of(name)
+        Returns the list index of joint name specificed paramerter name
+    count()
+        Returns number of joint names
+    contains(name)
+        Checks if this JointSet contains a specific joint name
     """
 
     def __init__(self, names):
@@ -18,7 +37,7 @@ class JointSet(object):
 
         Parameters
         ----------
-        names : str or list of strs 
+        names : str or list of str 
             The Joint set class is initializable in different ways.
             -by a string which only contains one joint name
             -by a string which contains multiple joints names
@@ -26,17 +45,21 @@ class JointSet(object):
             -by a list of strings where each string represents a
              joint name
 
+        Yields
+        ------
+            An instance of class JointSet
+
         Raises
         ------
         TypeError : type mismatch
-            If input parameter names is not of type str or list of strs
+            If input parameter names is not of type str or list of str
         """
-        self.__names = list()
+        self.__names = tuple()
 
         if isinstance(names, str):
-            self.__names = [s.strip() for s in names.split(',')]
+            self.__names = tuple(s.strip() for s in names.split(','))
         elif names and all(isinstance(s, str) for s in names):
-            self.__names = list(names)
+            self.__names = tuple(names)
         else:
             raise TypeError(('Wrong attribute types, only '
                              'list[str] or str with names separated '
@@ -45,11 +68,11 @@ class JointSet(object):
     @staticmethod
     def empty():
         """
-        static method to greate a empty JointSet
+        Creates a empty JointSet
 
-        Returns
-        -------
-        joint_set : JointSet
+        Yields
+        ------
+        JointSet
             The created empty JointSet
         """
         joint_set = JointSet('')
@@ -58,7 +81,7 @@ class JointSet(object):
 
     def add_prefix(self, prefix):
         """
-        Creates new instance wid add prefix to every joint name
+        Creates new JointSet where prefix is added to every joint name
 
         Parameters
         ----------
@@ -71,10 +94,10 @@ class JointSet(object):
         TypeError : type mismatch
             If input parameter prefix is not of type str
 
-        Returns
-        -------
-        join_set : JointSet
-            Returns new joint set with concatenated joint names    
+        Yields
+        ------
+        JointSet
+            The created JointSet with added prefix to joint names    
 
         """
         if not isinstance(prefix, str):
@@ -109,7 +132,7 @@ class JointSet(object):
 
     def is_similar(self, other):
         """
-        Checks if it contains the same joint names as in JoinSet other
+        Checks if it contains the same joint names as in JointSet other
 
         Parameters
         ----------
