@@ -9,7 +9,7 @@ from functools import total_ordering
 @total_ordering
 class JointSet(object):
     """
-    Class which manages a list of joint names
+    Manages a list of joint names
 
     Methods
     -------
@@ -58,7 +58,8 @@ class JointSet(object):
 
         if isinstance(names, str):
             self.__names = tuple(s.strip() for s in names.split(','))
-        elif names and all(isinstance(s, str) for s in names):
+        elif ((isinstance(names, list) or isinstance(names, tuple))
+              and all(isinstance(s, str) for s in names)):
             self.__names = tuple(names)
         else:
             raise TypeError(('Wrong attribute types, only '
