@@ -26,7 +26,21 @@ class Pose(object):
         """
         # from transformation matrix
         if len(*args) == 1:
-            pass
+            if isinstance(args[0], np.ndarray):
+                if (len(args[0].shape) != 2 or
+                        args[0].shape[0] != 4 or
+                        args[0].shape[1] != 4):
+                    raise ValueError('translation_matrix (argument1) '
+                                     ' is not a 4x4 numpy array')
+                if not issubclass(translation.dtype.type, np.floating):
+                    raise TypeError('translation_matrix (argument1) is not a'
+                                    'dtype is no floating type')
+
+                self.__translation = args[0][:-1, 3]
+                self.__quaternion = Quaternion(matrix=args[0])
+        else:
+            raise TypeError('translation_matrix (argument1) '
+                            'is not of type numpy array')
 
         # from translation vector and quaternion
         elif len(*args) == 2:
@@ -36,10 +50,10 @@ class Pose(object):
         # translation
         if isinstance(translation, np.ndarray):
             if len(translation.shape) != 1:
-                raise ValueError('translation is not a one'
+                raise ValueError('translation (argument1) is not a one'
                                  ' dimensional numpy array')
             if translation.shape[0] != 3:
-                raise ValueError('translation numpy array contains'
+                raise ValueError('translation (argument1) numpy array contains'
                                  ' not exactly three values')
             if not issubclass(translation.dtype.type, np.floating):
                 raise TypeError('translation dtype is no floating type')
@@ -49,12 +63,12 @@ class Pose(object):
         elif ((isinstance(translation, list) or isinstance(translation, tuple))
               and all(isinstance(value, float) for value in translation)):
             if len(translation) != 3:
-                raise ValueError('translation list contains not '
+                raise ValueError('translation list (argument1) contains not '
                                  'exactly three values')
 
             self.__translation = np.fromiter(translation, float)
         else:
-            raise TypeError('translation is not one of the expected'
+            raise TypeError('translation  (argument1) is not one of the expected'
                             ' types list of float or numpy array of floating')
 
         # rotation
@@ -62,5 +76,5 @@ class Pose(object):
             self.__quaternion = rotation
 
         else:
-            raise TypeError('rotation is not of the expected'
+            raise TypeError('rotation (argument2) is not of the expected'
                             ' type Quaternion')
