@@ -41,6 +41,10 @@ class JointLimits(object):
         """
         Initialization of JointLimits class
 
+        If a specific joint has no limits for velocity, acceleration or position
+        than please set them to None (for list) or numpy.nan (for numpy.ndarray)
+        the specific joint has than no contrain for this limit
+
         Parameters
         ----------
         joint_set : JointSet
@@ -274,13 +278,13 @@ class JointLimits(object):
                 self.__max_position.__iter__())
 
     def __str__(self):
-        joint_limits_str = '\n'.join([name + ' :  max velocity=' +
-                                      str(self.__max_velocity[i]) + ' max acceleration=' +
-                                      str(self.__max_acceleration[i]) + ' min position=' +
-                                      str(self.__min_position[i]) + ' max position=' +
-                                      str(self.__max_position[i])
-                                      for i, name in enumerate(self.__joint_set)])
-        return 'JointLimits:\n' + joint_limits_str
+        j_str = '\n'.join([name + ' :  max velocity=' +
+                           str(self.__max_velocity[i]) + ' max acceleration=' +
+                           str(self.__max_acceleration[i]) + ' min position=' +
+                           str(self.__min_position[i]) + ' max position=' +
+                           str(self.__max_position[i])
+                           for i, name in enumerate(self.__joint_set)])
+        return 'JointLimits:\n' + j_str
 
     def __repr__(self):
         return self.__str__()

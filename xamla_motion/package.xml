@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>xamla_motion</name>
-  <version>0.0.0</version>
-  <description>The xamla_motion package</description>
+  <version>0.0.1</version>
+  <description>client library to interact with xamla motion</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="volk@todo.todo">volk</maintainer>
+  <maintainer email="manuel.volk@xamla.com">volk</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
   <!-- Commonly used license strings: -->
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>TODO</license>
+  <license>LICENSE.txt</license>
 
 
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
@@ -25,7 +25,7 @@
   <!-- Author tags are optional, multiple are allowed, one per tag -->
   <!-- Authors do not have to be maintainers, but could be -->
   <!-- Example: -->
-  <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
+  <author email="manuel.volk@xamla.com">Manuel Volk</author> -->
 
 
   <!-- The *depend tags are used to specify dependencies -->
