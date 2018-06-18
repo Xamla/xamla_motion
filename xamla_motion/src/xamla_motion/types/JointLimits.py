@@ -3,7 +3,6 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 from future.builtins import *
-from functools import total_ordering
 
 import numpy as np
 
@@ -262,8 +261,8 @@ class JointLimits(object):
             else:
                 raise TypeError('names is not one of the expected types'
                                 ' str or list of str')
-            return JointLimits(JointSet(names), max_velocity, max_acceleration,
-                               min_position, max_position)
+            return self.__class__(JointSet(names), max_velocity, max_acceleration,
+                                  min_position, max_position)
         except ValueError as exc:
             raise_from(ValueError('joint name ' + name +
                                   ' not exist in joint names'), exc)
@@ -275,18 +274,22 @@ class JointLimits(object):
                 self.__max_position.__iter__())
 
     def __str__(self):
-        return '\n'.join([name + ' :  max velocity=' +
-                          str(self.__max_velocity[i]) + ' max acceleration=' +
-                          str(self.__max_acceleration[i]) + ' min position=' +
-                          str(self.__min_position[i]) + ' max position=' +
-                          str(self.__max_position[i])
-                          for i, name in enumerate(self.__joint_set)])
+        joint_limits_str = '\n'.join([name + ' :  max velocity=' +
+                                      str(self.__max_velocity[i]) + ' max acceleration=' +
+                                      str(self.__max_acceleration[i]) + ' min position=' +
+                                      str(self.__min_position[i]) + ' max position=' +
+                                      str(self.__max_position[i])
+                                      for i, name in enumerate(self.__joint_set)])
+        return 'JointLimits:\n' + joint_limits_str
 
     def __repr__(self):
         return self.__str__()
 
     def __eq__(self, other):
-        if not isinstance(other, JointLimits):
+        r_tol = 1.0e-13
+        a_tol = 1.0e-14
+
+        if not isinstance(other, self.__class__):
             return False
 
         if id(other) == id(self):
@@ -295,17 +298,20 @@ class JointLimits(object):
         if other.join_set != self.__joint_set:
             return False
 
-        if not np.array_equal(other.max_velocity, self.__max_velocity):
+        if not np.allclose(self.__max_velocity, other.max_velocity,
+                           rtol=r_tol, atol=a_tol):
             return False
 
-        if not np.array_equal(other.max_acceleration,
-                              self.__max_acceleration):
+        if not np.allclose(self.__max_acceleration, other.max_acceleration,
+                           rtol=r_tol, atol=a_tol):
             return False
 
-        if not np.array_equal(other.min_position, self.__min_position):
+        if not np.allclose(self.__min_position, other.min_position,
+                           rtol=r_tol, atol=a_tol):
             return False
 
-        if not np.array_equal(other.max_position, self.__max_position):
+        if not np.allclose(self.__max_position, other.max_position,
+                           rtol=r_tol, atol=a_tol):
             return False
         return True
 

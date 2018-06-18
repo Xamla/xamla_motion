@@ -110,8 +110,8 @@ class JointValues(object):
 
         self.__values.flags.writeable = False
 
-    @staticmethod
-    def empty():
+    @classmethod
+    def empty(self):
         """
         Creates a empty JointValues instance
 
@@ -120,12 +120,12 @@ class JointValues(object):
         joint_values : JointValues
             An empty instance of JointValues
         """
-        joint_values = JointValues(JointSet.empty(), 0.0)
+        joint_values = self.__class__(JointSet.empty(), 0.0)
         joint_values.__values = np.array([])
         return joint_values
 
-    @staticmethod
-    def zero(joint_set):
+    @classmethod
+    def zero(self, joint_set):
         """
         Creates instance of JointValues with all values 0.0
 
@@ -146,7 +146,7 @@ class JointValues(object):
         """
         if not isinstance(joint_set, JointSet):
             raise TypeError('joint_set is not expected type JointSet')
-        joint_values = JointValues(joint_set, 0.0)
+        joint_values = self.__class__(joint_set, 0.0)
         return joint_values
 
     @property
@@ -229,7 +229,7 @@ class JointValues(object):
         except ValueError as exc:
             raise ValueError('joint name ' + joint_name + ' from new_oder'
                              ' not exist in this instance of JointValues')
-        return JointValues(new_order, values)
+        return self.__class__(new_order, values)
 
     def transform(self, transform_function):
         """
@@ -273,7 +273,7 @@ class JointValues(object):
         except TypeError as exc:
             raise_from(TypeError('wrong transform function format'))
 
-        return JointValues(self.__joint_set, value)
+        return self.__class__(self.__joint_set, value)
 
     def select(self, names):
         """
@@ -308,7 +308,7 @@ class JointValues(object):
             else:
                 raise TypeError('names is not one of the expected types'
                                 ' str or list of strs')
-            return JointValues(JointSet(names), values)
+            return self.__class__(JointSet(names), values)
         except ValueError as exc:
             raise_from(ValueError('name ' + name +
                                   ' not exist in joint names'), exc)
@@ -355,13 +355,17 @@ class JointValues(object):
         return self.__values.__iter__()
 
     def __str__(self):
-        return ', '.join([name + ' : ' + str(self.__values[i])
-                          for i, name in enumerate(self.__joint_set)])
+        values_str = '\n'.join([name + ' : ' + str(self.__values[i])
+                                for i, name in enumerate(self.__joint_set)])
+        return 'JointValues:\n' + values_str
 
     def __repr__(self):
         return self.__str__()
 
     def __eq__(self, other):
+        r_tol = 1.0e-13
+        a_tol = 1.0e-14
+
         if not isinstance(other, JointValues):
             return False
 
@@ -371,7 +375,8 @@ class JointValues(object):
         if other.join_set != self.__joint_set:
             return False
 
-        if not np.array_equal(other.values, self.__values):
+        if not np.allclose(self.values, other.values,
+                           rtol=r_tol, atol=a_tol):
             return False
 
         return True
@@ -381,14 +386,14 @@ class JointValues(object):
 
     def __add__(self, other):
         try:
-            if isinstance(other, JointValues):
+            if isinstance(other, self.__class__):
                 if other.joint_set.count() < self.__joint_set.count():
                     values = np.zeros(other.joint_set.count(),
                                       self.__values.dtype)
                     for i, name in enumerate(other.joint_set):
                         values[i] = (self.__values[self.__joint_set.get_index_of(name)] +
                                      other.values[i])
-                    return JointValues(other.joint_set, values)
+                    return self.__class__(other.joint_set, values)
                 else:
                     values = np.zeros(
                         self.__joint_set.count(), self.__values.dtype)
@@ -398,28 +403,28 @@ class JointValues(object):
             else:
                 values = self.__values + other
 
-            return JointValues(self.__joint_set, values)
+            return self.__class__(self.__joint_set, values)
         except Exception as exc:
             raise_from(RuntimeError('addition could not be performed'), exc)
 
     def __radd__(self, other):
         try:
             values = other + self.__values
-            return JointValues(self.__joint_set, values)
+            return self.__class__(self.__joint_set, values)
         except Exception as exc:
             raise_from(RuntimeError(
                 'addition could not be preformed'), exc)
 
     def __sub__(self, other):
         try:
-            if isinstance(other, JointValues):
+            if isinstance(other, self.__class__):
                 if other.joint_set.count() < self.__joint_set.count():
                     values = np.zeros(other.joint_set.count(),
                                       self.__values.dtype)
                     for i, name in enumerate(other.joint_set):
                         values[i] = (self.__values[self.__joint_set.get_index_of(name)] -
                                      other.values[i])
-                    return JointValues(other.joint_set, values)
+                    return self.__class__(other.joint_set, values)
                 else:
                     values = np.zeros(
                         self.__joint_set.count(), self.__values.dtype)
@@ -429,7 +434,7 @@ class JointValues(object):
             else:
                 values = self.__values - other
 
-            return JointValues(self.__joint_set, values)
+            return self.__class__(self.__joint_set, values)
         except Exception as exc:
             raise_from(RuntimeError(
                 'substraction could not be performed'), exc)
@@ -437,21 +442,21 @@ class JointValues(object):
     def __rsub__(self, other):
         try:
             values = other - self.__values
-            return JointValues(self.__joint_set, values)
+            return self.__class__(self.__joint_set, values)
         except Exception as exc:
             raise_from(RuntimeError(
                 'substraction could not be preformed'), exc)
 
     def __mul__(self, other):
         try:
-            if isinstance(other, JointValues):
+            if isinstance(other, self.__class__):
                 if other.joint_set.count() < self.__joint_set.count():
                     values = np.zeros(other.joint_set.count(),
                                       self.__values.dtype)
                     for i, name in enumerate(other.joint_set):
                         values[i] = (self.__values[self.__joint_set.get_index_of(name)] *
                                      other.values[i])
-                    return JointValues(other.joint_set, values)
+                    return self.__class__(other.joint_set, values)
                 else:
                     values = np.zeros(
                         self.__joint_set.count(), self.__values.dtype)
@@ -461,7 +466,7 @@ class JointValues(object):
             else:
                 values = self.__values * other
 
-            return JointValues(self.__joint_set, values)
+            return self.__class__(self.__joint_set, values)
         except Exception as exc:
             raise_from(RuntimeError(
                 'multiplication could not be performed'), exc)
@@ -469,21 +474,21 @@ class JointValues(object):
     def __rmul__(self, other):
         try:
             values = other * self.__values
-            return JointValues(self.__joint_set, values)
+            return self.__class__(self.__joint_set, values)
         except Exception as exc:
             raise_from(RuntimeError(
                 'multiplication could not be preformed'), exc)
 
     def __truediv__(self, other):
         try:
-            if isinstance(other, JointValues):
+            if isinstance(other, self.__class__):
                 if other.joint_set.count() < self.__joint_set.count():
                     values = np.zeros(other.joint_set.count(),
                                       self.__values.dtype)
                     for i, name in enumerate(other.joint_set):
                         values[i] = (self.__values[self.__joint_set.get_index_of(name)] /
                                      other.values[i])
-                    return JointValues(other.joint_set, values)
+                    return self.__class__(other.joint_set, values)
                 else:
                     values = np.zeros(
                         self.__joint_set.count(), self.__values.dtype)
@@ -493,7 +498,7 @@ class JointValues(object):
             else:
                 values = self.__values / other
 
-            return JointValues(self.__joint_set, values)
+            return self.__class__(self.__joint_set, values)
         except Exception as exc:
             raise_from(RuntimeError(
                 'division could not be performed'), exc)
@@ -501,7 +506,7 @@ class JointValues(object):
     def __rtruediv__(self, other):
         try:
             values = other / self.__values
-            return JointValues(self.__joint_set, values)
+            return self.__class__(self.__joint_set, values)
         except Exception as exc:
             raise_from(RuntimeError(
                 'division could not be preformed'), exc)

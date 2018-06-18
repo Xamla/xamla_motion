@@ -6,6 +6,7 @@ from future.builtins import *
 from JointSet import JointSet
 from JointValues import JointValues
 from JointLimits import JointLimits
+from Pose import Pose
 import pdb
 import numpy as np
 
@@ -29,5 +30,17 @@ print(tmp2/4)
 print(tmp2/(1, 2, 3, 10, 5, 1))
 print(tmp2/tmp4)
 print(tmp4/tmp2)
+
+transformation_matrix = np.eye((4), dtype=float)
+transformation_matrix[:-1, -1] = np.array([1., 2., 3.]).T
+print(transformation_matrix)
+pose = Pose(transformation_matrix)
+print(pose)
+transformation_matrix[:-1, -1] = np.array([2., 3., 4.]).T
+print(transformation_matrix)
+pose1 = Pose(transformation_matrix)
+print(pose1)
+
+print(pose1*transformation_matrix)
 
 pdb.set_trace()

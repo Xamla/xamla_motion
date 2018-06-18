@@ -66,8 +66,8 @@ class JointSet(object):
                              'list[str] or str with names separated '
                              'by "," are supported as attributes'))
 
-    @staticmethod
-    def empty():
+    @classmethod
+    def empty(self):
         """
         Creates a empty JointSet
 
@@ -76,7 +76,7 @@ class JointSet(object):
         JointSet
             The created empty JointSet
         """
-        joint_set = JointSet('')
+        joint_set = self.__class__('')
         joint_set.__names = []
         return joint_set
 
@@ -104,7 +104,7 @@ class JointSet(object):
         if not isinstance(prefix, str):
             raise TypeError('prefix expected type is str')
         names = list(map(lambda x: prefix + x, self.__names))
-        return JointSet(names)
+        return self.__class__(names)
 
     def is_subset(self, other):
         """
@@ -126,7 +126,7 @@ class JointSet(object):
         TypeError : type mismatch
             If the parameter other is not of type JointSet
         """
-        if not isinstance(other, JointSet):
+        if not isinstance(other, self.__class__):
             raise TypeError('other expected type is JointSet')
 
         return all(name in other.__names for name in self.__names)
@@ -151,7 +151,7 @@ class JointSet(object):
         TypeError : type mismatch
             If the parameter other is not of type JointSet
         """
-        if not isinstance(other, JointSet):
+        if not isinstance(other, self.__class__):
             raise TypeError('other expected type is JointSet')
 
         return other.count == len(self.__names) and self.is_subset(other)
@@ -286,13 +286,13 @@ class JointSet(object):
         return self.__names.__iter__()
 
     def __str__(self):
-        return ' '.join(self.__names)
+        return 'JointSet:\n'+'\n'.join(self.__names)
 
     def __repr__(self):
         return self.__str__()
 
     def __eq__(self, other):
-        if not isinstance(other, JointSet):
+        if not isinstance(other, self.__class__):
             return False
 
         if id(other) == id(self):
@@ -308,7 +308,7 @@ class JointSet(object):
         return not self.__eq__(other)
 
     def __lt__(self, other):
-        if not isinstance(other, JointSet):
+        if not isinstance(other, self.__class__):
             return False
 
         if other.count != len(self.__names) and self.is_subset(other):
