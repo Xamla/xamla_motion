@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 from future.builtins import *
 
+from copy import deepcopy
 import numpy as np
 
 from JointSet import JointSet
@@ -270,6 +271,17 @@ class JointLimits(object):
         except ValueError as exc:
             raise_from(ValueError('joint name ' + name +
                                   ' not exist in joint names'), exc)
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        for k, v in result.__dict__.items():
+            if isinstance(v, np.ndarray):
+                v.flags.writeable = False
+        return result
 
     def __iter__(self):
         return (self.__max_velocity.__iter__(),

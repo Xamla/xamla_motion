@@ -15,12 +15,32 @@ class Pose(object):
     Pose defined by three dimensional translation and rotation
 
     The translation is representated by a three dimensional
-    column vector. The rotation is represented by a
+    row vector. The rotation is represented by a
     quaternion. The pose itself is idenified by the frame_id
     attribute
 
+    Attributes
+    ----------
+    frame_id : str
+        Id of the coordinate system / frame
+    translation : numpy.array((3,) dtype=floating) readonly
+        numpy row array of size 3 which describes the translation
+    max_acceleration : Quaternion (pyquaternion lib) readonly
+        Quaternion which describes the rotation
+
+
     Methods
     -------
+    normalize_rotation()
+        Creates a instance of Pose with normalized quaternion
+    is_rotation_normalized()
+        Return True if quaternion is normalized
+    rotation_matrix()
+        Returns the roation matrix in homogenous coordinates (4x4 numpy array)
+    transformation_matrix()
+        Returns the transformation matrix in homogenous coordinates (4x4 numpy array)
+    to_posestamped_msg()
+        Creates an instance of the ROS message PoseStamped from Pose
     """
 
     def __init__(self, *args, **kwargs):
@@ -39,7 +59,7 @@ class Pose(object):
             The pose class can be initialized in two different ways.
             By only one parameter in args which is a 4x4 transformation
             matrix in homogenous coordinates or by two parameters in args.
-            The translation as three dimensional column vector and a
+            The translation as three dimensional row vector and a
             quaternion which describes the rotation
         kwargs : dict
             With help of kwargs two optinal parameter can be set.
@@ -116,7 +136,7 @@ class Pose(object):
             raise TypeError('frame_id is not of expected type str')
         self.__normalize_rotation = kwargs.get("normalize_rotation", False)
         if not isinstance(self.__normalize_rotation, bool):
-            raise TypeError('frame_id is not of expected type bool')
+            raise TypeError('normalize_rotation is not of expected type bool')
 
         if self.__normalize_rotation is True:
             self._normalize_rotation()
@@ -180,8 +200,11 @@ class Pose(object):
         ------
             Instance of Pose with normalized quaternion / rotation
         """
-        return Pose(self.__translation, self.__quaternion,
-                    normalize_rotation=True)
+        if self.__normalize_rotation:
+            return self
+        else:
+            return Pose(self.__translation, self.__quaternion,
+                        normalize_rotation=True)
 
     def _normalize_rotation(self):
         self.__quaternion._fast_normalise()
@@ -226,7 +249,7 @@ class Pose(object):
             matrix in homogenous coordinates
         """
         transformation_matrix = self.__quaternion.transformation_matrix
-        transformation_matrix[:-1, -1] = self.__translation.T
+        transformation_matrix[:-1, -1] = self.__translation
         return transformation_matrix
 
     def to_posestamped_msg(self):

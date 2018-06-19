@@ -7,8 +7,11 @@ from JointSet import JointSet
 from JointValues import JointValues
 from JointLimits import JointLimits
 from Pose import Pose
+from PlanParameters import PlanParameters
+from EndeffectorLimits import EndeffectorLimits
 import pdb
 import numpy as np
+from pyquaternion import Quaternion
 
 tmp0 = ['Joint1', 'Joint2', 'Joint3', 'Joint4', 'Joint5', 'Joint6']
 values = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
@@ -40,7 +43,14 @@ transformation_matrix[:-1, -1] = np.array([2., 3., 4.]).T
 print(transformation_matrix)
 pose1 = Pose(transformation_matrix)
 print(pose1)
+pose2 = Pose(np.array([1., 2., 3.], dtype=float), Quaternion(1.0))
+print(pose2)
 
 print(pose1*transformation_matrix)
+
+tmp6 = PlanParameters('left_arm', tmp5)
+
+tmp7 = EndeffectorLimits(1.0, 1.0, 1.0, 1.0)
+print(tmp7)
 
 pdb.set_trace()
