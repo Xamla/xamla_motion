@@ -55,12 +55,12 @@ class Pose(object):
 
         Parameters
         ----------
-        args : list
+        args : tuple(numpy array 4x4) or tuple(translation, Quaternion)
             The pose class can be initialized in two different ways.
             By only one parameter in args which is a 4x4 transformation
             matrix in homogenous coordinates or by two parameters in args.
-            The translation as three dimensional row vector and a
-            quaternion which describes the rotation
+            The translation as iterable type that can be converted to a
+            numpy array of shape (3,) and a quaternion which describes the rotation
         kwargs : dict
             With help of kwargs two optinal parameter can be set.
             frame_id names the initialized pose default is a empty str
@@ -76,9 +76,9 @@ class Pose(object):
         ------
         TypeError : type mismatch
             If tranformation matrix is not a 4x4 numpy array with dtype
-            floating or if tranlation vector is not a numpy array of
-            shape (3,) with d type floating and the quaternion is not
-            of type Quaternion.
+            floating or if tranlation vector could not converted to a 
+            numpy array of shape (3,) with d type floating and the 
+            quaternion is not of type Quaternion.
             If frame_id is not of type str.
             If normalize_rotation is not of type bool
         ValueError
@@ -146,28 +146,13 @@ class Pose(object):
 
     def _init_with_translation_and_rotation(self, translation, rotation):
         # translation
-        if isinstance(translation, np.ndarray):
-            if len(translation.shape) != 1:
-                raise ValueError('translation (argument1) is not a one'
-                                 ' dimensional numpy array')
-            if translation.shape[0] != 3:
-                raise ValueError('translation (argument1) numpy array contains'
-                                 ' not exactly three values')
-            if not issubclass(translation.dtype.type, np.floating):
-                raise TypeError('translation dtype is no floating type')
-
+        try:
             self.__translation = np.fromiter(translation, float)
-
-        elif ((isinstance(translation, list) or isinstance(translation, tuple))
-              and all(isinstance(value, float) for value in translation)):
-            if len(translation) != 3:
-                raise ValueError('translation list (argument1) contains not '
-                                 'exactly three values')
-
-            self.__translation = np.fromiter(translation, float)
-        else:
-            raise TypeError('translation  (argument1) is not one of the expected'
-                            ' types list of float or numpy array of floating')
+            if self.__translation.shape[0] != 3:
+                raise ValueError('provided translation (argument1) is not'
+                                 ' convertabel to a numpy vector of size (3,)')
+        except (TypeError, ValueError) as exc:
+            raise exc
 
         # rotation
         if isinstance(rotation, Quaternion):

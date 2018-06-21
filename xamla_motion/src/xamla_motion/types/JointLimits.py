@@ -84,116 +84,85 @@ class JointLimits(object):
         self.__joint_set = joint_set
 
         # max_velocity
-        if isinstance(max_velocity, np.ndarray):
-            if len(max_velocity.shape) != 1:
-                raise ValueError('max_velocity is not a one'
-                                 ' dimensional numpy array')
-            if max_velocity.shape[0] != joint_set.count():
-                raise ValueError('max_velocity numpy array has not the '
-                                 ' same number of values as'
-                                 ' respective joints are present'
-                                 ' in joint_set')
-            if not issubclass(max_velocity.dtype.type, np.floating):
-                raise TypeError('max_velocity dtype is no floating type')
+        try:
+            try:
+                if len(max_velocity) <= 1:
+                    raise ValueError('max one value is provided')
+            except (TypeError, ValueError) as exc:
+                if isinstance(exc, TypeError):
+                    max_velocity = [max_velocity] * self.__joint_set.count()
+                else:
+                    max_velocity = max_velocity * self.__joint_set.count()
 
-            self.__max_velocity = np.fromiter(max_velocity, float)
-
-        elif ((isinstance(max_velocity, list) or isinstance(max_velocity, tuple))
-              and all(isinstance(value, float) for value in max_velocity)):
             if len(max_velocity) != joint_set.count():
-                raise ValueError('max_velocity list has not the '
-                                 ' same number of values as'
-                                 ' respective joints are present'
-                                 ' in joint_set')
-
+                raise ValueError('joint set holds ' +
+                                 str(self.__joint_set.count()) +
+                                 ' joints but only ' + str(len(max_velocity)) +
+                                 ' velocities are provided')
             self.__max_velocity = np.fromiter(max_velocity, float)
-        else:
-            raise TypeError('max_velocity is not one of the expected'
-                            ' types list of float or numpy array of floating')
+        except (TypeError, ValueError) as exc:
+            raise exc
 
         # max_acceleration
-        if isinstance(max_acceleration, np.ndarray):
-            if len(max_acceleration.shape) != 1:
-                raise ValueError('max_acceleration is not a one'
-                                 ' dimensional numpy array')
-            if max_acceleration.shape[0] != joint_set.count():
-                raise ValueError('max_acceleration numpy array has not the '
-                                 ' same number of values as'
-                                 ' respective joints are present'
-                                 ' in joint_set')
-            if not issubclass(max_acceleration.dtype.type, np.floating):
-                raise TypeError('max_acceleration dtype is no floating type')
+        try:
+            try:
+                if len(max_acceleration) <= 1:
+                    raise ValueError('max one value is provided')
+            except (TypeError, ValueError) as exc:
+                if isinstance(exc, TypeError):
+                    max_acceleration = [max_acceleration] * \
+                        self.__joint_set.count()
+                else:
+                    max_acceleration = max_acceleration*self.__joint_set.count()
 
-            self.__max_acceleration = np.fromiter(max_acceleration, float)
-
-        elif ((isinstance(max_acceleration, list) or isinstance(max_acceleration, tuple))
-              and all(isinstance(value, float) for value in max_acceleration)):
             if len(max_acceleration) != joint_set.count():
-                raise ValueError('max_acceleration list has not the '
-                                 ' same number of values as'
-                                 ' respective joints are present'
-                                 ' in joint_set')
-
+                raise ValueError('joint set holds ' +
+                                 str(self.__joint_set.count()) +
+                                 ' joints but only '+str(len(max_acceleration)) +
+                                 ' accelerations are provided')
             self.__max_acceleration = np.fromiter(max_acceleration, float)
-        else:
-            raise TypeError('max_acceleration is not one of the expected'
-                            ' types list of float or numpy array of floating')
+        except (TypeError, ValueError) as exc:
+            raise exc
 
         # min_position
-        if isinstance(min_position, np.ndarray):
-            if len(min_position.shape) != 1:
-                raise ValueError('min_position is not a one'
-                                 ' dimensional numpy array')
-            if min_position.shape[0] != joint_set.count():
-                raise ValueError('min_position numpy array has not the '
-                                 ' same number of values as'
-                                 ' respective joints are present'
-                                 ' in joint_set')
-            if not issubclass(min_position.dtype.type, np.floating):
-                raise TypeError('min_position dtype is no floating type')
+        try:
+            try:
+                if len(min_position) <= 1:
+                    raise ValueError('max one value is provided')
+            except (TypeError, ValueError) as exc:
+                if isinstance(exc, TypeError):
+                    min_position = [min_position] * self.__joint_set.count()
+                else:
+                    min_position = min_position * self.__joint_set.count()
 
-            self.__min_position = np.fromiter(min_position, float)
-
-        elif ((isinstance(min_position, list) or isinstance(min_position, tuple))
-              and all(isinstance(value, float) for value in min_position)):
             if len(min_position) != joint_set.count():
-                raise ValueError('min_position list has not the '
-                                 ' same number of values as'
-                                 ' respective joints are present'
-                                 ' in joint_set')
-
+                raise ValueError('joint set holds ' +
+                                 str(self.__joint_set.count()) +
+                                 ' joints but only ' + str(len(min_position)) +
+                                 ' min positions are provided')
             self.__min_position = np.fromiter(min_position, float)
-        else:
-            raise TypeError('min_position is not one of the expected'
-                            ' types list of float or numpy array of floating')
+        except (TypeError, ValueError) as exc:
+            raise exc
 
         # max_position
-        if isinstance(max_position, np.ndarray):
-            if len(max_position.shape) != 1:
-                raise ValueError('max_position is not a one'
-                                 ' dimensional numpy array')
-            if max_position.shape[0] != joint_set.count():
-                raise ValueError('max_position numpy array has not the '
-                                 ' same number of values as'
-                                 ' respective joints are present'
-                                 ' in joint_set')
-            if not issubclass(max_position.dtype.type, np.floating):
-                raise TypeError('max_position dtype is no floating type')
+        try:
+            try:
+                if len(max_position) <= 1:
+                    raise ValueError('max one value is provided')
+            except (TypeError, ValueError) as exc:
+                if isinstance(exc, TypeError):
+                    max_position = [max_position] * self.__joint_set.count()
+                else:
+                    max_position = max_position * self.__joint_set.count()
 
-            self.__max_position = np.fromiter(max_position, float)
-
-        elif ((isinstance(max_position, list) or isinstance(max_position, tuple))
-              and all(isinstance(value, float) for value in max_position)):
             if len(max_position) != joint_set.count():
-                raise ValueError('max_position list has not the '
-                                 ' same number of values as'
-                                 ' respective joints are present'
-                                 ' in joint_set')
-
+                raise ValueError('joint set holds ' +
+                                 str(self.__joint_set.count()) +
+                                 ' joints but only ' + str(len(max_position)) +
+                                 ' max positions are provided')
             self.__max_position = np.fromiter(max_position, float)
-        else:
-            raise TypeError('max_position is not one of the expected'
-                            ' types list of float or numpy array of floating')
+        except (TypeError, ValueError) as exc:
+            raise exc
 
         self.__max_velocity.flags.writeable = False
         self.__max_acceleration.flags.writeable = False

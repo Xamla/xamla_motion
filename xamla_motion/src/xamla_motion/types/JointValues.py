@@ -49,18 +49,13 @@ class JointValues(object):
         ----------
         joint_set : JoinSet
             JointSet for which also the values should be managed
-        values : float, list of float or numpy array float
+        values : iterable[float castable]
             The JointValue class can be initialized in different ways
-            -JointSet + float then all joint values are set to the same
-             float value of values
-            -JointSet + list of float then joint values and joint set
-             must contain the same number of items and every joint name
-             get this specific join value
-            -JointSet + one dimensional numpy array with only one value then
-             all joints are initialized with this value
-            -JointSet + one dimensional numpy array with the same number of
-             values as joint names, then values are mapped to joint names
-             one to one
+            -JointSet + only on float convertable value then all
+             joint values are set to the same float value
+            -JointSet + an iterable type with the same number of
+             items as number of joints in joint set. (mapping one
+             to one)
 
         Yields
         ------
@@ -71,7 +66,7 @@ class JointValues(object):
         ------
         TypeError : type mismatch
             If joint_set is not of type JointSet or
-            values is not of type float or list of floats
+            type in values is not float castable
         ValueError : not same size
             If values is list of floats and not contains the same number
             of items as joint_set or numpy array that has not the correct size
@@ -83,35 +78,29 @@ class JointValues(object):
 
         self.__joint_set = joint_set
 
-        if isinstance(values, float) or isinstance(values, int):
-            self.__values = np.fromiter([values] * joint_set.count(), float)
-        elif (isinstance(values, np.ndarray) and
-              len(values.shape) == 1 and
-              issubclass(values.dtype.type, np.floating)):
-            if(values.shape[0] == 1):
-                self.__values = np.repeat(values, self.joint_set.count())
-            elif values.shape[0] == self.joint_set.count():
-                self.__values = values
-            else:
-                raise ValueError('values is not a numpy array wiht only '
-                                 'one element or the same number of elements '
-                                 'as joint names')
-        elif ((isinstance(values, list) or isinstance(values, tuple))
-              and all(isinstance(value, float) for value in values)):
-            if len(values) != self.joint_set.count():
-                raise ValueError('values has not the same size'
-                                 ' as JointSet')
-            self.__values = np.fromiter(values, float)
+        try:
+            try:
+                if len(values) <= 1:
+                    raise ValueError('max one value is provided')
+            except (TypeError, ValueError) as exc:
+                if isinstance(exc, TypeError):
+                    values = [values] * self.__joint_set.count()
+                else:
+                    values = values * self.__joint_set.count()
 
-        else:
-            raise TypeError('values is not one of the expected'
-                            ' types int, float, list[float or int] or'
-                            ' an one dimensional np.array of typ floating')
+            if len(values) != joint_set.count():
+                raise ValueError('joint set holds ' +
+                                 str(self.__joint_set.count()) +
+                                 ' joints but only ' + str(len(values)) +
+                                 ' values are provided')
+            self.__values = np.fromiter(values, float)
+        except (TypeError, ValueError) as exc:
+            raise exc
 
         self.__values.flags.writeable = False
 
-    @classmethod
-    def empty(self):
+    @staticmethod
+    def empty():
         """
         Creates a empty JointValues instance
 
@@ -120,11 +109,11 @@ class JointValues(object):
         joint_values : JointValues
             An empty instance of JointValues
         """
-        joint_values = self.__class__(JointSet.empty(), 0.0)
+        joint_values = JointValues(JointSet.empty(), 0.0)
         joint_values.__values = np.array([])
         return joint_values
 
-    @classmethod
+    @staticmethod
     def zero(self, joint_set):
         """
         Creates instance of JointValues with all values 0.0
@@ -146,7 +135,7 @@ class JointValues(object):
         """
         if not isinstance(joint_set, JointSet):
             raise TypeError('joint_set is not expected type JointSet')
-        joint_values = self.__class__(joint_set, 0.0)
+        joint_values = JointValues(joint_set, 0.0)
         return joint_values
 
     @property
@@ -281,7 +270,7 @@ class JointValues(object):
 
         Parameters
         ----------
-        names : str or list of str
+        names : str or list of str or JointSet
             Joint names which should be in the new JointValues instance
 
 
@@ -298,8 +287,10 @@ class JointValues(object):
             If name not exist in joint names
         """
         try:
-            if isinstance(names, str):
-                values = self.__values[self.__joint_set.get_index_of(name)]
+            if isinstance(names, JointSet):
+                return self.reorder(names)
+            elif isinstance(names, str):
+                values = self.__values[self.__joint_set.get_index_of(names)]
             elif names and all(isinstance(s, str) for s in names):
                 values = np.zeros(len(names), self.__values.dtype)
                 for i, name in enumerate(names):

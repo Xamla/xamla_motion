@@ -37,7 +37,7 @@ class JointSet(object):
 
         Parameters
         ----------
-        names : str or list of str 
+        names : str or list of str
             The Joint set class is initializable in different ways.
             -by a string which only contains one joint name
             -by a string which contains multiple joints names
@@ -66,8 +66,8 @@ class JointSet(object):
                              'list[str] or str with names separated '
                              'by "," are supported as attributes'))
 
-    @classmethod
-    def empty(self):
+    @staticmethod
+    def empty():
         """
         Creates a empty JointSet
 
@@ -76,11 +76,10 @@ class JointSet(object):
         JointSet
             The created empty JointSet
         """
-        joint_set = self.__class__('')
-        joint_set.__names = []
+        joint_set = JointSet('')
         return joint_set
 
-    def add_prefix(self, prefix):
+    def add_prefix(prefix):
         """
         Creates new JointSet where prefix is added to every joint name
 
@@ -98,7 +97,7 @@ class JointSet(object):
         Yields
         ------
         JointSet
-            The created JointSet with added prefix to joint names    
+            The created JointSet with added prefix to joint names
 
         """
         if not isinstance(prefix, str):
@@ -118,7 +117,7 @@ class JointSet(object):
         Returns
         -------
         result : bool
-            If this JointSet is a subset of the other JointSet 
+            If this JointSet is a subset of the other JointSet
             returns True else False
 
         Raises
@@ -147,7 +146,7 @@ class JointSet(object):
             returns True else False
 
         Raises
-        ------ 
+        ------
         TypeError : type mismatch
             If the parameter other is not of type JointSet
         """
@@ -197,14 +196,14 @@ class JointSet(object):
         Returns
         -------
         index : int
-            List index of the searched joint name 
+            List index of the searched joint name
 
         Raises:
         ------
         TypeError : type mismatch
             If parameter name is not type of str
         ValueError : value not exists
-            If joint name not exists 
+            If joint name not exists
         """
         if not isinstance(name, str):
             raise TypeError('name expected type is str')
@@ -237,7 +236,7 @@ class JointSet(object):
         Returns
         -------
         is_found : bool
-            If joint name specified by name is found retruns 
+            If joint name specified by name is found retruns
             True else False
 
         Raises

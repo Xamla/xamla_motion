@@ -9,6 +9,8 @@ from JointLimits import JointLimits
 from Pose import Pose
 from PlanParameters import PlanParameters
 from EndeffectorLimits import EndeffectorLimits
+from JointStates import JointStates
+
 import pdb
 import numpy as np
 from pyquaternion import Quaternion
@@ -19,6 +21,7 @@ print(type(tmp0))
 tmp1 = JointSet(tmp0)
 
 tmp2 = JointValues(tmp1, values)
+print(tmp2)
 
 tmp3 = tmp2.reorder(
     JointSet(['Joint2', 'Joint1', 'Joint4', 'Joint3', 'Joint6', 'Joint5']))
@@ -52,5 +55,7 @@ tmp6 = PlanParameters('left_arm', tmp5)
 
 tmp7 = EndeffectorLimits(1.0, 1.0, 1.0, 1.0)
 print(tmp7)
+
+tmp8 = JointStates(tmp2, tmp2)
 
 pdb.set_trace()

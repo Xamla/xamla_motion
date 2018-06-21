@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 from future.builtins import *
@@ -182,8 +184,11 @@ class TaskSpacePlanParameters(object):
         return self.__ik_jump_threshold
 
     def __str__(self):
-        s = '/n'.join([k+' = '+str(v) for k, v in self.__dict__])
-        endeffector_limits_str = '\n' + self.__joint_limits.__str__()
+        j_str = '\n'.join(['sampling_resolution = '+str(self.__sample_resolution),
+                           'collision_check = '+str(self.__collision_check),
+                           'max_devitation = '+str(self.__max_deviation),
+                           'ik_jump_threshold ='+str(self.__ik_jump_threshold)])
+        endeffector_limits_str = '\n' + self.__endeffector_limits.__str__()
         endeffector_limits_str = endeffector_limits_str.replace('\n', '\n  ')
         return 'TaskSpacePlanParameters:\n' + j_str + endeffector_limits_str
 

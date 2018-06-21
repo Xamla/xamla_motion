@@ -2,6 +2,7 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 from future.builtins import *
 from future.utils import raise_from, raise_with_traceback
+import pdb
 
 
 class EndeffectorLimits(object):
@@ -13,11 +14,11 @@ class EndeffectorLimits(object):
     max_xyz_velocity : float (read only)
         Maximal xyz velocity [m/s]
     max_xyz_acceleration : float (read only)
-        Max xyz acceleration [m/s²]
+        Max xyz acceleration [m/(s^2)]
     max_angular_velocity : float (read only)
         Max angular velocity [rad/s]
     max_angular_acceleration : float (read only)
-        Max angular acceleration [rad/s²]
+        Max angular acceleration [rad/(s^2)]
     """
 
     def __init__(self, max_xyz_velocity, max_xyz_acceleration,
@@ -30,11 +31,11 @@ class EndeffectorLimits(object):
         max_xyz_velocity : float
             Defines the maximal xyz velocity [m/s]
         max_xyz_acceleration : float (read only)
-            Defines the maximal xyz acceleration [m/s²]
+            Defines the maximal xyz acceleration [m/s^2]
         max_angular_velocity : float (read only)
             Defines the maximal angular velocity [rad/s]
         max_angular_acceleration : float (read only)
-            Defines the maximal angular acceleration [rad/s²]  
+            Defines the maximal angular acceleration [rad/s^2]
 
         Yields
         ------
@@ -85,7 +86,9 @@ class EndeffectorLimits(object):
         return self.__max_angular_acceleration
 
     def __str__(self):
-        s = '/n'.join([k+' = '+str(v) for k, v in self.__dict__])
+        s = '\n'.join([k+' = ' + str(v) for k, v in self.__dict__.items()])
+        s = s.replace('_'+self.__class__.__name__+'__', '')
+        print(self.__class__.__name__)
         return 'EndeffectorLimits\n'+s
 
     def __repr__(self):
