@@ -5,7 +5,7 @@ from future.utils import raise_from, raise_with_traceback
 import pdb
 
 
-class EndeffectorLimits(object):
+class EndEffectorLimits(object):
     """
     Class which holds hold task space / endeffector limits
 
@@ -88,7 +88,6 @@ class EndeffectorLimits(object):
     def __str__(self):
         s = '\n'.join([k+' = ' + str(v) for k, v in self.__dict__.items()])
         s = s.replace('_'+self.__class__.__name__+'__', '')
-        print(self.__class__.__name__)
         return 'EndeffectorLimits\n'+s
 
     def __repr__(self):

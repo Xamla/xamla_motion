@@ -8,7 +8,7 @@ from functools import total_ordering
 
 import numpy as np
 
-from JointSet import JointSet
+from data_types import JointSet
 
 
 class JointValues(object):

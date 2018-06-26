@@ -7,7 +7,7 @@ from future.builtins import *
 from copy import deepcopy
 import numpy as np
 
-from JointSet import JointSet
+from data_types import JointSet
 
 
 class JointLimits(object):

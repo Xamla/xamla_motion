@@ -37,13 +37,12 @@ class JointSet(object):
 
         Parameters
         ----------
-        names : str or list of str
+        names : str or Iterable[str convertable]
             The Joint set class is initializable in different ways.
             -by a string which only contains one joint name
             -by a string which contains multiple joints names
              separated by a comma as delimiter
-            -by a list of strings where each string represents a
-             joint name
+            -Iterable container where each time is convertable to str
 
         Yields
         ------
@@ -52,19 +51,15 @@ class JointSet(object):
         Raises
         ------
         TypeError : type mismatch
-            If input parameter names is not of type str or list of str
+            If input parameter names is not of type str or Iterable[str convertable]
         """
-        self.__names = tuple()
 
         if isinstance(names, str):
-            self.__names = tuple(s.strip() for s in names.split(','))
-        elif ((isinstance(names, list) or isinstance(names, tuple))
-              and all(isinstance(s, str) for s in names)):
-            self.__names = tuple(names)
+            self.__names = list(s.strip() for s in names.split(','))
         else:
-            raise TypeError(('Wrong attribute types, only '
-                             'list[str] or str with names separated '
-                             'by "," are supported as attributes'))
+            self.__names = list()
+            for name in names:
+                self.__names.append(str(name))
 
     @staticmethod
     def empty():
@@ -77,6 +72,7 @@ class JointSet(object):
             The created empty JointSet
         """
         joint_set = JointSet('')
+        joint_set.__JointSet__names = list()
         return joint_set
 
     def add_prefix(prefix):

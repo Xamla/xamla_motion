@@ -6,7 +6,7 @@ from future.builtins import *
 from future.utils import raise_from, raise_with_traceback
 from copy import deepcopy
 
-from JointLimits import JointLimits
+from data_types import JointLimits
 
 import numpy as np
 

@@ -5,7 +5,7 @@ from __future__ import (absolute_import, division,
 from future.builtins import *
 from future.utils import raise_from, raise_with_traceback
 
-from JointValues import JointValues
+from data_types import JointValues
 
 
 class JointStates(object):
