@@ -75,6 +75,11 @@ class JointSet(object):
         joint_set.__JointSet__names = list()
         return joint_set
 
+    @property
+    def names(self):
+        """List of joint names (read only)"""
+        return self.__names
+
     def add_prefix(prefix):
         """
         Creates new JointSet where prefix is added to every joint name

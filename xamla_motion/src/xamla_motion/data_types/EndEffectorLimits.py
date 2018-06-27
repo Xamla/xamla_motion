@@ -2,7 +2,6 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 from future.builtins import *
 from future.utils import raise_from, raise_with_traceback
-import pdb
 
 
 class EndEffectorLimits(object):
@@ -28,13 +27,13 @@ class EndEffectorLimits(object):
 
         Parameters
         ----------
-        max_xyz_velocity : float
+        max_xyz_velocity : float convertable
             Defines the maximal xyz velocity [m/s]
-        max_xyz_acceleration : float (read only)
+        max_xyz_acceleration : float convertable (read only)
             Defines the maximal xyz acceleration [m/s^2]
-        max_angular_velocity : float (read only)
+        max_angular_velocity : float convertable (read only)
             Defines the maximal angular velocity [rad/s]
-        max_angular_acceleration : float (read only)
+        max_angular_acceleration : float convertable (read only)
             Defines the maximal angular acceleration [rad/s^2]
 
         Yields
@@ -44,26 +43,12 @@ class EndEffectorLimits(object):
         Raise
         -----
             TypeError : type mismatch
-                If one of the parameters is not of type float
+                If one of the parameters is not convertable to float
         """
-
-        if not isinstance(max_xyz_velocity, float):
-            raise TypeError('max_xyz_velocity is not'
-                            ' of expected type float')
-        if not isinstance(max_xyz_acceleration, float):
-            raise TypeError('max_xyz_acceleration is not'
-                            ' of expected type float')
-        if not isinstance(max_angular_velocity, float):
-            raise TypeError('max_angular_velocity is not'
-                            ' of expected type float')
-        if not isinstance(max_angular_acceleration, float):
-            raise TypeError('max_angular_acceleration is not'
-                            ' of expected type float')
-
-        self.__max_xyz_velocity = max_xyz_velocity
-        self.__max_xyz_acceleration = max_xyz_acceleration
-        self.__max_angular_velocity = max_angular_velocity
-        self.__max_angular_acceleration = max_angular_acceleration
+        self.__max_xyz_velocity = float(max_xyz_velocity)
+        self.__max_xyz_acceleration = float(max_xyz_acceleration)
+        self.__max_angular_velocity = float(max_angular_velocity)
+        self.__max_angular_acceleration = float(max_angular_acceleration)
 
     @property
     def max_xyz_velocity(self):
