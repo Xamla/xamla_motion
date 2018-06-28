@@ -1,15 +1,10 @@
 #!/usr/bin/env python
 
 from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from future.builtins import *
-from JointSet import JointSet
-from JointValues import JointValues
-from JointLimits import JointLimits
-from Pose import Pose
-from PlanParameters import PlanParameters
-from EndeffectorLimits import EndeffectorLimits
-from JointStates import JointStates
+                        print_function)  # , unicode_literals)
+#from future.builtins import *
+
+from data_types import *
 
 import pdb
 import numpy as np
@@ -53,9 +48,10 @@ print(pose1*transformation_matrix)
 
 tmp6 = PlanParameters('left_arm', tmp5)
 
-tmp7 = EndeffectorLimits(1.0, 1.0, 1.0, 1.0)
+tmp7 = EndEffectorLimits(1.0, 1.0, 1.0, 1.0)
 print(tmp7)
 
-tmp8 = JointStates(tmp2, tmp2)
+tmp8 = JointStates(tmp2, tmp2, None)
+print(tmp8)
 
 pdb.set_trace()

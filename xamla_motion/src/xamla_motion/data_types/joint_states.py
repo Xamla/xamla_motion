@@ -1,8 +1,26 @@
+# joint_states.py
+#
+# Copyright (c) 2018, Xamla and/or its affiliates. All rights reserved.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 #!/usr/bin/env python
 
 from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from future.builtins import *
+                        print_function)
+#from future.builtins import *
 from future.utils import raise_from, raise_with_traceback
 
 from data_types import JointValues
@@ -20,30 +38,29 @@ class JointStates(object):
 
     Attributes
     ----------
-    joint_set : JointSet
+    joint_set : JointSet (read only)
         Set of joints for which it holds the values
-    positions : JointValues
+    positions : JointValues (read only)
         Joint Values which defines the positions of the joints
-    velocities : JointValues
+    velocities : JointValues (read only)
         Joint Values which defines the velocities of the joints
-    efforts : JointValues
+    efforts : JointValues (read only)
         Joint Values which defines the efforts / acceleration of the joints
     """
 
-    def __init__(self, *args):
+    def __init__(self, positions, velocities=None, efforts=None):
         """
         Initialization of JointStates class
 
         Parameters
         ----------
-        args : Iterable[JointValues]
-            The JointStates class is initializable in three ways
-            -with only a instance of JointValues which holds the 
-             positions (argument1)
-            -with two JointValue instances hold positions (argument1)
-             and velocities (argument2)
-            -with three instances hold positions (argument1), 
-             velocities (argument2) and efforts (argument3) 
+        positions : Joint_Values
+            A instance of JointValues which represent the positions
+        velocities : Joint_Values or None (optional)
+            A instance of JointValues which represent the velocities
+        efforts : Joint_Values or None (optional)
+            A instance of JointValues which represent the efforts
+
 
         Yields
         ------
@@ -55,36 +72,26 @@ class JointStates(object):
         TypeError : type mismatch
             If arguments are not of type JointValues
         ValueError
-            If number of provided arguments is not between 1-3
-            or if instances of JointValues does not hold the
+            If instances of JointValues does not hold the
             same JointSets (joint names and order)
         """
 
-        if len(args) < 1:
-            raise ValueError('at least one parameter (positions) '
-                             'is necessary')
+        self.__positions = self._init_check(positions,
+                                            'positions',
+                                            False)
 
-        if len(args) > 3:
-            raise ValueError('maximal 3 parameters are possible'
-                             ' (positions, velocities, efforts)')
+        self.__velocities = None
+        self.__efforts = None
 
-        self.__positions = self._init_with_two_args(args[0],
-                                                    'positions',
-                                                    False)
+        if velocities != None:
+            self.__velocities = self._init_check(velocities,
+                                                 'velocities')
 
-        if len(args) >= 2:
-            self.__velocities = self._init_with_two_args(args[1],
-                                                         'velocities')
-        else:
-            self.__velocities = None
+        if efforts != None:
+            self.__efforts = self._init_check(efforts,
+                                              'efforts')
 
-        if len(args) == 3:
-            self.__efforts = self._init_with_two_args(args[2],
-                                                      'efforts')
-        else:
-            self.__efforts = None
-
-    def _init_with_two_args(self, joint_values, name, check=True):
+    def _init_check(self, joint_values, name, check=True):
         if not isinstance(joint_values, JointValues):
             raise TypeError(name+' is not of expected type JointValues')
 
@@ -110,7 +117,10 @@ class JointStates(object):
 
     @property
     def efforts(self):
-        """JointValues which defines the efforts/acceleration readonly"""
+        """
+        JointValues which defines the efforts/acceleration readonly
+        if not available returns None
+        """
         return self.__efforts
 
     def reorder(self, new_order):

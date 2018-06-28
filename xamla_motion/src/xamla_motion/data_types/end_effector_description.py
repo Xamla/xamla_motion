@@ -1,49 +1,67 @@
+# end_effector_description.py
+#
+# Copyright (c) 2018, Xamla and/or its affiliates. All rights reserved.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+#!/usr/bin/env python
+
 from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from future.builtins import *
+                        print_function)  # , unicode_literals)
+#from future.builtins import *
 from future.utils import raise_from, raise_with_traceback
 
 from data_types import JointSet
 
 
-class MoveGroupDescription(object):
-
+class EndEffectorDescription(object):
     """
-    Class which describes a robot or a subset of it 
-    by move groups, end effectors and joints
+    Class which describes a end effector 
 
     Attributes
     ----------
     name : str (read only)
-        name of the base move group
+        name of the end effector
     sub_move_group_ids : List[str] (read only)
         ids of the sub move groups
     joint_set : JointSet (read only)
         JointSet which contains all joints of the base move group
-    end_effector_names : List[str] (read only)
-        names of the end effectors
-    end_effector_link_names : List[str] (read only)
-        names of the end effector links
+    move_group_name : str (read only)
+        name of the move group
+    link_name : List[str] (read only)
+        names of the endeffector link
     """
 
     def __init__(self, name, sub_move_group_ids, joint_set,
-                 end_effector_names, end_effector_link_names):
+                 move_group_name, link_name):
         """
         Initialization of MoveGroupDescription class
 
         Parameters
         ----------
         name : str convertable
-            name of the base move group
+            name of the end effector
         sub_move_group_ids : Iterable[str convertable]
             ids of the sub move groups
         joint_set : JointSet
             JointSet which contains all joints of the base move group
             (if provided)
-        end_effector_names : Iterable[str convertable]
-            names of the end effectors
-        end_effector_link_names : Iterable[str convertable]
-            names of the end effector links
+        move_group_name : str convertable
+            name of the move group
+        link_name : str convertable
+            name of the end effector link
 
         Raises
         ------
@@ -55,8 +73,8 @@ class MoveGroupDescription(object):
 
         Yields
         ------
-        MoveGroupDescription
-            The created MoveGroupDescription
+       EndEffectorDescription
+            The created EndEffectorDescription
         """
 
         self.__name = str(name)
@@ -69,17 +87,13 @@ class MoveGroupDescription(object):
             raise TypeError('joint_set is not of expected type JointSet')
         self.__joint_set = joint_set
 
-        self.__end_effector_names = []
-        for end_effector_name in end_effector_names:
-            self.__end_effector_names.append(str(end_effector_name))
+        self.__move_group_name = str(move_group_name)
 
-        self.__end_effector_link_names = []
-        for end_effector_link_name in end_effector_link_names:
-            self.__end_effector_link_names.append(str(end_effector_link_name))
+        self.__link_name = str(link_name)
 
     @property
     def name(self):
-        """move group name (read only)"""
+        """end effector name (read only)"""
         return self.__name
 
     @property
@@ -93,14 +107,14 @@ class MoveGroupDescription(object):
         return self.__joint_set
 
     @property
-    def end_effector_names(self):
-        """list of end effector names (read only)"""
-        return self.__end_effector_names
+    def move_group_name(self):
+        """move group name (read only)"""
+        return self.__move_group_name
 
     @property
-    def end_effector_link_names(self):
-        """list of end effector link names (read only)"""
-        return self.__end_effector_link_names
+    def link_name(self):
+        """end effector link name (read only)"""
+        return self.__link_name
 
     def __str__(self):
         s = '\n'.join(['  '+k+' = ' + str(v)
@@ -128,10 +142,10 @@ class MoveGroupDescription(object):
         if other.joint_set != self.__joint_set:
             return False
 
-        if other.end_effector_names != self.__end_effector_names:
+        if other.move_group_name != self.__move_group_name:
             return False
 
-        if other.end_effector_link_names != self.__end_effector_link_names:
+        if other.link_name != self.__link_name:
             return False
 
         return True
