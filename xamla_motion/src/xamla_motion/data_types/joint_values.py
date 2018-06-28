@@ -47,8 +47,6 @@ class JointValues(object):
         Creates empty instance of JointValues
     zero(joint_set)
         Creates instance of JointValues with all values 0.0
-    count()
-        Returns the number of joints managed by JointValues
     try_get_value(name)
         Tries to get joint value by joint name
     reorder(new_order)
@@ -102,13 +100,13 @@ class JointValues(object):
                     raise ValueError('max one value is provided')
             except (TypeError, ValueError) as exc:
                 if isinstance(exc, TypeError):
-                    values = [values] * self.__joint_set.count()
+                    values = [values] * len(self.__joint_set)
                 else:
-                    values = values * self.__joint_set.count()
+                    values = values * len(self.__joint_set)
 
-            if len(values) != joint_set.count():
+            if len(values) != len(joint_set):
                 raise ValueError('joint set holds ' +
-                                 str(self.__joint_set.count()) +
+                                 str(len(self.__joint_set)) +
                                  ' joints but only ' + str(len(values)) +
                                  ' values are provided')
             self.__values = np.fromiter(values, float)
@@ -165,17 +163,6 @@ class JointValues(object):
     def values(self):
         """read only values"""
         return self.__values
-
-    def count(self):
-        """
-        Returns number of joints
-
-        Returns
-        -------
-        count : int
-            Number of joints managed by this JointValues
-        """
-        return len(self.__values)
 
     def try_get_value(self, joint_name):
         """
@@ -278,7 +265,7 @@ class JointValues(object):
                 values = np.fromiter(map(transform_function, self.__values),
                                      self.__values.dtype)
         except TypeError as exc:
-            raise_from(TypeError('wrong transform function format'))
+            raise_from(TypeError('wrong transform function format'), exc)
 
         return self.__class__(self.__joint_set, value)
 
@@ -328,18 +315,18 @@ class JointValues(object):
 
         Parameters
         ----------
-        key : int or str
-            index of joint or joint name for which the value is requested
+        key : int ,str or slice
+            index of joint, slice or joint name for which the values are requested
 
         Returns
         -------
-
-        value : float
+        value : numpy floating or numpy ndarray of floating
             Joint value if index or joint name is valid / exists
 
-        Raises:
+        Raises
+        ------
         TypeError : type mismatch
-            If key is not int or str
+            If key is not int, str or slice
         ValueError :
             If joint name not exists
         IndexError :
@@ -352,13 +339,17 @@ class JointValues(object):
             except ValueError as exc:
                 raise ValueError('joint name not exists')
 
-        elif isinstance(key, int):
+        elif isinstance(key, (int, slice)):
             try:
                 return self.__values[key]
             except IndexError as exc:
                 raise IndexError('index out of range')
         else:
-            raise TypeError('key is not one of expected types int or str')
+            raise TypeError(
+                'key is not one of expected types int, str or slice ')
+
+    def __len__(self):
+        return len(self.__values)
 
     def __iter__(self):
         return self.__values.__iter__()
@@ -394,128 +385,99 @@ class JointValues(object):
         return not self.__eq__(other)
 
     def __add__(self, other):
-        try:
-            if isinstance(other, self.__class__):
-                if other.joint_set.count() < self.__joint_set.count():
-                    values = np.zeros(other.joint_set.count(),
-                                      self.__values.dtype)
-                    for i, name in enumerate(other.joint_set):
-                        values[i] = (self.__values[self.__joint_set.get_index_of(name)] +
-                                     other.values[i])
-                    return self.__class__(other.joint_set, values)
-                else:
-                    values = np.zeros(
-                        self.__joint_set.count(), self.__values.dtype)
-                    for i, name in enumerate(self.__joint_set):
-                        values[i] = (self.__values[i] +
-                                     other.values[other.joint_set.get_index_of(name)])
+        if isinstance(other, self.__class__):
+            if len(other.joint_set) < len(self.__joint_set):
+                values = np.zeros(len(other.joint_set),
+                                  self.__values.dtype)
+                for i, name in enumerate(other.joint_set):
+                    values[i] = (self.__values[self.__joint_set.get_index_of(name)] +
+                                 other.values[i])
+                return self.__class__(other.joint_set, values)
             else:
-                values = self.__values + other
+                values = np.zeros(
+                    len(self.__joint_set), self.__values.dtype)
+                for i, name in enumerate(self.__joint_set):
+                    values[i] = (self.__values[i] +
+                                 other.values[other.joint_set.get_index_of(name)])
+        else:
+            values = self.__values + other
 
-            return self.__class__(self.__joint_set, values)
-        except Exception as exc:
-            raise_from(RuntimeError('addition could not be performed'), exc)
+        return self.__class__(self.__joint_set, values)
 
     def __radd__(self, other):
-        try:
-            values = other + self.__values
-            return self.__class__(self.__joint_set, values)
-        except Exception as exc:
-            raise_from(RuntimeError(
-                'addition could not be preformed'), exc)
+
+        values = other + self.__values
+        return self.__class__(self.__joint_set, values)
 
     def __sub__(self, other):
-        try:
-            if isinstance(other, self.__class__):
-                if other.joint_set.count() < self.__joint_set.count():
-                    values = np.zeros(other.joint_set.count(),
-                                      self.__values.dtype)
-                    for i, name in enumerate(other.joint_set):
-                        values[i] = (self.__values[self.__joint_set.get_index_of(name)] -
-                                     other.values[i])
-                    return self.__class__(other.joint_set, values)
-                else:
-                    values = np.zeros(
-                        self.__joint_set.count(), self.__values.dtype)
-                    for i, name in enumerate(self.__joint_set):
-                        values[i] = (self.__values[i] -
-                                     other.values[other.joint_set.get_index_of(name)])
+        if isinstance(other, self.__class__):
+            if len(other.joint_set) < len(self.__joint_set):
+                values = np.zeros(len(other.joint_set),
+                                  self.__values.dtype)
+                for i, name in enumerate(other.joint_set):
+                    values[i] = (self.__values[self.__joint_set.get_index_of(name)] -
+                                 other.values[i])
+                return self.__class__(other.joint_set, values)
             else:
-                values = self.__values - other
+                values = np.zeros(
+                    len(self.__joint_set), self.__values.dtype)
+                for i, name in enumerate(self.__joint_set):
+                    values[i] = (self.__values[i] -
+                                 other.values[other.joint_set.get_index_of(name)])
+        else:
+            values = self.__values - other
 
-            return self.__class__(self.__joint_set, values)
-        except Exception as exc:
-            raise_from(RuntimeError(
-                'substraction could not be performed'), exc)
+        return self.__class__(self.__joint_set, values)
 
     def __rsub__(self, other):
-        try:
-            values = other - self.__values
-            return self.__class__(self.__joint_set, values)
-        except Exception as exc:
-            raise_from(RuntimeError(
-                'substraction could not be preformed'), exc)
+        values = other - self.__values
+        return self.__class__(self.__joint_set, values)
 
     def __mul__(self, other):
-        try:
-            if isinstance(other, self.__class__):
-                if other.joint_set.count() < self.__joint_set.count():
-                    values = np.zeros(other.joint_set.count(),
-                                      self.__values.dtype)
-                    for i, name in enumerate(other.joint_set):
-                        values[i] = (self.__values[self.__joint_set.get_index_of(name)] *
-                                     other.values[i])
-                    return self.__class__(other.joint_set, values)
-                else:
-                    values = np.zeros(
-                        self.__joint_set.count(), self.__values.dtype)
-                    for i, name in enumerate(self.__joint_set):
-                        values[i] = (self.__values[i] *
-                                     other.values[other.joint_set.get_index_of(name)])
+        if isinstance(other, self.__class__):
+            if len(other.joint_set) < len(self.__joint_set):
+                values = np.zeros(len(other.joint_set),
+                                  self.__values.dtype)
+                for i, name in enumerate(other.joint_set):
+                    values[i] = (self.__values[self.__joint_set.get_index_of(name)] *
+                                 other.values[i])
+                return self.__class__(other.joint_set, values)
             else:
-                values = self.__values * other
+                values = np.zeros(
+                    len(self.__joint_set), self.__values.dtype)
+                for i, name in enumerate(self.__joint_set):
+                    values[i] = (self.__values[i] *
+                                 other.values[other.joint_set.get_index_of(name)])
+        else:
+            values = self.__values * other
 
-            return self.__class__(self.__joint_set, values)
-        except Exception as exc:
-            raise_from(RuntimeError(
-                'multiplication could not be performed'), exc)
+        return self.__class__(self.__joint_set, values)
 
     def __rmul__(self, other):
-        try:
-            values = other * self.__values
-            return self.__class__(self.__joint_set, values)
-        except Exception as exc:
-            raise_from(RuntimeError(
-                'multiplication could not be preformed'), exc)
+        values = other * self.__values
+        return self.__class__(self.__joint_set, values)
 
     def __truediv__(self, other):
-        try:
-            if isinstance(other, self.__class__):
-                if other.joint_set.count() < self.__joint_set.count():
-                    values = np.zeros(other.joint_set.count(),
-                                      self.__values.dtype)
-                    for i, name in enumerate(other.joint_set):
-                        values[i] = (self.__values[self.__joint_set.get_index_of(name)] /
-                                     other.values[i])
-                    return self.__class__(other.joint_set, values)
-                else:
-                    values = np.zeros(
-                        self.__joint_set.count(), self.__values.dtype)
-                    for i, name in enumerate(self.__joint_set):
-                        values[i] = (self.__values[i] /
-                                     other.values[other.joint_set.get_index_of(name)])
-            else:
-                values = self.__values / other
 
-            return self.__class__(self.__joint_set, values)
-        except Exception as exc:
-            raise_from(RuntimeError(
-                'division could not be performed'), exc)
+        if isinstance(other, self.__class__):
+            if len(other.joint_set) < len(self.__joint_set):
+                values = np.zeros(len(other.joint_set),
+                                  self.__values.dtype)
+                for i, name in enumerate(other.joint_set):
+                    values[i] = (self.__values[self.__joint_set.get_index_of(name)] /
+                                 other.values[i])
+                return self.__class__(other.joint_set, values)
+            else:
+                values = np.zeros(
+                    len(self.__joint_set), self.__values.dtype)
+                for i, name in enumerate(self.__joint_set):
+                    values[i] = (self.__values[i] /
+                                 other.values[other.joint_set.get_index_of(name)])
+        else:
+            values = self.__values / other
+
+        return self.__class__(self.__joint_set, values)
 
     def __rtruediv__(self, other):
-        try:
-            values = other / self.__values
-            return self.__class__(self.__joint_set, values)
-        except Exception as exc:
-            raise_from(RuntimeError(
-                'division could not be preformed'), exc)
+        values = other / self.__values
+        return self.__class__(self.__joint_set, values)

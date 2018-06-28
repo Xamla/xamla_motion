@@ -20,13 +20,14 @@
 
 from __future__ import (absolute_import, division,
                         print_function)
-#from future.builtins import *
+# from future.builtins import *
 from future.utils import raise_from, raise_with_traceback
 
 import rospy
 import pdb
 from xamlamoveit_msgs.srv import *
 
+from xamla_motion_exceptions import ServiceException
 from data_types import *
 
 
@@ -34,23 +35,26 @@ class MotionServices(object):
 
     def __init__(self):
 
-        self.__movej_action_name = 'moveJ_action'
-        self.__query_move_group_service_name = ('xamlaMoveGroupServices/'
-                                                'query_move_group_interface')
-        self.__query_joint_states_service_name = ('xamlaMoveGroupServices/'
-                                                  'query_move_group'
-                                                  '_current_position')
-        self.__end_effector_limits_param_name = ('xamlaJointJogging/'
-                                                 'end_effector_list')
-        self.__joint_limits_param_name = ('robot_description_planning/'
-                                          'joint_limits')
+        self.__movej_action = 'moveJ_action'
+        self.__query_move_group_service = ('xamlaMoveGroupServices/'
+                                           'query_move_group_interface')
+        self.__query_joint_states_service = ('xamlaMoveGroupServices/'
+                                             'query_move_group'
+                                             '_current_position')
+        self.__query_forward_kinematics_service = ('xamlaMoveGroupServices/'
+                                                   'query_fk')
+
+        self.__end_effector_limits_param = ('xamlaJointJogging/'
+                                            'end_effector_list')
+        self.__joint_limits_param = ('robot_description_planning/'
+                                     'joint_limits')
 
     def query_available_move_groups(self):
         """
         Query all currently available move groups
 
         To query the move groups the ros service with the string
-        defined in query_move_group_serivce_name is called
+        defined in query_move_group_serivce is called
 
         Returns
         -------
@@ -61,7 +65,7 @@ class MotionServices(object):
 
         Raises
         ------
-        rospy.ServiceExeption
+        xamla_motion.ServiceNotAvailableException
             If Service not exist or is not callable
         TypeError
             If the service response joint_names are not
@@ -70,13 +74,13 @@ class MotionServices(object):
 
         try:
             service = rospy.ServiceProxy(
-                self.__query_move_group_service_name,
+                self.__query_move_group_service,
                 QueryMoveGroupInterfaces)
             response = service()
-        except rospy.ServiceException as e:
-            print ('service call for query available'
-                   'move groups failed, abort ')
-            raise e
+        except rospy.ServiceException as exc:
+            raise_from(ServiceException('service call for query'
+                                        ' available move groups failed,'
+                                        ' abort '), exc)
 
         groups = list()
         for g in response.move_group_interfaces:
@@ -94,7 +98,7 @@ class MotionServices(object):
         Query all currently available end effectors
 
         To query the available end effectors the ros service with the string
-        defined in _query_move_group_service_name is called an only the relevant
+        defined in _query_move_group_service is called an only the relevant
         information about the endeffector is filtered out
 
         Returns
@@ -105,7 +109,7 @@ class MotionServices(object):
 
         Raises
         ------
-        rospy.ServiceExeption
+        xamla_motion.ServiceExeption
             If Service not exist or is not callable
         TypeError
             If the service response joint_names are not
@@ -113,7 +117,7 @@ class MotionServices(object):
         """
         try:
             move_groups = self.query_available_move_groups()
-        except (rospy.ServiceException, TypeError) as exc:
+        except (ServiceException, TypeError) as exc:
             raise exc
 
         end_effectors = {}
@@ -135,7 +139,7 @@ class MotionServices(object):
         Query end effector limits from ros param
 
         To query the end effector limits the ros param definied in
-        end_effector_limits_param_name is read out
+        end_effector_limits_param is read out
 
         Parameters
         ----------
@@ -158,10 +162,10 @@ class MotionServices(object):
             If not all necessary limits exists
         """
         try:
-            eel_param = rospy.get_param(self.__end_effector_limits_param_name)
+            eel_param = rospy.get_param(self.__end_effector_limits_param)
         except KeyError as exc:
             raise_from(RuntimeError('end effector limit ros param: '
-                                    + self.end_effector_limits_param_name +
+                                    + self.__end_effector_limits_param +
                                     ' not exists'), exc)
         name = str(name)
 
@@ -191,7 +195,7 @@ class MotionServices(object):
         Query end joint limits from ros param
 
         To query the joint limits the ros param definied in
-        joint_limits_param_name + joint name + limit name is read out
+        joint_limits_param + joint name + limit name is read out
 
         Parameters
         ----------
@@ -215,13 +219,13 @@ class MotionServices(object):
         if not isinstance(joint_set, JointSet):
             raise TypeError('joint_set is not of expected type JointSet')
 
-        maxVel = [None] * joint_set.count()
-        maxAcc = [None] * joint_set.count()
-        minPos = [None] * joint_set.count()
-        maxPos = [None] * joint_set.count()
+        maxVel = [None] * len(joint_set)
+        maxAcc = [None] * len(joint_set)
+        minPos = [None] * len(joint_set)
+        maxPos = [None] * len(joint_set)
 
         for i, name in enumerate(joint_set):
-            prefix = self.__joint_limits_param_name + '/' + name + '/'
+            prefix = self.__joint_limits_param + '/' + name + '/'
 
             if rospy.get_param(prefix+'has_velocity_limits'):
                 maxVel[i] = rospy.get_param(prefix+'max_velocity')
@@ -240,7 +244,7 @@ class MotionServices(object):
         Query joint states by calling the providing ros service
 
         To query the joint states the ros service with the name
-        defined in quary_joint_states_service_name is called
+        defined in quary_joint_states_service is called
 
         Parameters
         ----------
@@ -251,13 +255,13 @@ class MotionServices(object):
         -------
         JointStates
             Returns a instance of JointStates which contains the joint
-            states of all joint defined in joint_set
+            states of all joints defined in joint_set
 
         Raises
         ------
         TypeError : type mismatch
             If joint_set is not of expected type JointSet
-        rospy.ServiceException
+        xamla_motion.ServiceException
             If ros service not exists or is not callable
         """
 
@@ -266,15 +270,63 @@ class MotionServices(object):
 
         try:
             service = rospy.ServiceProxy(
-                self.__query_joint_states_service_name,
+                self.__query_joint_states_service,
                 GetCurrentJointState)
-            response = service(names)
-        except rospy.ServiceException as e:
+            response = service(joint_set.names).current_joint_position
+        except rospy.ServiceException as exc:
             print ('service call for query current'
                    'joint states failed, abort ')
-            raise e
+            raise_from(ServiceException('service call for query'
+                                        ' current joint states '
+                                        'failed, abort'), exc)
 
-        pdb.set_trace()
         r_joint_set = JointSet(response.name)
+        positions = JointValues(r_joint_set,
+                                response.position)
 
-        return JointStates()
+        if not response.velocity:
+            velocities = None
+        else:
+            velocities = JointValues(r_joint_set,
+                                     response.velocity)
+
+        if not response.effort:
+            efforts = None
+        else:
+            efforts = JointValues(r_joint_set,
+                                  response.effort)
+
+        return JointStates(positions, velocities, efforts)
+
+    def query_pose(self, move_group_name,
+                   joint_positions, end_effector_link=''):
+        """
+        Computes the pose by applying forward kinematics
+
+        Returns
+        -------
+        Pose
+            Pose of the kinematic chain defined by the input parameter
+        """
+
+        move_group_name = str(move_group_name)
+
+        return self.query_pose_many(move_group_name, joint_positions,
+                                    end_effector_link)[0]
+
+    def query_pose_many(self, move_group_name,
+                        joint_path, end_effector_link=''):
+
+        move_group_name = str(move_group_name)
+
+        try:
+            service = rospy.ServiceProxy(
+                self.__query_forward_kinematics_service,
+                GetFKSolution)
+            response = service()
+        except rospy.ServiceException as exc:
+            print ('service call for query available'
+                   'move groups failed, abort ')
+            raise_from(ServiceException('service call for query'
+                                        ' available move groups'
+                                        ' failed, abort'), exc)

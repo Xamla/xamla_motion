@@ -204,6 +204,9 @@ class JointStates(object):
             raise_from(ValueError('name ' + name +
                                   ' not exist in joint names'), exc)
 
+    def __len__(self):
+        return len(self.__positions)
+
     def __str__(self):
         ss = '\n'.join([k+' = '+str(v) for k, v in self.__dict__.items()])
         ss = ss.replace('_'+self.__class__.__name__+'__', '')

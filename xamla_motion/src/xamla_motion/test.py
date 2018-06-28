@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division,
 #from future.builtins import *
 from future.utils import raise_from, raise_with_traceback
 
-from MotionService import MotionServices
+from motion_service import MotionServices
 import pdb
 
 motion_service = MotionServices()

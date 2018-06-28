@@ -23,6 +23,8 @@ from __future__ import (absolute_import, division,
 #from future.builtins import *
 from future.utils import raise_from, raise_with_traceback
 
+import numpy as np
+
 
 class EndEffectorLimits(object):
     """
@@ -30,13 +32,13 @@ class EndEffectorLimits(object):
 
     Attributes
     ----------
-    max_xyz_velocity : float (read only)
+    max_xyz_velocity : numpy float (read only)
         Maximal xyz velocity [m/s]
-    max_xyz_acceleration : float (read only)
+    max_xyz_acceleration : numpy float (read only)
         Max xyz acceleration [m/(s^2)]
-    max_angular_velocity : float (read only)
+    max_angular_velocity : numpy float (read only)
         Max angular velocity [rad/s]
-    max_angular_acceleration : float (read only)
+    max_angular_acceleration : numpy float (read only)
         Max angular acceleration [rad/(s^2)]
     """
 
@@ -65,10 +67,10 @@ class EndEffectorLimits(object):
             TypeError : type mismatch
                 If one of the parameters is not convertable to float
         """
-        self.__max_xyz_velocity = float(max_xyz_velocity)
-        self.__max_xyz_acceleration = float(max_xyz_acceleration)
-        self.__max_angular_velocity = float(max_angular_velocity)
-        self.__max_angular_acceleration = float(max_angular_acceleration)
+        self.__max_xyz_velocity = np.float64(max_xyz_velocity)
+        self.__max_xyz_acceleration = np.float64(max_xyz_acceleration)
+        self.__max_angular_velocity = np.float64(max_angular_velocity)
+        self.__max_angular_acceleration = np.float64(max_angular_acceleration)
 
     @property
     def max_xyz_velocity(self):

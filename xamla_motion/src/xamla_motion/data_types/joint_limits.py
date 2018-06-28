@@ -108,13 +108,13 @@ class JointLimits(object):
                     raise ValueError('max one value is provided')
             except (TypeError, ValueError) as exc:
                 if isinstance(exc, TypeError):
-                    max_velocity = [max_velocity] * self.__joint_set.count()
+                    max_velocity = [max_velocity] * len(self.__joint_set)
                 else:
-                    max_velocity = max_velocity * self.__joint_set.count()
+                    max_velocity = max_velocity * len(self.__joint_set)
 
-            if len(max_velocity) != joint_set.count():
+            if len(max_velocity) != len(joint_set):
                 raise ValueError('joint set holds ' +
-                                 str(self.__joint_set.count()) +
+                                 str(len(self.__joint_set)) +
                                  ' joints but only ' + str(len(max_velocity)) +
                                  ' velocities are provided')
             self.__max_velocity = np.fromiter(max_velocity, float)
@@ -129,13 +129,13 @@ class JointLimits(object):
             except (TypeError, ValueError) as exc:
                 if isinstance(exc, TypeError):
                     max_acceleration = [max_acceleration] * \
-                        self.__joint_set.count()
+                        len(self.__joint_set)
                 else:
-                    max_acceleration = max_acceleration*self.__joint_set.count()
+                    max_acceleration = max_acceleration*len(self.__joint_set)
 
-            if len(max_acceleration) != joint_set.count():
+            if len(max_acceleration) != len(joint_set):
                 raise ValueError('joint set holds ' +
-                                 str(self.__joint_set.count()) +
+                                 str(len(self.__joint_set)) +
                                  ' joints but only '+str(len(max_acceleration)) +
                                  ' accelerations are provided')
             self.__max_acceleration = np.fromiter(max_acceleration, float)
@@ -149,13 +149,13 @@ class JointLimits(object):
                     raise ValueError('max one value is provided')
             except (TypeError, ValueError) as exc:
                 if isinstance(exc, TypeError):
-                    min_position = [min_position] * self.__joint_set.count()
+                    min_position = [min_position] * len(self.__joint_set)
                 else:
-                    min_position = min_position * self.__joint_set.count()
+                    min_position = min_position * len(self.__joint_set)
 
-            if len(min_position) != joint_set.count():
+            if len(min_position) != len(joint_set):
                 raise ValueError('joint set holds ' +
-                                 str(self.__joint_set.count()) +
+                                 str(len(self.__joint_set)) +
                                  ' joints but only ' + str(len(min_position)) +
                                  ' min positions are provided')
             self.__min_position = np.fromiter(min_position, float)
@@ -169,13 +169,13 @@ class JointLimits(object):
                     raise ValueError('max one value is provided')
             except (TypeError, ValueError) as exc:
                 if isinstance(exc, TypeError):
-                    max_position = [max_position] * self.__joint_set.count()
+                    max_position = [max_position] * len(self.__joint_set)
                 else:
-                    max_position = max_position * self.__joint_set.count()
+                    max_position = max_position * len(self.__joint_set)
 
-            if len(max_position) != joint_set.count():
+            if len(max_position) != len(joint_set):
                 raise ValueError('joint set holds ' +
-                                 str(self.__joint_set.count()) +
+                                 str(len(self.__joint_set)) +
                                  ' joints but only ' + str(len(max_position)) +
                                  ' max positions are provided')
             self.__max_position = np.fromiter(max_position, float)
@@ -269,6 +269,9 @@ class JointLimits(object):
             if isinstance(v, np.ndarray):
                 v.flags.writeable = False
         return result
+
+    def __len__(self):
+        return len(self.__max_position)
 
     def __iter__(self):
         return (self.__max_velocity.__iter__(),

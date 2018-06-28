@@ -318,39 +318,35 @@ class Pose(object):
         return not self.__eq__(other)
 
     def __mul__(self, other):
-        try:
-            matrix_self = self.transformation_matrix()
-            if isinstance(other, self.__class__):
-                matrix_other = other.transformation_matrix()
-                product = np.matmul(matrix_self, matrix_other)
+
+        matrix_self = self.transformation_matrix()
+        if isinstance(other, self.__class__):
+            matrix_other = other.transformation_matrix()
+            product = np.matmul(matrix_self, matrix_other)
+            return self.__class__(product, fram_id=self.__frame_id)
+        elif (isinstance(other, np.ndarray) and
+                issubclass(other.dtype.type, np.floating)):
+            if other.shape in [(3,), (3, 1)]:
+                vector = np.append(other, [[1.0]], axis=0)
+                return np.matmul(matrix_self, vector)
+            elif other.shape == (1, 3):
+                vector = np.append(other, [[1.0]], axis=1)
+                return np.matmul(matrix_self, vector.T)
+            elif other.shape in [(4,), (4, 1)]:
+                return np.matmul(matrix_self, other)
+            elif other.shape == (1, 4):
+                return np.matmul(matrix_self, other.T)
+            elif other.shape == (4, 4):
+                product = np.matmul(matrix_self, other)
                 return self.__class__(product, fram_id=self.__frame_id)
-            elif (isinstance(other, np.ndarray) and
-                    issubclass(other.dtype.type, np.floating)):
-                if other.shape in [(3,), (3, 1)]:
-                    vector = np.append(other, [[1.0]], axis=0)
-                    return np.matmul(matrix_self, vector)
-                elif other.shape == (1, 3):
-                    vector = np.append(other, [[1.0]], axis=1)
-                    return np.matmul(matrix_self, vector.T)
-                elif other.shape in [(4,), (4, 1)]:
-                    return np.matmul(matrix_self, other)
-                elif other.shape == (1, 4):
-                    return np.matmul(matrix_self, other.T)
-                elif other.shape == (4, 4):
-                    product = np.matmul(matrix_self, other)
-                    return self.__class__(product, fram_id=self.__frame_id)
-                else:
-                    TypeError('vector is not of shape (3,), (3,1)'
-                              '(1,3), (4,), (4,1) or (1,4) or matrix (4,4)')
-
             else:
-                TypeError('other is not of expected type Pose or'
-                          ' 3 dimensional numpy vector or'
-                          ' 4x4 transformation matrix dtype floating')
+                TypeError('vector is not of shape (3,), (3,1)'
+                          '(1,3), (4,), (4,1) or (1,4) or matrix (4,4)')
 
-        except Exception as exc:
-            raise_from(RuntimeError(
-                'multiplication could not be performed'), exc)
+        else:
+            TypeError('other is not of expected type Pose or'
+                      ' 3 dimensional numpy vector or'
+                      ' 4x4 transformation matrix dtype floating')
 
     def __rmul__(self, other):
         return np.dot(other, self.transformation_matrix())

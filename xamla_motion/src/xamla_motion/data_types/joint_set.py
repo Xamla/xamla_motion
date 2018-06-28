@@ -43,8 +43,6 @@ class JointSet(object):
         Tries to get the list index of the joint by name
     get_index_of(name)
         Returns the list index of joint name specificed paramerter name
-    count()
-        Returns number of joint names
     contains(name)
         Checks if this JointSet contains a specific joint name
     """
@@ -172,7 +170,7 @@ class JointSet(object):
         if not isinstance(other, self.__class__):
             raise TypeError('other expected type is JointSet')
 
-        return other.count == len(self.__names) and self.is_subset(other)
+        return len(other) == len(self.__names) and self.is_subset(other)
 
     def try_get_index_of(self, name):
         """
@@ -232,17 +230,6 @@ class JointSet(object):
         except ValueError as exc:
             raise ValueError('get_index_of: %s', exc)
 
-    def count(self):
-        """
-        Returns the number of joint names
-
-        Returns
-        -------
-        count : int
-            Number of joint names which are managed by this JointSet
-        """
-        return len(self.__names)
-
     def contains(self, name):
         """
         Checks if this JointSet contains a specific joint name
@@ -300,6 +287,9 @@ class JointSet(object):
             raise IndexError('index out of range')
         return self.__names[index]
 
+    def __len__(self):
+        return len(self.__names)
+
     def __iter__(self):
         return self.__names.__iter__()
 
@@ -316,8 +306,8 @@ class JointSet(object):
         if id(other) == id(self):
             return True
 
-        for i, name in enumerate(self.__names):
-            if other.__names[i] != name:
+        for i, name in enumerate(other):
+            if self.__names[i] != name:
                 return False
 
         return True
@@ -329,7 +319,7 @@ class JointSet(object):
         if not isinstance(other, self.__class__):
             return False
 
-        if other.count != len(self.__names) and self.is_subset(other):
+        if len(other) != len(self.__names) and self.is_subset(other):
             return True
         else:
             return False
