@@ -49,6 +49,8 @@ class Pose(object):
 
     Methods
     -------
+    from_transformation_matrix()
+        Creates a instance of Pose from a transformation matrix
     normalize_rotation()
         Creates a instance of Pose with normalized quaternion
     is_rotation_normalized()
@@ -61,29 +63,26 @@ class Pose(object):
         Creates an instance of the ROS message PoseStamped from Pose
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, translation, rotation, frame_id='',
+                 normalize_rotation=False):
         """
         Initialization of the pose class
 
-
         For the internal quaternion representation and also to initialize the
-        the class with two parameters where the second parameter is a
-        quaternion the library pyquaternion is used :
+        the class the library pyquaternion is used :
         http://kieranwynn.github.io/pyquaternion/
 
         Parameters
         ----------
-        args : tuple(numpy array 4x4) or tuple(translation, Quaternion)
-            The pose class can be initialized in two different ways.
-            By only one parameter in args which is a 4x4 transformation
-            matrix in homogenous coordinates or by two parameters in args.
-            The translation as iterable type that can be converted to a
-            numpy array of shape (3,) and a quaternion which describes the rotation
-        kwargs : dict
-            With help of kwargs two optinal parameter can be set.
-            frame_id names the initialized pose default is a empty str
-            and the second parameter is normalize_rotation it is True
-            the rotation is normalized (default False)
+        translation : convertable to numpy array of shape (3,)
+            translation or position the pose describes
+        roation : pyquaternion.Quaternion
+            rotation the pose describes as Quaternion
+        frame_id : str (optinal defaul = '')
+            name of the coordinate system the pose is defined
+        normalize_roation : bool (optinal default = False)
+            If true quaternion normalization is performed in the
+            initialization process
 
         Yields
         ------
@@ -93,81 +92,29 @@ class Pose(object):
         Raises
         ------
         TypeError : type mismatch
-            If tranformation matrix is not a 4x4 numpy array with dtype
-            floating or if tranlation vector could not converted to a 
-            numpy array of shape (3,) with d type floating and the 
+            If tranlation vector could not converted to a numpy 
+            array of shape (3,) with d type floating and the 
             quaternion is not of type Quaternion.
-            If frame_id is not of type str.
+            If frame_id is not of type str
             If normalize_rotation is not of type bool
         ValueError
-            If args hold more than two arguments or if the
-            quaternion initalization from translation matrix
-            went wrong
+            If the quaternion initalization from 
+            translation matrix went wrong
 
         Examples
         --------
-        Create a Pose by transformation matrix and
-        set frame_id
-        >>> transformation_matrix = np.eye(4)
-        >>> p0 = Pose(transformation_matrix, frame_id="pose0")
-
         Create a Pose by translation and quaternion and
         perform normalization
         >>> quaternion = Quaternion(matrix=np.eye(3))
         >>> translation = np.array([1.0,1.0,1.0])
-        >>> p1 = Pose(translation, quaternion, normalize_roation=True)
+        >>> p1 = Pose(translation, quaternion, _, True)
         """
-        # from transformation matrix
-        if len(args) == 1:
-            if isinstance(args[0], np.ndarray):
-                if (len(args[0].shape) != 2 or
-                        args[0].shape[0] != 4 or
-                        args[0].shape[1] != 4):
-                    raise ValueError('translation_matrix (argument1) '
-                                     ' is not a 4x4 numpy array')
-                if not issubclass(args[0].dtype.type, np.floating):
-                    raise TypeError('translation_matrix (argument1) is not a'
-                                    'dtype is no floating type')
 
-                transformation_matrix = args[0].copy()
-                self.__translation = transformation_matrix[:-1, 3]
-                try:
-                    self.__quaternion = Quaternion(
-                        matrix=transformation_matrix)
-                except ValueError as exc:
-                    raise_from(ValueError(
-                        'quaternion initialization went wrong'), exc)
-
-            else:
-                raise TypeError('translation_matrix (argument1) '
-                                'is not of type numpy array')
-
-        # from translation vector and quaternion
-        elif len(args) == 2:
-            self._init_with_translation_and_rotation(args[0], args[1])
-
-        else:
-            raise ValueError('args has more than two arguments')
-
-        self.__frame_id = kwargs.get("frame_id", "")
-        if not isinstance(self.__frame_id, str):
-            raise TypeError('frame_id is not of expected type str')
-        self.__normalize_rotation = kwargs.get("normalize_rotation", False)
-        if not isinstance(self.__normalize_rotation, bool):
-            raise TypeError('normalize_rotation is not of expected type bool')
-
-        if self.__normalize_rotation is True:
-            self._normalize_rotation()
-
-        self.__translation.flags.writeable = False
-        self.__quaternion.q.flags.writeable = False
-
-    def _init_with_translation_and_rotation(self, translation, rotation):
         # translation
         try:
             self.__translation = np.fromiter(translation, float)
             if self.__translation.shape[0] != 3:
-                raise ValueError('provided translation (argument1) is not'
+                raise ValueError('provided translation is not'
                                  ' convertabel to a numpy vector of size (3,)')
         except (TypeError, ValueError) as exc:
             raise exc
@@ -177,8 +124,81 @@ class Pose(object):
             self.__quaternion = Quaternion(rotation.q.copy())
 
         else:
-            raise TypeError('rotation (argument2) is not of the expected'
+            raise TypeError('rotation is not of the expected'
                             ' type Quaternion')
+
+        if not isinstance(frame_id, str):
+            raise TypeError('frame_id is not of expected type str')
+
+        self.__frame_id = frame_id
+
+        if not isinstance(normalize_rotation, bool):
+            raise TypeError('normalize_rotation is not of expected type bool')
+
+        self.__normalize_rotation = normalize_rotation
+
+        if self.__normalize_rotation is True:
+            self._normalize_rotation()
+
+        self.__translation.flags.writeable = False
+        self.__quaternion.q.flags.writeable = False
+
+    @classmethod
+    def from_transformation_matrix(cls, matrix, frame_id='',
+                                   normalize_rotation=False):
+        """
+        Initialization of the pose class from transformation matrix
+
+        Parameters
+        ----------
+        matrix : numpy.ndarray((4,4),np.dtype=floating)
+            A transformation matrix in homogenous coordinates
+        frame_id : str (optinal defaul = '')
+            name of the coordinate system the pose is defined
+        normalize_roation : bool (optinal default = False)
+            If true quaternion normalization is performed in the
+            initialization process
+
+        Yields
+        ------
+        Pose
+            An instance of class Pose
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If tranformation matrix is not a 4x4 numpy array 
+            with dtype floating
+
+         Examples
+        --------
+        Create a Pose instance from transformation matrix and
+        set frame_id
+        >>> transformation_matrix = np.eye(4)
+        >>> p0 = Pose.from_transformation_matrix(transformation_matrix, "global")
+        """
+        if isinstance(matrix, np.ndarray):
+            if (len(matrix.shape) != 2 or
+                    matrix.shape[0] != 4 or
+                    matrix.shape[1] != 4):
+                raise ValueError('matrix is not a 4x4 numpy array')
+            if not issubclass(matrix.dtype.type, np.floating):
+                raise TypeError('matrix is not a'
+                                'dtype is no floating type')
+
+            transformation_matrix = matrix.copy()
+            translation = transformation_matrix[:-1, 3]
+            try:
+                quaternion = Quaternion(
+                    matrix=transformation_matrix)
+            except ValueError as exc:
+                raise_from(ValueError(
+                    'quaternion initialization went wrong'), exc)
+
+        else:
+            raise TypeError('matrix is not of type numpy array')
+
+        return cls(translation, quaternion, frame_id, normalize_rotation)
 
     @property
     def frame_id(self):
@@ -323,7 +343,7 @@ class Pose(object):
         if isinstance(other, self.__class__):
             matrix_other = other.transformation_matrix()
             product = np.matmul(matrix_self, matrix_other)
-            return self.__class__(product, fram_id=self.__frame_id)
+            return self.from_transformation_matrix(product, self.__frame_id)
         elif (isinstance(other, np.ndarray) and
                 issubclass(other.dtype.type, np.floating)):
             if other.shape in [(3,), (3, 1)]:
@@ -338,7 +358,7 @@ class Pose(object):
                 return np.matmul(matrix_self, other.T)
             elif other.shape == (4, 4):
                 product = np.matmul(matrix_self, other)
-                return self.__class__(product, fram_id=self.__frame_id)
+                return self.from_transformation_matrix(product, self.__frame_id)
             else:
                 TypeError('vector is not of shape (3,), (3,1)'
                           '(1,3), (4,), (4,1) or (1,4) or matrix (4,4)')

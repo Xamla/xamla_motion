@@ -35,11 +35,11 @@ print(tmp4/tmp2)
 transformation_matrix = np.eye((4), dtype=float)
 transformation_matrix[:-1, -1] = np.array([1., 2., 3.]).T
 print(transformation_matrix)
-pose = Pose(transformation_matrix)
+pose = Pose.from_transformation_matrix(transformation_matrix)
 print(pose)
 transformation_matrix[:-1, -1] = np.array([2., 3., 4.]).T
 print(transformation_matrix)
-pose1 = Pose(transformation_matrix)
+pose1 = Pose.from_transformation_matrix(transformation_matrix)
 print(pose1)
 pose2 = Pose(np.array([1., 2., 3.], dtype=float), Quaternion(1.0))
 print(pose2)
