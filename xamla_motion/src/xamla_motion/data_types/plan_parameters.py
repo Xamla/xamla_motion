@@ -25,6 +25,7 @@ from future.utils import raise_from, raise_with_traceback
 from copy import deepcopy
 
 from data_types import JointLimits
+from xamla_motion_exceptions import ArgumentError
 
 import numpy as np
 
@@ -33,41 +34,23 @@ class PlanParameters(object):
     """
     PlanParameter holds all constrains for joint space trajectory planning
 
-    Attributes
-    ----------
-    move_group_name : str (read only)
-        Name of the move group for which plan parameters are applied
-    joint_limits : JointLimits (read only)
-        define the joint constraints
-    sample_resolution : float
-        sampling resolution in Hz
-    collision_check : bool (read only)
-        defines if collision check should be performed
-    max_deviation : float (read only)
-        defines the maximal deviation from trajectory points
-        when fly-by-points in joint space 
+    Methods
+    -------
+    from_arguments
+        Creates instance of PlanParameters from
+        limit numpy arrays
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, move_group_name, joint_limits, **kwargs):
         """
         Initialization of PlanParameters class
 
-        The class can be initialized by a move_group_name,
-        JointSet and velocity, acceleration and position limits or
-        by move_group_name and an instance of JointLimits because
-        PlanParametes is a superset of JointLimits. Internally
-        a instance of JointLimits is created for the second initialization
-        routine. Therefore, please refer to the documentation of JointLimits
-        to properly set the joint limits
-
         Parameters
         ----------
-        args : list(str, JointLimits) or list(str, JointSet, 4*numpy.ndarray)
-            If list len is 2 the parameters are interpreted as
-            the name of the move group and an instance of JointLimits
-            If list len is 6 the parameters are interpreted as
-            the name of the move group, an instance of joint_set,
-            max_velocity, max_acceleration, min_position, max_position
+        move_group_name : str convertable
+            name of the move group for which the plan parameters are created
+        joint_limits : JointLimits
+            Defines the joint limits of the move group
         argv : dict
             The argv dict is used to set parameters which have default values
             this are sample_resolution (default = 0.008),
@@ -75,25 +58,17 @@ class PlanParameters(object):
             scale_velocity (default = 1.0) and scale_acceleration (
                 default = 1.0)
 
-        Yields
+        Returns
         ------
             Instance of PlanParameters
 
         Raises
         ------
             TypeError : type mismatch
-                If only two args arguments are provided and the second is
-                not of expected type JointLimts or if in general the first
-                provided argument is not of type str
-            ValueError
-                If number of args arguments is not equal to two or six
-            RuntimeError
-                If internally a instance of JointLimits can not be created
-                due to wrong argument size or type
+                If joint_limits is not of expected type JointLimts 
 
         Examples
         --------
-
         >>> joints = ['Joint1','Joint2']
         >>> joint_set = JointSet(joints)
         >>> max_v = np.array([1.0, 1.5])
@@ -126,36 +101,18 @@ class PlanParameters(object):
             raise ValueError('scale_acceleration is not in expected range'
                              'between 0.0 and 1.0')
 
-        if len(args) == 2:
-            if isinstance(args[1], JointLimits):
-                max_s_velocity = args[1].max_velocity * self.__scale_velocity
-                max_s_acceleration = (args[1].max_acceleration
-                                      * self.__scale_acceleration)
-                self.__joint_limits = JointLimits(args[1].joint_set,
-                                                  max_s_velocity,
-                                                  max_s_acceleration,
-                                                  args[1].min_position,
-                                                  args[1].max_position)
-            else:
-                raise TypeError('argument 2 (joint_limits) is not'
-                                ' of expected type JointLimits')
-        elif len(args) == 6:
-            max_s_velocity = args[2] * self.__scale_velocity
-            max_s_acceleration = (args[3]
+        if isinstance(joint_limits, JointLimits):
+            max_s_velocity = joint_limits.max_velocity * self.__scale_velocity
+            max_s_acceleration = (joint_limits.max_acceleration
                                   * self.__scale_acceleration)
-            try:
-                self.__joint_limits = JointLimits(args[1],
-                                                  max_s_velocity, max_s_acceleration,
-                                                  args[4], args[5])
-            except (ValueError, TypeError) as exc:
-                raise_from(RuntimeError('It was not possible to create'
-                                        ' an instance of JointLimts due to'
-                                        ' wrong parameter type or size'), exc)
+            self.__joint_limits = JointLimits(joint_limits.joint_set,
+                                              max_s_velocity,
+                                              max_s_acceleration,
+                                              joint_limits.min_position,
+                                              joint_limits.max_position)
         else:
-            raise ValueError('only 2 (move_group_name, instance of'
-                             ' JointLimits) or 6 arguments (move_group_name,'
-                             ' and all JointLimits initialization parameters)'
-                             ' are allowed')
+            raise TypeError('joint_limits is not'
+                            ' of expected type JointLimits')
 
         if isinstance(args[0], str):
             self.__move_group_name = args[0]
@@ -163,29 +120,88 @@ class PlanParameters(object):
             raise TypeError('argument 1 (move_group_name) is not '
                             'of expected type str')
 
+    @classmethod
+    def from_arguments(cls, move_group_name, joint_set, max_velocity,
+                       max_acceleration, min_position, max_position, **kwargs):
+        """
+        Initialization of PlanParameters class limit arrays
+
+        Parameters
+        ----------
+        move_group_name : str convertable
+            name of the move group for which the plan parameters are created
+        joint_set : JointSet
+            Set of joints for which joint limits are required
+        max_velocity : list of float or numpy.array(dtype=floating)
+            One dimension array which defines
+            the maximal velocity for each joint
+        max_acceleration : list of float or numpy.array(dtype=floating)
+            One dimension array which defines
+            the maximal acceleration for each joint
+        min_position : list of float or numpy.array(dtype=floating)
+            One dimension array which defines
+            the mininmal position for each joint
+        max_position : list of float or numpy.array(dtype=floating)
+            One dimension array which defines
+            the maximal position for each joint
+        kwargs : dict
+            The argv dict is used to set parameters which have default values
+            this are sample_resolution (default = 0.008),
+            collision_check (default = True), max_deviation (default = 0.2),
+            scale_velocity (default = 1.0) and scale_acceleration (
+                default = 1.0)
+        """
+
+        try:
+            joint_limits = JointLimits(joint_set,
+                                       max_s_velocity, max_s_acceleration,
+                                       min_position, max_position)
+        except (ValueError, TypeError) as exc:
+            raise_from(ArgumentError('It was not possible to create'
+                                     ' an instance of JointLimts due to'
+                                     ' wrong parameter type or format'), exc)
+
+        return cls(move_group_name, JointLimits, kwargs)
+
     @property
     def move_group_name(self):
-        """get move group name read only"""
+        """
+        move_group_name : str (read only)
+            Name of the move group for which plan parameters are applied
+        """
         return self.__move_group_name
 
     @property
     def joint_limits(self):
-        """get internal joint limits instance read only"""
+        """
+        joint_limits: JointLimits(read only)
+            define the joint constraints
+        """
         return self.__joint_limits
 
     @property
     def sample_resolution(self):
-        """get used sample resolution value read only"""
+        """
+        sample_resolution: float
+            sampling resolution in Hz
+        """
         return self.__sample_resolution
 
     @property
     def collision_check(self):
-        """if true collision are checked else this is not the case"""
+        """
+        collision_check: bool(read only)
+            defines if collision check should be performed
+        """
         return self.__collision_check
 
     @property
     def max_deviation(self):
-        """get value of max devitation which is used in the planning process"""
+        """
+        max_deviation: float(read only)
+            defines the maximal deviation from trajectory points
+            when fly-by-points in joint space
+        """
         return self.__max_deviation
 
     def __iter__(self):

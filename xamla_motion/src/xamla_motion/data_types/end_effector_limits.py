@@ -30,16 +30,6 @@ class EndEffectorLimits(object):
     """
     Class which holds hold task space / endeffector limits
 
-    Attributes
-    ----------
-    max_xyz_velocity : numpy float (read only)
-        Maximal xyz velocity [m/s]
-    max_xyz_acceleration : numpy float (read only)
-        Max xyz acceleration [m/(s^2)]
-    max_angular_velocity : numpy float (read only)
-        Max angular velocity [rad/s]
-    max_angular_acceleration : numpy float (read only)
-        Max angular acceleration [rad/(s^2)]
     """
 
     def __init__(self, max_xyz_velocity, max_xyz_acceleration,
@@ -58,7 +48,7 @@ class EndEffectorLimits(object):
         max_angular_acceleration : float convertable (read only)
             Defines the maximal angular acceleration [rad/s^2]
 
-        Yields
+        Returns
         ------
             Instance of class EndeffectorLimits
 
@@ -74,22 +64,34 @@ class EndEffectorLimits(object):
 
     @property
     def max_xyz_velocity(self):
-        """max_xyz_velocity read only"""
+        """
+        max_xyz_velocity : numpy float (read only)
+            Maximal xyz velocity [m/s]
+        """
         return self.__max_xyz_velocity
 
     @property
     def max_xyz_acceleration(self):
-        """max_xyz_acceleration read only"""
+        """
+        max_xyz_acceleration : numpy float (read only)
+            Max xyz acceleration [m/(s^2)]
+        """
         return self.__max_xyz_acceleration
 
     @property
     def max_angular_velocity(self):
-        """max_angular_velocity read only"""
+        """
+        max_angular_velocity: numpy float(read only)
+            Max angular velocity[rad/s]
+        """
         return self.__max_angular_velocity
 
     @property
     def max_angular_acceleration(self):
-        """max_angular_acceleration read only"""
+        """
+        max_angular_acceleration: numpy float(read only)
+            Max angular acceleration[rad/(s ^ 2)]
+        """
         return self.__max_angular_acceleration
 
     def __str__(self):

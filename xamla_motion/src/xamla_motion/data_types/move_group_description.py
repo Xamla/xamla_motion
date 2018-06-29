@@ -31,19 +31,6 @@ class MoveGroupDescription(object):
     """
     Class which describes a robot or a subset of it 
     by move groups, end effectors and joints
-
-    Attributes
-    ----------
-    name : str (read only)
-        name of the base move group
-    sub_move_group_ids : List[str] (read only)
-        ids of the sub move groups
-    joint_set : JointSet (read only)
-        JointSet which contains all joints of the base move group
-    end_effector_names : List[str] (read only)
-        names of the end effectors
-    end_effector_link_names : List[str] (read only)
-        names of the end effector links
     """
 
     def __init__(self, name, sub_move_group_ids, joint_set,
@@ -73,7 +60,7 @@ class MoveGroupDescription(object):
         ValueError 
             If a input is not convertable to str
 
-        Yields
+        Returns
         ------
         MoveGroupDescription
             The created MoveGroupDescription
@@ -99,27 +86,42 @@ class MoveGroupDescription(object):
 
     @property
     def name(self):
-        """move group name (read only)"""
+        """
+        name : str (read only)
+            name of the base move group
+        """
         return self.__name
 
     @property
     def sub_move_group_ids(self):
-        """list of sub move group ids (read only)"""
+        """
+        sub_move_group_ids: List[str](read only)
+            ids of the sub move groups
+        """
         return self.__sub_move_group_ids
 
     @property
     def joint_set(self):
-        """joint set (read only)"""
+        """
+        joint_set: JointSet(read only)
+            JointSet which contains all joints of the base move group
+        """
         return self.__joint_set
 
     @property
     def end_effector_names(self):
-        """list of end effector names (read only)"""
+        """
+        end_effector_names: List[str](read only)
+            names of the end effectors
+        """
         return self.__end_effector_names
 
     @property
     def end_effector_link_names(self):
-        """list of end effector link names (read only)"""
+        """
+        end_effector_link_names: List[str](read only)
+            names of the end effector links
+        """
         return self.__end_effector_link_names
 
     def __str__(self):

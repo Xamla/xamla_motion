@@ -37,16 +37,6 @@ class Pose(object):
     quaternion. The pose itself is idenified by the frame_id
     attribute
 
-    Attributes
-    ----------
-    frame_id : str
-        Id of the coordinate system / frame
-    translation : numpy.array((3,) dtype=floating) readonly
-        numpy row array of size 3 which describes the translation
-    max_acceleration : Quaternion (pyquaternion lib) readonly
-        Quaternion which describes the rotation
-
-
     Methods
     -------
     from_transformation_matrix()
@@ -84,7 +74,7 @@ class Pose(object):
             If true quaternion normalization is performed in the
             initialization process
 
-        Yields
+        Returns
         ------
         Pose
             An instance of class Pose
@@ -159,7 +149,7 @@ class Pose(object):
             If true quaternion normalization is performed in the
             initialization process
 
-        Yields
+        Returns
         ------
         Pose
             An instance of class Pose
@@ -202,24 +192,33 @@ class Pose(object):
 
     @property
     def frame_id(self):
-        """read only frame_id"""
+        """
+        frame_id : str (readonly)
+            Id of the coordinate system / frame
+        """
         return self.__frame_id
 
     @property
     def translation(self):
-        """read only translation"""
+        """
+        translation : numpy.array((3,) dtype=floating) (readonly)
+            numpy row array of size 3 which describes the translation
+        """
         return self.__translation
 
     @property
     def quaternion(self):
-        """read only quaternion"""
+        """
+        quaternion: Quaternion(pyquaternion lib) (readonly)
+            Quaternion which describes the rotation
+        """
         return self.__quaternion
 
     def normalize_roation(self):
         """
         Creates a instance of Pose with normalized quaternion
 
-        Yields
+        Returns
         ------
             Instance of Pose with normalized quaternion / rotation
         """
@@ -253,7 +252,7 @@ class Pose(object):
         """
         Returns the roation matrix in homogenous coordinates (4x4 numpy array)
 
-        Yields
+        Returns
         ------
             A 4x4 numpy array with dtype float which represents the roation
             matrix in homogenous coordinates
@@ -266,7 +265,7 @@ class Pose(object):
         """
         Return the transformation martix in homogenous coordinates (4x4 numpy array)
 
-        Yields
+        Returns
         ------
             A 4x4 numpy array with dtype float which represents the transformation
             matrix in homogenous coordinates
@@ -279,7 +278,7 @@ class Pose(object):
         """
         Creates an instance of the ROS message PoseStamped
 
-        Yields
+        Returns
         ------
             Instance of ROS message PoseStamped (seq and time are not set)
             docs.ros.org/kinetic/api/geometry_msgs/html/msg/PoseStamped.html

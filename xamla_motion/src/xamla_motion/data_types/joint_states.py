@@ -35,17 +35,6 @@ class JointStates(object):
     the state of joints of a robot. For this purpose it holds an 
     instance of JointValues for positions, velocities, and efforts
     (velocities and efforts are optional)
-
-    Attributes
-    ----------
-    joint_set : JointSet (read only)
-        Set of joints for which it holds the values
-    positions : JointValues (read only)
-        Joint Values which defines the positions of the joints
-    velocities : JointValues (read only)
-        Joint Values which defines the velocities of the joints
-    efforts : JointValues (read only)
-        Joint Values which defines the efforts / acceleration of the joints
     """
 
     def __init__(self, positions, velocities=None, efforts=None):
@@ -62,7 +51,7 @@ class JointStates(object):
             A instance of JointValues which represent the efforts
 
 
-        Yields
+        Returns
         ------
         JointStates
             Creates an instance of JointStates
@@ -103,23 +92,33 @@ class JointStates(object):
 
     @property
     def joint_set(self):
+        """
+        joint_set : JointSet (read only)
+            Set of joints for which it holds the values
+        """
         return self.__positions.joint_set
 
     @property
     def positions(self):
-        """JointValues which defines the positions readonly"""
+        """
+        positions : JointValues (read only)
+            Joint Values which defines the positions of the joints
+        """
         return self.__positions
 
     @property
     def velocities(self):
-        """JointValues which defines the velocities readonly"""
+        """
+        velocities : JointValues (read only)
+            Joint Values which defines the velocities of the joints
+        """
         return self.__velocities
 
     @property
     def efforts(self):
         """
-        JointValues which defines the efforts/acceleration readonly
-        if not available returns None
+        efforts : JointValues (read only)
+            Joint Values which defines the efforts / acceleration of the joints
         """
         return self.__efforts
 
@@ -132,7 +131,7 @@ class JointStates(object):
         new_order : JointSet
             JointSet which defines the new order
 
-        Yields
+        Returns
         ------
         JointStates
             A new Instance of JointStates containing the
@@ -163,7 +162,7 @@ class JointStates(object):
             Joint names which should be in the new JointValues instance
 
 
-        Yields
+        Returns
         ------
         JointValues
             New instance of JointValues with selected joints

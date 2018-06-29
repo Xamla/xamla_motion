@@ -30,8 +30,15 @@ from collections import Iterable, deque
 
 
 class JointPath(object):
+    """
+    JointPath class describes a path by a list of joint configurations
+
+    Methods
+    -------
+    """
 
     def __init__(self, joints, points):
+
         if not isinstance(joints, JointSet):
             raise TypeError('joints is not of expected type JointSet')
 
@@ -55,21 +62,38 @@ class JointPath(object):
         return joint_values.reorder(self.__joints)
 
     @classmethod
-    def from_alternative_arguments(cls, args):
+    def from_one_point(cls, point):
+        if not isinstance(point, JointValues):
+            raise TypeError('joint_values is not of expected'
+                            ' type JointValues')
 
-        if isinstance(args, JointValues):
-            return cls(args.joint_set, [args])
+        return cls(point.joint_set, [point])
 
-        elif isinstance(args, (JointValues, JointValues)):
-            start, stop = args
-            return cls(start.joint_set, [start, stop])
-        else:
-            raise TypeError('Provided arguments not have correct'
-                            ' types to initialize JointPath')
+    @classmethod
+    def from_start_stop_point(cls, start, stop):
+        if (not isinstance(start, JointValues) or
+                not isinstance(stop, JointValues)):
+            raise TypeError('start or/and stop are not of'
+                            'expected type JointValues')
+
+        return cls(start.joint_set, [start, stop])
 
     @property
     def joint_set(self):
-        """Set of joints for which path points are managed (readonly)"""
+        """
+        joint_set : JointSet (readonly)
+            JointSet which represent the joints for which JointPath
+            describes a path
+        """
+        return self.__joints
+
+    @property
+    def points(self):
+        """
+        points : Deque[JointValues] (readonly)
+            A deque of JointValues which represent the joint configurations
+            which are describe the path
+        """
         return self.__joints
 
     def prepend(self, points):

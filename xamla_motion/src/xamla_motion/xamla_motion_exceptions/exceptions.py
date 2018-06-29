@@ -25,6 +25,10 @@ from future.utils import raise_from, raise_with_traceback
 
 
 class XamlaMotionException(Exception):
+    """
+    Base xamla_motion exception to enable lib depended 
+    exception handling
+    """
 
     def __init__(self, msg, original_exception=None):
         super(XamlaMotionException, self).__init__(msg)
@@ -32,6 +36,20 @@ class XamlaMotionException(Exception):
 
 
 class ServiceException(XamlaMotionException):
+    """
+    Underlying service is not available or
+    call unsuccessful (e.g. ROS services)
+    """
+
+    def __init__(self, msg, original_exception=None):
+        super(XamlaMotionException, self).__init__(msg)
+        self.original_exception = original_exception
+
+
+class ArgumentError(XamlaMotionException):
+    """
+    Wrong format or type of argument
+    """
 
     def __init__(self, msg, original_exception=None):
         super(XamlaMotionException, self).__init__(msg)

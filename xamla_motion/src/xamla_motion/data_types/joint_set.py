@@ -60,7 +60,7 @@ class JointSet(object):
              separated by a comma as delimiter
             -Iterable container where each time is convertable to str
 
-        Yields
+        Returns
         ------
             An instance of class JointSet
 
@@ -82,7 +82,7 @@ class JointSet(object):
         """
         Creates a empty JointSet
 
-        Yields
+        Returns
         ------
         JointSet
             The created empty JointSet
@@ -93,7 +93,10 @@ class JointSet(object):
 
     @property
     def names(self):
-        """List of joint names (read only)"""
+        """
+        names : List[str] (readonly)
+            List of joint names
+        """
         return self.__names
 
     def add_prefix(prefix):
@@ -111,7 +114,7 @@ class JointSet(object):
         TypeError : type mismatch
             If input parameter prefix is not of type str
 
-        Yields
+        Returns
         ------
         JointSet
             The created JointSet with added prefix to joint names

@@ -32,23 +32,6 @@ class JointLimits(object):
     """
     Manages the joint limits for a set of joints
 
-    Attributes
-    ----------
-    joint_set : JointSet (readonly)
-        A instance of JointSet managing joint names
-    max_velocity : list of float or numpy.array(dtype=floating)
-        One dimension array which defines the maximal
-        velocity for each joint (readonly)
-    max_acceleration : list of float or numpy.array(dtype=floating)
-        One dimension array which defines the maximal
-        acceleration for each joint (readonly)
-    min_position : list of float or numpy.array(dtype=floating)
-        One dimension array which defines the mininmal
-        position for each joint (readonly)
-    max_position : list of float or numpy.array(dtype=floating)
-        One dimension array which defines the maximal
-        position for each joint (readonly)
-
     Methods
     -------
     select(names)
@@ -81,7 +64,7 @@ class JointLimits(object):
             One dimension array which defines
             the maximal position for each joint
 
-        Yields
+        Returns
         ------
         JointLimits
             An instance of class JointLimits
@@ -189,27 +172,46 @@ class JointLimits(object):
 
     @property
     def joint_set(self):
-        """read only joint_set"""
+        """
+        joint_set : JointSet (readonly)
+            A instance of JointSet managing joint names
+        """
         return self.__joint_set
 
     @property
     def max_velocity(self):
-        """read only maxmimal velocity"""
+        """
+        max_velocity: list of float or numpy.array(dtype=floating)
+            One dimension array which defines the maximal
+            velocity for each joint(readonly)
+        """
         return self.__max_velocity
 
     @property
     def max_acceleration(self):
-        """read only maximal acceleration"""
+        """
+        max_acceleration: list of float or numpy.array(dtype=floating)
+            One dimension array which defines the maximal
+            acceleration for each joint(readonly)
+        """
         return self.__max_acceleration
 
     @property
     def min_position(self):
-        """read only min position"""
+        """
+        min_position: list of float or numpy.array(dtype=floating)
+            One dimension array which defines the mininmal
+            position for each joint(readonly)
+        """
         return self.__min_position
 
     @property
     def max_position(self):
-        """read only max position"""
+        """
+        max_position: list of float or numpy.array(dtype=floating)
+            One dimension array which defines the maximal
+            position for each joint(readonly)
+        """
         return self.__max_position
 
     def select(self, names):
@@ -222,7 +224,7 @@ class JointLimits(object):
             Joint names which from the new JointLimit instance
 
 
-        Yields
+        Returns
         ------
         JointLimits
             New instance of JointLimits with selected joints

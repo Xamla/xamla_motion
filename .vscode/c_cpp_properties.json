@@ -1,0 +1,22 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/volk/development/catkin_ws/devel/include",
+        "/opt/ros/kinetic/include",
+        "/home/volk/development/catkin_ws/src/camera_aravis/include",
+        "/home/volk/development/catkin_ws/src/fiducials/fiducial_slam/include",
+        "/home/volk/development/catkin_ws/src/xamla_sysmon/ros/xamla_sysmon_client/include",
+        "/home/volk/development/catkin_ws/src/xamla_sysmon/ros/xamla_sysmon_msgs/include",
+        "/home/volk/development/catkin_ws/src/xamla_sysmon/ros/xamla_sysmon_node/include",
+        "/home/volk/development/catkin_ws/src/xamla_sysmon/ros/xamla_sysmon_watch/include",
+        "/usr/include"
+      ],
+      "name": "Linux"
+    }
+  ]
+}

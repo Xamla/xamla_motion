@@ -30,24 +30,12 @@ class EndEffectorDescription(object):
     """
     Class which describes a end effector 
 
-    Attributes
-    ----------
-    name : str (read only)
-        name of the end effector
-    sub_move_group_ids : List[str] (read only)
-        ids of the sub move groups
-    joint_set : JointSet (read only)
-        JointSet which contains all joints of the base move group
-    move_group_name : str (read only)
-        name of the move group
-    link_name : List[str] (read only)
-        names of the endeffector link
     """
 
     def __init__(self, name, sub_move_group_ids, joint_set,
                  move_group_name, link_name):
         """
-        Initialization of MoveGroupDescription class
+        Initialization of EndeffectorDescription class
 
         Parameters
         ----------
@@ -71,9 +59,9 @@ class EndEffectorDescription(object):
         ValueError 
             If a input is not convertable to str
 
-        Yields
+        Returns
         ------
-       EndEffectorDescription
+        EndEffectorDescription
             The created EndEffectorDescription
         """
 
@@ -93,27 +81,42 @@ class EndEffectorDescription(object):
 
     @property
     def name(self):
-        """end effector name (read only)"""
+        """
+        name : str (read only)
+            name of the end effector
+        """
         return self.__name
 
     @property
     def sub_move_group_ids(self):
-        """list of sub move group ids (read only)"""
+        """
+        sub_move_group_ids : List[str] (read only)
+            ids of the sub move groups
+        """
         return self.__sub_move_group_ids
 
     @property
     def joint_set(self):
-        """joint set (read only)"""
+        """
+        joint_set : JointSet (read only)
+            JointSet which contains all joints of the base move group
+        """
         return self.__joint_set
 
     @property
     def move_group_name(self):
-        """move group name (read only)"""
+        """
+        move_group_name : str (read only)
+            name of the move group
+        """
         return self.__move_group_name
 
     @property
     def link_name(self):
-        """end effector link name (read only)"""
+        """
+        link_name : List[str] (read only)
+            names of the endeffector link
+        """
         return self.__link_name
 
     def __str__(self):

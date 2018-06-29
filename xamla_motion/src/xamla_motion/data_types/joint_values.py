@@ -33,14 +33,6 @@ class JointValues(object):
     """
     Manages a set of joints and the respective joint values
 
-    Attributes
-    ----------
-    joint_set : JointSet (readonly)
-        A instance of JointSet managing joint names
-    valules : numpy.ndarray(dtype=float64) (readonly)
-        One dimensional numpy array holding the respective
-        joint values
-
     Methods
     -------
     empty()
@@ -73,7 +65,7 @@ class JointValues(object):
              items as number of joints in joint set. (mapping one
              to one)
 
-        Yields
+        Returns
         ------
         JointValues
             An instance of class JointValues
@@ -120,7 +112,7 @@ class JointValues(object):
         """
         Creates a empty JointValues instance
 
-        Yields
+        Returns
         ------
         joint_values : JointValues
             An empty instance of JointValues
@@ -139,7 +131,7 @@ class JointValues(object):
         joint_set:
             JointSet which should be managed by JointValues
 
-        Yields
+        Returns
         ------
         JointValues
             An JointValue instance with values initialized with 0.0
@@ -156,12 +148,19 @@ class JointValues(object):
 
     @property
     def joint_set(self):
-        """read only joint_set"""
+        """
+        joint_set : JointSet (readonly)
+            A instance of JointSet managing joint names
+        """
         return self.__joint_set
 
     @property
     def values(self):
-        """read only values"""
+        """
+        valules : numpy.ndarray(dtype=float64) (readonly)
+            One dimensional numpy array holding the respective
+            joint values
+        """
         return self.__values
 
     def try_get_value(self, joint_name):
@@ -200,7 +199,7 @@ class JointValues(object):
         new_order : JointSet
             JointSet which defines the new order
 
-        Yields
+        Returns
         ------
         JointValues
             A new Instance of JointValues containing the
@@ -237,7 +236,7 @@ class JointValues(object):
         transform_function : callable or numpy.ufunc
             Function which is applied to every value in join values
 
-        Yields
+        Returns
         ------
         JointValues
             A new Instance of JointValues with transformed
@@ -279,7 +278,7 @@ class JointValues(object):
             Joint names which should be in the new JointValues instance
 
 
-        Yields
+        Returns
         ------
         JointValues
             New instance of JointValues with selected joints

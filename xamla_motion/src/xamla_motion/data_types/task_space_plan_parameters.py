@@ -28,74 +28,49 @@ from data_types import EndEffectorLimits
 
 import numpy as np
 
+from xamla_motion_exceptions import ArgumentError
+
 
 class TaskSpacePlanParameters(object):
     """
     TaskSpace holds all constrains for task space trajectory planning
 
-    Attributes
-    ----------
-    endeffector_name : str (read only)
-        Name of the move group for which plan parameters are applied
-    endeffector_limits : EndeffectorLimits (read only)
-        define the task space constraints
-    sample_resolution : float
-        sampling resolution in Hz
-    collision_check : bool (read only)
-        defines if collision check should be performed
-    max_deviation : float (read only)
-        defines the maximal deviation from trajectory points
-        when fly-by-points in task space 
-    ik_jump_threshold : float
-        defines the inverse kinematic jump threshold
+    Methods
+    -------
+    from_arguments
+        Creates a instance or TaskSpacePlanParameters
+        from single limit arguments
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, ende_effector_name, ende_effector_limits, **kwargs):
         """
         Initialization of TaskSpacePlanParameters class
 
-        The class can be initialized by a move group name,
-        JointSet and velocity and acceleration (xyz and angular) limits or
-        by move group name and an instance of EndeffectorLimits because
-        TaskSpacePlanParametes is a superset of EndeffectorLimits. Internally
-        a instance of EndeffectorLimits is created for the second initialization
-        routine. Therefore, please refer to the documentation of EndeffectorLimits
-        to properly set the endeffector limits
-
         Parameters
         ----------
-        args : list(str, EndeffectorLimits) or list(str, 4*float)
-            If list len is 2 the parameters are interpreted as
-            the name of the endeffectpr and an instance of EndeffectorLimits
-            If list len is 5 the parameters are interpreted as
-            the name of the endeffector, max_xyz_velocity, max_xyz_acceleration, 
-            max_angular_velocity, max_angular_acceleration
-        argv : dict
+        end_effector_name : str convertable
+            Name of the end effector
+        end_effector_limits : EndEffectorLimits
+            Limits of the end effector in task space
+        kwargs : dict
             The argv dict is used to set parameters which have default values
             this are sample_resolution (default = 0.008),
             collision_check (default = True), max_deviation (default = 0.2),
             ik_jump_threshold (default = 1.2), scale_velocity (default = 1.0) 
             and scale_acceleration (default = 1.0)
 
-        Yields
+        Returns
         ------
             Instance of TaskSpacePlanParameters
 
         Raises
         ------
             TypeError : type mismatch
-                If only two args arguments are provided and the second is
-                not of expected type EndeffectorLimits or if in general the first
-                provided argument is not of type str
-            ValueError
-                If number of args arguments is not equal to two or five
-            RuntimeError
-                If internally a instance of EndeffectorLimits can not be created
-                due to wrong argument size or type
+                If end_effector_limits is not of 
+                expected type EndEffectorLimits
 
         Examples
         --------
-
         >>> endeffector_limits = EndeffectorLimits(1.0, 1.0, 1.0, 1.0)
         >>> p = TaskSpacePlanParameters('tool1', endeffector_limits, max_deviation=0.1)
         """
@@ -125,80 +100,127 @@ class TaskSpacePlanParameters(object):
             raise ValueError('scale_acceleration is not in expected range'
                              'between 0.0 and 1.0')
 
-        if len(args) == 2:
-            if isinstance(args[1], EndeffectorLimits):
-                s_x_velocity = (args[1].max_xyz_velocity
-                                * self.__scale_velocity)
-                s_x_acceleration = (args[1].max_xyz_acceleration
-                                    * self.__scale_acceleration)
-                s_a_velocity = (args[1].max_angular_velocity
-                                * self.__scale_velocity)
-                s_a_acceleration = (args[1].max_angular_acceleration
-                                    * self.__scale_acceleration)
+        if isinstance(ende_effector_limits, EndeffectorLimits):
+            s_x_velocity = (ende_effector_limits.max_xyz_velocity
+                            * self.__scale_velocity)
+            s_x_acceleration = (ende_effector_limits.max_xyz_acceleration
+                                * self.__scale_acceleration)
+            s_a_velocity = (ende_effector_limits.max_angular_velocity
+                            * self.__scale_velocity)
+            s_a_acceleration = (ende_effector_limits.max_angular_acceleration
+                                * self.__scale_acceleration)
 
-                self.__endeffector_limits = EndeffectorLimits(args[1].joint_set,
-                                                              s_x_velocity,
-                                                              s_x_acceleration,
-                                                              s_a_velocity,
-                                                              s_a_acceleration)
-            else:
-                raise TypeError('argument 2 (joint_limits) is not'
-                                ' of expected type EndeffectorLimits')
-        elif len(args) == 5:
-            s_x_velocity = args[1] * self.__scale_velocity
-            s_x_acceleration = args[2] * self.__scale_acceleration
-            s_a_velocity = args[3] * self.__scale_velocity
-            s_a_acceleration = args[4] * self.__scale_acceleration
-            try:
-                self.__endeffector_limits = EndeffectorLimits(s_x_velocity,
-                                                              s_x_acceleration,
-                                                              s_a_velocity,
-                                                              s_a_acceleration)
-            except (ValueError, TypeError) as exc:
-                raise_from(RuntimeError('It was not possible to create'
-                                        ' an instance of Endeffectorlimits'
-                                        ' due to wrong parameter'
-                                        ' type or size'), exc)
+            self.__endeffector_limits = EndeffectorLimits(s_x_velocity,
+                                                          s_x_acceleration,
+                                                          s_a_velocity,
+                                                          s_a_acceleration)
         else:
-            raise ValueError('only 2 (endeffector name, instance of'
-                             ' EndeffectorLimits) or 5 arguments (endeffector'
-                             ' name, and all EndeffectorLimits initialization'
-                             ' parameters) are allowed')
+            raise TypeError('end_effector_limits is not of'
+                            ' expected type EndEffectorLimits')
 
-        if isinstance(args[0], str):
-            self.__endeffector_name = args[0]
-        else:
-            raise TypeError('argument 1 (endeffector_name) is not '
-                            'of expected type str')
+        self.__endeffector_name = str(ende_effector_name)
+
+    @classmethod
+    def from_arguments(cls, ende_effector_name, max_xyz_velocity,
+                       max_xyz_acceleration, max_angular_velocity,
+                       max_angular_acceleration, **kwargs):
+        """
+        Initialization of TaskSpacePlanParameters by single limits
+
+        Parameters
+        ----------
+        end_effector_name : str
+            Name of the end effector
+        max_xyz_velocity : float convertable
+            Defines the maximal xyz velocity [m/s]
+        max_xyz_acceleration : float convertable (read only)
+            Defines the maximal xyz acceleration [m/s^2]
+        max_angular_velocity : float convertable (read only)
+            Defines the maximal angular velocity [rad/s]
+        max_angular_acceleration : float convertable (read only)
+            Defines the maximal angular acceleration [rad/s^2]
+        kwargs : dict
+            The argv dict is used to set parameters which have default values
+            this are sample_resolution (default = 0.008),
+            collision_check (default = True), max_deviation (default = 0.2),
+            ik_jump_threshold (default = 1.2), scale_velocity (default = 1.0) 
+            and scale_acceleration (default = 1.0)
+
+        Returns
+        -------
+        TaskSpacePlanParameters
+            Instance of TaskSpacePlanParameters
+
+        Raises
+        ------
+        ArgumentError
+            If instance of EndeffectorLimits could not be created
+            due to wrong type or format of the arguments
+
+        Examples
+        --------
+        >>> p = TaskSpacePlanParameters('tool1', 1.0, 1.0, 1.0, 1.0, max_deviation=0.1)
+        """
+
+        try:
+            endeffector_limits = EndeffectorLimits(max_xyz_velocity,
+                                                   max_xyz_acceleration,
+                                                   max_angular_velocity,
+                                                   max_angular_acceleration)
+        except (ValueError, TypeError) as exc:
+            raise_from(ArgumentError('It was not possible to create'
+                                     ' an instance of Endeffectorlimits'
+                                     ' due to limit type or size'), exc)
+
+        return cls(ende_effector_name, endeffector_limits, kwargs)
 
     @property
     def endeffector_name(self):
-        """get endeffector name read only"""
+        """
+        endeffector_name : str (read only)
+            Name of the move group for which plan parameters are applied
+        """
         return self.__endeffector_name
 
     @property
     def endeffector_limits(self):
-        """get internal endeffector limits instance read only"""
+        """
+        endeffector_limits: EndeffectorLimits(read only)
+            define the task space constraints
+        """
         return self.__endeffector_limits
 
     @property
     def sample_resolution(self):
-        """get used sample resolution value read only"""
+        """
+        sample_resolution: float
+            sampling resolution in Hz
+        """
         return self.__sample_resolution
 
     @property
     def collision_check(self):
-        """if true collision are checked else this is not the case"""
+        """
+        collision_check: bool(read only)
+            defines if collision check should be performed
+        """
         return self.__collision_check
 
     @property
     def max_deviation(self):
-        """get value of max devitation which is used in the planning process"""
+        """
+        max_deviation: float(read only)
+            defines the maximal deviation from trajectory points
+            when fly-by-points in task space
+        """
         return self.__max_deviation
 
     @property
     def jk_jump_threshold(self):
-        """get value of ik jump threshold"""
+        """
+        ik_jump_threshold: float
+            defines the inverse kinematic jump threshold
+        """
         return self.__ik_jump_threshold
 
     def __str__(self):
