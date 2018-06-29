@@ -154,6 +154,9 @@ class JointSet(object):
         """
         Checks if it contains the same joint names as in JointSet other
 
+        The method returns true if all joint names are available in the
+        other join set. It is not necessary that both have the same order.
+
         Parameters
         ----------
         other : JointSet

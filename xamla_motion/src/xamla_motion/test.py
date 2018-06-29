@@ -37,4 +37,9 @@ joint_states = motion_service.query_joint_states(groups[0].joint_set)
 
 print(joint_states)
 
-pdb.set_trace()
+print('----------------query Pose --------------')
+
+joint_states = motion_service.query_pose(
+    groups[0].name, joint_states.positions)
+
+print(joint_states)

@@ -27,6 +27,7 @@ from functools import total_ordering
 import numpy as np
 
 from data_types import JointSet
+from xamlamoveit_msgs.msg import JointPathPoint
 
 
 class JointValues(object):
@@ -307,6 +308,14 @@ class JointValues(object):
         except ValueError as exc:
             raise_from(ValueError('name ' + name +
                                   ' not exist in joint names'), exc)
+
+    def to_joint_path_point_message(self):
+        """
+        Transform to xamlamoveit_msgs JointPathMessage
+        """
+        joint_path_point = JointPathPoint()
+        joint_path_point.positions = list(self.__values)
+        return joint_path_point
 
     def __getitem__(self, key):
         """

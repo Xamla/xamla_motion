@@ -35,14 +35,48 @@ class JointPath(object):
 
     Methods
     -------
+    from_one_point
+        Initialization of JointPath class with only one Point
+    from_start_stop_point
+        Initialization of JointPath class with start, stop point
+    prepend
+        Creates new JointPath with points added in front of path points
+    append
+        Creates new JointPath with points added behind the path points
+    concat
+        Creates new JointPath with concatenated path points
+    transform
+        Creates a transformed version of JointPath
     """
 
     def __init__(self, joints, points):
+        """
+        Initialization of JointPath class
+
+        Parameters
+        ----------
+        joints : JointSet
+            Set of joints
+        points : List[JointValues]
+             List of JointValues where each JointValues instance 
+             describes a point of the path
+
+        Returns
+        -------
+        JointPath
+            Instance of JointPath
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If joints is not of type JointSet
+            or if points is not of type list of JointValues
+        """
 
         if not isinstance(joints, JointSet):
             raise TypeError('joints is not of expected type JointSet')
 
-        if (not isinstance(points, collections.Iterable) or
+        if (not isinstance(points, Iterable) or
                 any(not isinstance(j, JointValues)
                     for j in points)):
             raise TypeError('points is not of expected'
@@ -63,6 +97,25 @@ class JointPath(object):
 
     @classmethod
     def from_one_point(cls, point):
+        """
+        Initialization of JointPath class with only one Point
+
+        Parameters
+        ----------
+        point : JointValues
+             Single point to initialize JointPath
+
+        Returns
+        -------
+        JointPath
+            Instance of JointPath
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If points is not of type JointValues
+        """
+
         if not isinstance(point, JointValues):
             raise TypeError('joint_values is not of expected'
                             ' type JointValues')
@@ -71,6 +124,27 @@ class JointPath(object):
 
     @classmethod
     def from_start_stop_point(cls, start, stop):
+        """
+        Initialization of JointPath class with start, stop point
+
+        Parameters
+        ----------
+        start : JointValues
+             start point of the joint path
+        stop : JointValues
+             stop point of the joint path
+
+        Returns
+        -------
+        JointPath
+            Instance of JointPath
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If start or stop is not of type JointValues
+        """
+
         if (not isinstance(start, JointValues) or
                 not isinstance(stop, JointValues)):
             raise TypeError('start or/and stop are not of'
@@ -97,31 +171,120 @@ class JointPath(object):
         return self.__joints
 
     def prepend(self, points):
+        """
+        Creates new JointPath with points added in front of path points 
 
-        if isinstance(points, JointValues)
+        Parameters
+        ----------
+        points : JointValues or Iterable[JointValues]
+            Points which are added in front of path points
+
+        Returns
+        -------
+        JointPath
+            Instance of JointPath with added points
+
+        Raises
+        ------
+        TypeError
+            If points is not one of expected types 
+            JointValues or Iterable of JointValues 
+        """
+
+        if isinstance(points, JointValues):
             return self.__class__(self.__joints, points.extendleft(points))
+
+        if (not isinstance(points, collections.Iterable) or
+                any(not isinstance(j, JointValues)
+                    for j in points)):
+            raise TypeError('points is not of expected'
+                            ' type JointValues or Iterable of JointValues')
 
         return self.__class__(self.__joints,
                               points.extendleft(reversed(points)))
 
     def append(self, points):
+        """
+        Creates new JointPath with points added behind the path points
 
-        if isinstance(points, JointValues)
+        Parameters
+        ----------
+        points : JointValues or Iterable[JointValues]
+            Points which are added behind path points
+
+        Returns
+        -------
+        JointPath
+            Instance of JointPath with added points
+
+        Raises
+        ------
+        TypeError
+            If points is not one of expected types 
+            JointValues or Iterable of JointValues 
+        """
+
+        if isinstance(points, JointValues):
             return self.__class__(self.__joints, points.extend(points))
+
+        if (not isinstance(points, collections.Iterable) or
+                any(not isinstance(j, JointValues)
+                    for j in points)):
+            raise TypeError('points is not of expected'
+                            ' type JointValues or Iterable of JointValues')
 
         return self.__class__(self.__joints, points.extend(points))
 
     def concat(self, other):
+        """
+        Creates new JointPath with concatenated path points
+
+        Parameters
+        ----------
+        other : JointPath
+
+        Raises
+        ------
+        TypeError
+            If other is not of type JointPath
+        """
+        if not isinstance(other, JointPath):
+            raise TypeError('other is not of expected type JointPath')
+
         return self.__class__(self.__joints, points.extend(other.points))
 
-    def sub(self, start_index, end_index):
-        return self.__class__(self.__joints,
-                              self.__points[start_index:end_index])
-
     def transform(self, transform_function):
-        return self.__class__(self.__joints,
-                              [x.transform(transform_function)
-                               for x in self.__points])
+        """
+        Creates a transformed version of JointPath
+
+        The transformation which is applied to every point in
+        JointPath is defined by the transform function
+
+        Parameters
+        ----------
+        transform_function : callable or numpy.ufunc
+            Function which is applied to every point value
+
+        Returns
+        ------
+        JointPath
+            A new Instance of JointPath with transformed
+            point values
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If transform function is not callable or not
+            a numpy.ufunc and if the function dont has the
+            signature input : floating , output : floating
+        """
+
+        try:
+            return self.__class__(self.__joints,
+                                  [x.transform(transform_function)
+                                   for x in self.__points])
+        except TypeError as exc:
+            raise_from(TypeError('None valid transformation function'), exc)
 
     def __getitem__(self, key):
         """

@@ -20,12 +20,13 @@
 
 from __future__ import (absolute_import, division,
                         print_function)
-# from future.builtins import *
+from future.builtins import map
 from future.utils import raise_from, raise_with_traceback
 
 import rospy
 import pdb
 from xamlamoveit_msgs.srv import *
+from moveit_msgs.msg import MoveItErrorCodes
 
 from xamla_motion_exceptions import ServiceException
 from data_types import *
@@ -310,23 +311,47 @@ class MotionServices(object):
         """
 
         move_group_name = str(move_group_name)
-
-        return self.query_pose_many(move_group_name, joint_positions,
+        joint_path = JointPath.from_one_point(joint_positions)
+        return self.query_pose_many(move_group_name, joint_path,
                                     end_effector_link)[0]
 
     def query_pose_many(self, move_group_name,
                         joint_path, end_effector_link=''):
 
         move_group_name = str(move_group_name)
+        end_effector_link = str(end_effector_link)
+
+        if not isinstance(joint_path, JointPath):
+            raise TypeError('joint_path is not of expected type JointPath')
 
         try:
             service = rospy.ServiceProxy(
                 self.__query_forward_kinematics_service,
                 GetFKSolution)
-            response = service()
+            response = service(move_group_name,
+                               end_effector_link,
+                               joint_path.joint_set,
+                               [p.to_joint_path_point_message()
+                                for p in joint_path]
+                               )
         except rospy.ServiceException as exc:
-            print ('service call for query available'
-                   'move groups failed, abort ')
+            print ('service call for query forward kinematics'
+                   ' failed, abort ')
             raise_from(ServiceException('service call for query'
-                                        ' available move groups'
+                                        ' forward kinematics'
                                         ' failed, abort'), exc)
+
+        if (response.error_codes == None or response.error_msgs == None
+                or len(response.error_codes) != len(response.error_msgs)):
+            raise ServiceException('service call for query forward'
+                                   'kinematics returns with '
+                                   'invalid response')
+
+        errors = None
+        for i, error in enumerate(response.error_codes):
+            if error.val != MoveItErrorCodes.SUCCESS:
+                raise ServiceException('service call for query forward'
+                                       ' kinematics was not'
+                                       ' successful for point: ' + str(i))
+
+        return list(map(lambda x: Pose.from_posestamped_msg(x), response.solutions))

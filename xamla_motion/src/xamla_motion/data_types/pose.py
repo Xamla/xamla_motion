@@ -190,6 +190,41 @@ class Pose(object):
 
         return cls(translation, quaternion, frame_id, normalize_rotation)
 
+    @classmethod
+    def from_posestamped_msg(cls, msg):
+        """
+        Initialize Pose from ROS posestamped message
+
+        Parameters
+        ----------
+        msg : PoseStamped from ROS geometry_msgs
+            posestamped message 
+
+        Returns
+        -------
+        Pose
+            Instance of Pose generated from PoseStamped message
+
+        Raises
+        ------
+        TypeError
+            If msg is not of type PoseStamped
+        """
+        if not isinstance(msg, PoseStamped):
+            raise TypeError('msg is not of expected type PoseStamped')
+
+        translation = np.fromiter([msg.pose.position.x,
+                                   msg.pose.position.y,
+                                   msg.pose.position.z],
+                                  float)
+
+        quaternion = Quaternion([msg.pose.orientation.w,
+                                 msg.pose.orientation.x,
+                                 msg.pose.orientation.y,
+                                 msg.pose.orientation.z])
+
+        return cls(translation, quaternion)
+
     @property
     def frame_id(self):
         """

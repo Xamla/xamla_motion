@@ -3,6 +3,7 @@
 from .joint_set import JointSet
 from .joint_values import JointValues
 from .joint_states import JointStates
+from .joint_path import JointPath
 from .move_group_description import MoveGroupDescription
 from .end_effector_description import EndEffectorDescription
 from .end_effector_limits import EndEffectorLimits
