@@ -20,7 +20,7 @@
 
 from __future__ import (absolute_import, division,
                         print_function)  # , unicode_literals)
-#from future.builtins import *
+from future.builtins import map
 from future.utils import raise_from, raise_with_traceback
 from functools import total_ordering
 
@@ -384,7 +384,8 @@ class JointValues(object):
             return False
 
         if not np.allclose(self.values, other.values,
-                           rtol=r_tol, atol=a_tol):
+                           rtol=r_tol, atol=a_tol,
+                           equal_nan=True):
             return False
 
         return True

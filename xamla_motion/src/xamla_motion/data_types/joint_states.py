@@ -214,3 +214,27 @@ class JointStates(object):
 
     def __repr__(self):
         return self.__str__()
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        if id(other) == id(self):
+            return True
+
+        if other.time_from_start != self.__time_from_start:
+            return False
+
+        if other.positions != self.__positions:
+            return False
+
+        if other.velocites != self.__velocities:
+            return False
+
+        if other.efforts != self.__efforts:
+            return False
+
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

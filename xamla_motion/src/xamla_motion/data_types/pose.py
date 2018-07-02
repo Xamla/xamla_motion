@@ -39,17 +39,19 @@ class Pose(object):
 
     Methods
     -------
-    from_transformation_matrix()
-        Creates a instance of Pose from a transformation matrix
-    normalize_rotation()
-        Creates a instance of Pose with normalized quaternion
-    is_rotation_normalized()
+    from_transformation_matrix
+        Creates an instance of Pose from a transformation matrix
+    from_posestamped_msg
+        Initialize Pose from ROS posestamped message
+    normalize_rotation
+        Creates an instance of Pose with normalized quaternion
+    is_rotation_normalized
         Return True if quaternion is normalized
-    rotation_matrix()
+    rotation_matrix
         Returns the roation matrix in homogenous coordinates (4x4 numpy array)
-    transformation_matrix()
+    transformation_matrix
         Returns the transformation matrix in homogenous coordinates (4x4 numpy array)
-    to_posestamped_msg()
+    to_posestamped_msg
         Creates an instance of the ROS message PoseStamped from Pose
     """
 
@@ -251,7 +253,7 @@ class Pose(object):
 
     def normalize_roation(self):
         """
-        Creates a instance of Pose with normalized quaternion
+        Creates an instance of Pose with normalized quaternion
 
         Returns
         ------

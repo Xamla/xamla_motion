@@ -24,264 +24,253 @@ from future.builtins import map
 from future.utils import raise_from, raise_with_traceback
 
 from data_types import JointSet
-from data_types import JointValues
+from data_types import Pose
 
 from collections import Iterable, deque
 
 
-class JointPath(object):
+class CartesianPath(object):
     """
-    JointPath class describes a path by a list of joint configurations
+    CartesianPath class describes a path by a list of joint configurations
 
     Methods
     -------
     from_one_point
-        Initialization of JointPath class with only one Point
+        Initialization of CartesianPath class with only one Point
     from_start_stop_point
-        Initialization of JointPath class with start, stop point
+        Initialization of CartesianPath class with start, stop point
     prepend
-        Creates new JointPath with points added in front of path points
+        Creates new CartesianPath with points added in front of path points
     append
-        Creates new JointPath with points added behind the path points
+        Creates new CartesianPath with points added behind the path points
     concat
-        Creates new JointPath with concatenated path points
+        Creates new CartesianPath with concatenated path points
     transform
-        Creates a transformed version of JointPath
+        Creates a transformed version of CartesianPath
     """
 
-    def __init__(self, joints, points):
+    def __init__(self, points):
         """
-        Initialization of JointPath class
+        Initialization of CartesianPath class
 
         Parameters
         ----------
-        joints : JointSet
-            Set of joints
-        points : Iterable[JointValues]
-             Iterable of JointValues where each JointValues instance 
+        points : Iterable[Pose]
+             List of Pose where each Pose instance
              describes a point of the path
 
         Returns
         -------
-        JointPath
-            Instance of JointPath
+        CartesianPath
+            Instance of CartesianPath
 
         Raises
         ------
         TypeError : type mismatch
-            If joints is not of type JointSet
-            or if points is not of type list of JointValues
+            If points is not of type iterable of Pose
         """
 
-        if not isinstance(joints, JointSet):
-            raise TypeError('joints is not of expected type JointSet')
-
         if (not isinstance(points, Iterable) or
-                any(not isinstance(j, JointValues)
+                any(not isinstance(j, Pose)
                     for j in points)):
             raise TypeError('points is not of expected'
-                            ' type Iterable of JointValues')
+                            ' type Iterable of Pose')
 
-        self.__joints = joints
-        self.__points = deque(self._align_values(j) for j in points)
-
-    def _align_values(self, joint_values):
-        if joint_values.joint_set == self.__joints:
-            return joint_values
-
-        if not joint_values.is_similar(self.__joints):
-            raise ValueError('Provided path points have joint values'
-                             ' of incompatible joint sets')
-
-        return joint_values.reorder(self.__joints)
+        self.__points = deque(points)
 
     @classmethod
     def from_one_point(cls, point):
         """
-        Initialization of JointPath class with only one Point
+        Initialization of CartesianPath class with only one Point
 
         Parameters
         ----------
-        point : JointValues
-             Single point to initialize JointPath
+        point : Pose
+             Single point to initialize CartesianPath
 
         Returns
         -------
-        JointPath
-            Instance of JointPath
+        CartesianPath
+            Instance of CartesianPath
 
         Raises
         ------
         TypeError : type mismatch
-            If points is not of type JointValues
+            If points is not of type Pose
         """
 
-        if not isinstance(point, JointValues):
+        if not isinstance(point, Pose):
             raise TypeError('joint_values is not of expected'
-                            ' type JointValues')
+                            ' type Pose')
 
         return cls(point.joint_set, [point])
 
     @classmethod
     def from_start_stop_point(cls, start, stop):
         """
-        Initialization of JointPath class with start, stop point
+        Initialization of CartesianPath class with start, stop point
 
         Parameters
         ----------
-        start : JointValues
+        start : Pose
              start point of the joint path
-        stop : JointValues
+        stop : Pose
              stop point of the joint path
 
         Returns
         -------
-        JointPath
-            Instance of JointPath
+        CartesianPath
+            Instance of CartesianPath
 
         Raises
         ------
         TypeError : type mismatch
-            If start or stop is not of type JointValues
+            If start or stop is not of type Pose
         """
 
-        if (not isinstance(start, JointValues) or
-                not isinstance(stop, JointValues)):
+        if (not isinstance(start, Pose) or
+                not isinstance(stop, Pose)):
             raise TypeError('start or/and stop are not of'
-                            'expected type JointValues')
+                            'expected type Pose')
 
         return cls(start.joint_set, [start, stop])
 
     @property
-    def joint_set(self):
-        """
-        joint_set : JointSet (readonly)
-            JointSet which represent the joints for which JointPath
-            describes a path
-        """
-        return self.__joints
-
-    @property
     def points(self):
         """
-        points : Deque[JointValues] (readonly)
-            A deque of JointValues which represent the joint configurations
+        points : Deque[Pose] (readonly)
+            A deque of Pose which represent the cartesian poses
             which are describe the path
         """
         return self.__joints
 
+    @property
+    def Positions(self):
+        """
+        positions : List[np.array((3,),dtype=floating)
+            positions in x,y,z coordinates
+        """
+        return [p.translation for p in self.__points]
+
+    def Orientations(self):
+        """
+        orientations : List[pyquaternion.Quaternion]
+            orientations as Quaternion from pyquaternion
+        """
+        return [o.quaternion for o in self.__points]
+
     def prepend(self, points):
         """
-        Creates new JointPath with points added in front of path points 
+        Creates new CartesianPath with points added in front of path points
 
         Parameters
         ----------
-        points : JointValues or Iterable[JointValues]
+        points : Pose or Iterable[Pose]
             Points which are added in front of path points
 
         Returns
         -------
-        JointPath
-            Instance of JointPath with added points
+        CartesianPath
+            Instance of CartesianPath with added points
 
         Raises
         ------
         TypeError
-            If points is not one of expected types 
-            JointValues or Iterable of JointValues 
+            If points is not one of expected types
+            Pose or Iterable of Pose
         """
 
-        if isinstance(points, JointValues):
+        if isinstance(points, Pose):
             return self.__class__(self.__joints, points.extendleft(points))
 
         if (not isinstance(points, collections.Iterable) or
-                any(not isinstance(j, JointValues)
+                any(not isinstance(j, Pose)
                     for j in points)):
             raise TypeError('points is not of expected'
-                            ' type JointValues or Iterable of JointValues')
+                            ' type Pose or Iterable of Pose')
 
         return self.__class__(self.__joints,
                               points.extendleft(reversed(points)))
 
     def append(self, points):
         """
-        Creates new JointPath with points added behind the path points
+        Creates new CartesianPath with points added behind the path points
 
         Parameters
         ----------
-        points : JointValues or Iterable[JointValues]
+        points : Pose or Iterable[Pose]
             Points which are added behind path points
 
         Returns
         -------
-        JointPath
-            Instance of JointPath with added points
+        CartesianPath
+            Instance of CartesianPath with added points
 
         Raises
         ------
         TypeError
-            If points is not one of expected types 
-            JointValues or Iterable of JointValues 
+            If points is not one of expected types
+            Pose or Iterable of Pose
         """
 
-        if isinstance(points, JointValues):
+        if isinstance(points, Pose):
             return self.__class__(self.__joints, points.extend(points))
 
         if (not isinstance(points, collections.Iterable) or
-                any(not isinstance(j, JointValues)
+                any(not isinstance(j, Pose)
                     for j in points)):
             raise TypeError('points is not of expected'
-                            ' type JointValues or Iterable of JointValues')
+                            ' type Pose or Iterable of Pose')
 
         return self.__class__(self.__joints, points.extend(points))
 
     def concat(self, other):
         """
-        Creates new JointPath with concatenated path points
+        Creates new CartesianPath with concatenated path points
 
         Parameters
         ----------
-        other : JointPath
+        other : CartesianPath
 
         Raises
         ------
         TypeError
-            If other is not of type JointPath
+            If other is not of type CartesianPath
         """
-        if not isinstance(other, JointPath):
-            raise TypeError('other is not of expected type JointPath')
+        if not isinstance(other, CartesianPath):
+            raise TypeError('other is not of expected type CartesianPath')
 
         return self.__class__(self.__joints, points.extend(other.points))
 
     def transform(self, transform_function):
         """
-        Creates a transformed version of JointPath
+        Creates a transformed version of CartesianPath
 
         The transformation which is applied to every point in
-        JointPath is defined by the transform function
+        CartesianPath is defined by the transform function
 
         Parameters
         ----------
-        transform_function : callable or numpy.ufunc
-            Function which is applied to every point value
+        transform_function : callable
+            Function which is applied to every pose
 
         Returns
         ------
-        JointPath
-            A new Instance of JointPath with transformed
-            point values
+        CartesianPath
+            A new Instance of CartesianPath with transformed
+            poses
 
         Raises
         ------
         TypeError : type mismatch
-            If transform function is not callable or not
-            a numpy.ufunc and if the function dont has the
-            signature input : floating , output : floating
+            If transform function is not callable and
+            if the function dont has the
+            signature input : Pose , output : Pose
         """
 
         try:
             return self.__class__(self.__joints,
-                                  [x.transform(transform_function)
+                                  [transform_function(x)
                                    for x in self.__points])
         except TypeError as exc:
             raise_from(TypeError('None valid transformation function'), exc)
@@ -297,8 +286,8 @@ class JointPath(object):
 
         Returns
         -------
-        JointValues or List[JointValues]
-            Returns a instance of JointValues or list of JointValues 
+        Pose or List[Pose]
+            Returns a instance of Pose or list of Pose
 
         Raises
         ------
@@ -335,9 +324,6 @@ class JointPath(object):
 
         if id(other) == id(self):
             return True
-
-        if other.joints != self.__joints:
-            return False
 
         for i, point in enumerate(other):
             if point != self.__points[i]:

@@ -28,29 +28,30 @@ import pdb
 from xamlamoveit_msgs.srv import *
 from moveit_msgs.msg import MoveItErrorCodes
 
-from xamla_motion_exceptions import ServiceException
+from xamla_motion_exceptions import ServiceException, ArgumentError
 from data_types import *
 
 
 class MotionServices(object):
 
+    __instance = None
+
+    def __new__(cls, val):
+        if MotionServices.__instance is None:
+            MotionServices.__instance = object.__new__(cls)
+        MotionServices.__instance.velocity_scaling = 1.0
+        MotionServices.__instance.acceleration_scaling = 1.0
+        return MotionServices.__instance
+
     def __init__(self):
 
         self.__movej_action = 'moveJ_action'
-        self.__query_move_group_service = ('xamlaMoveGroupServices/'
-                                           'query_move_group_interface')
-        self.__query_joint_states_service = ('xamlaMoveGroupServices/'
-                                             'query_move_group'
-                                             '_current_position')
-        self.__query_forward_kinematics_service = ('xamlaMoveGroupServices/'
-                                                   'query_fk')
 
-        self.__end_effector_limits_param = ('xamlaJointJogging/'
-                                            'end_effector_list')
         self.__joint_limits_param = ('robot_description_planning/'
                                      'joint_limits')
 
-    def query_available_move_groups(self):
+    @staticmethod
+    def query_available_move_groups():
         """
         Query all currently available move groups
 
@@ -73,9 +74,12 @@ class MotionServices(object):
             of an iterable type
         """
 
+        query_move_group_serivce = ('xamlaMoveGroupServices/'
+                                    'query_move_group_interface')
+
         try:
             service = rospy.ServiceProxy(
-                self.__query_move_group_service,
+                query_move_group_service,
                 QueryMoveGroupInterfaces)
             response = service()
         except rospy.ServiceException as exc:
@@ -94,7 +98,8 @@ class MotionServices(object):
                                                g.end_effector_link_names))
         return groups
 
-    def query_available_end_effectors(self):
+    @staticmethod
+    def query_available_end_effectors():
         """
         Query all currently available end effectors
 
@@ -117,7 +122,7 @@ class MotionServices(object):
             of an iterable type
         """
         try:
-            move_groups = self.query_available_move_groups()
+            move_groups = MotionServices.query_available_move_groups()
         except (ServiceException, TypeError) as exc:
             raise exc
 
@@ -135,7 +140,8 @@ class MotionServices(object):
 
         return end_effectors
 
-    def query_endeffector_limits(self, name):
+    @staticmethod
+    def query_endeffector_limits(name):
         """
         Query end effector limits from ros param
 
@@ -162,11 +168,15 @@ class MotionServices(object):
         KeyError
             If not all necessary limits exists
         """
+
+        end_effector_limits_param = ('xamlaJointJogging/'
+                                     'end_effector_list')
+
         try:
-            eel_param = rospy.get_param(self.__end_effector_limits_param)
+            eel_param = rospy.get_param(end_effector_limits_param)
         except KeyError as exc:
             raise_from(RuntimeError('end effector limit ros param: '
-                                    + self.__end_effector_limits_param +
+                                    + end_effector_limits_param +
                                     ' not exists'), exc)
         name = str(name)
 
@@ -191,7 +201,8 @@ class MotionServices(object):
 
         raise RuntimeError('Requested end effector name not exists')
 
-    def query_joint_limits(self, joint_set):
+    @staticmethod
+    def query_joint_limits(joint_set):
         """
         Query end joint limits from ros param
 
@@ -217,6 +228,9 @@ class MotionServices(object):
         KeyError
             If ros params not exists
         """
+        joint_limits_param = ('robot_description_planning/'
+                              'joint_limits')
+
         if not isinstance(joint_set, JointSet):
             raise TypeError('joint_set is not of expected type JointSet')
 
@@ -226,7 +240,7 @@ class MotionServices(object):
         maxPos = [None] * len(joint_set)
 
         for i, name in enumerate(joint_set):
-            prefix = self.__joint_limits_param + '/' + name + '/'
+            prefix = joint_limits_param + '/' + name + '/'
 
             if rospy.get_param(prefix+'has_velocity_limits'):
                 maxVel[i] = rospy.get_param(prefix+'max_velocity')
@@ -240,7 +254,8 @@ class MotionServices(object):
 
         return JointLimits(joint_set, maxVel, maxAcc, minPos, maxPos)
 
-    def query_joint_states(self, joint_set):
+    @staticmethod
+    def query_joint_states(joint_set):
         """
         Query joint states by calling the providing ros service
 
@@ -265,13 +280,16 @@ class MotionServices(object):
         xamla_motion.ServiceException
             If ros service not exists or is not callable
         """
+        query_joint_states_service = ('xamlaMoveGroupServices/'
+                                      'query_move_group'
+                                      '_current_position')
 
         if not isinstance(joint_set, JointSet):
             raise TypeError('joint_set is not of expected type JointSet')
 
         try:
             service = rospy.ServiceProxy(
-                self.__query_joint_states_service,
+                query_joint_states_service,
                 GetCurrentJointState)
             response = service(joint_set.names).current_joint_position
         except rospy.ServiceException as exc:
@@ -299,24 +317,73 @@ class MotionServices(object):
 
         return JointStates(positions, velocities, efforts)
 
-    def query_pose(self, move_group_name,
+    @staticmethod
+    def query_pose(move_group_name,
                    joint_positions, end_effector_link=''):
         """
         Computes the pose by applying forward kinematics
+
+        Parameters
+        ----------
+        move_group_name : str convertable
+            name of the move group from which the pose
+            is queried
+        joint_positions : JointValues
+            joint values from which the pose is calculated
+        end_effector_link : str convertable (optional)
+            end effector link is necessary if end effector
+            is not part of the move group but pose should
+            be computed for the end effector
 
         Returns
         -------
         Pose
             Pose of the kinematic chain defined by the input parameter
+
+        Raises
+        ------
+        TypeError
+            If joint_positions is not of type JointValues
         """
 
-        move_group_name = str(move_group_name)
-        joint_path = JointPath.from_one_point(joint_positions)
-        return self.query_pose_many(move_group_name, joint_path,
-                                    end_effector_link)[0]
+        if not isinstance(joint_positions, JointValues):
+            raise TypeError('joint_positions is not of'
+                            ' expected type JointValues')
 
-    def query_pose_many(self, move_group_name,
+        joint_path = JointPath.from_one_point(joint_positions)
+        return MotionServices.query_pose_many(move_group_name, joint_path,
+                                              end_effector_link)[0]
+
+    @staticmethod
+    def query_pose_many(move_group_name,
                         joint_path, end_effector_link=''):
+        """
+        Query the poses from joint path points by applying forward kinematics
+
+        Parameters
+        ----------
+        move_group_name : str convertable
+            name of the move group from which the poses are queried
+        joint_path : JointPath
+            joint path from which the poses are calculated
+        end_effector_link : str convertable (optional)
+            end effector link is necessary if end effector
+            is not part of the move group but pose should
+            be computed for the end effector
+
+        Returns
+        -------
+        List[Pose]
+            List of Poses
+
+        Raises
+        ------
+        TypeError
+            If joint_path is not of type JointPath
+        """
+
+        query_forward_kinematics_service = ('xamlaMoveGroupServices/'
+                                            'query_fk')
 
         move_group_name = str(move_group_name)
         end_effector_link = str(end_effector_link)
@@ -326,14 +393,13 @@ class MotionServices(object):
 
         try:
             service = rospy.ServiceProxy(
-                self.__query_forward_kinematics_service,
+                query_forward_kinematics_service,
                 GetFKSolution)
             response = service(move_group_name,
                                end_effector_link,
                                joint_path.joint_set,
                                [p.to_joint_path_point_message()
-                                for p in joint_path]
-                               )
+                                for p in joint_path])
         except rospy.ServiceException as exc:
             print ('service call for query forward kinematics'
                    ' failed, abort ')
@@ -352,6 +418,194 @@ class MotionServices(object):
             if error.val != MoveItErrorCodes.SUCCESS:
                 raise ServiceException('service call for query forward'
                                        ' kinematics was not'
-                                       ' successful for point: ' + str(i))
+                                       ' successful for point: ' + str(i) +
+                                       'service name:' +
+                                       query_forward_kinematics_service +
+                                       ' error code: ' +
+                                       str(response.error_code.val))
 
-        return list(map(lambda x: Pose.from_posestamped_msg(x), response.solutions))
+        return list(map(lambda x: Pose.from_posestamped_msg(x),
+                        response.solutions))
+
+    @staticmethod
+    def _query_moveit_joint_path(move_group_name, joint_path):
+
+        query_joint_path_service = ('xamlaPlanningServices/'
+                                    'query_joint_path')
+
+        if not isinstance(joint_path, JointPath):
+            raise TypeError('joint_path is not of expected type JointPath')
+
+        try:
+            service = rospy.ServiceProxy(
+                query_joint_path_service,
+                GetMoveItJointPath)
+            response = service(move_group_name,
+                               joint_path.joint_set,
+                               [p.to_joint_path_point_message()
+                                for p in joint_path])
+        except rospy.ServiceException as exc:
+            print ('service call for query joint path'
+                   ' failed, abort ')
+            raise_from(ServiceException('service call for query'
+                                        ' joint path'
+                                        ' failed, abort'), exc)
+
+        return response
+
+    @staticmethod
+    def query_collision_free_joint_path(move_group_name, joint_path):
+        """
+        Query a collision free joint path from a user defined joint path
+
+        Parameters
+        ----------
+        move_group_name : str convertable
+            name of the move group for which the collision free joint
+            is required
+        joint_path : JointPath
+            joint path which may contains collisions
+
+        Results
+        -------
+        JointPath
+            New planned JointPath without collisions
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If joint_path is not of expectef type JointPath
+            or it move_group_name is not convertable to str
+
+        ServiceException
+            If query joint path service is not callable or
+            is not successful
+        """
+
+        query_joint_path_service = ('xamlaPlanningServices/'
+                                    'query_joint_path')
+
+        if not isinstance(joint_path, JointPath):
+            raise TypeError('joint_path is not of expected type JointPath')
+
+        move_group_name = str(move_group_name)
+
+        response = MotionServices._query_moveit_joint_path(move_group_name,
+                                                           joint_path)
+
+        if response.error_code.val != MoveItErrorCodes.SUCCESS:
+            raise ServiceException('service call for query collision free'
+                                   ' joint path was not successful. '
+                                   'service name:' +
+                                   query_joint_path_service +
+                                   ' error code: ' +
+                                   str(response.error_code.val))
+
+        return JointPath(joint_path.joints, [JointValues(joint_path.joints, p)
+                                             for p in respones.path])
+
+    @staticmethod
+    def query_cartesian_path(cartesian_path, number_of_steps=50):
+        """
+        Query a complete cartesian path
+
+        from a cartesian path with
+        key points e.g. only start stop point
+
+        Parameters
+        ----------
+        cartesian_path : CartesianPath
+            Documentation
+        number_of_steps : int convertable
+            Documentation
+
+        Returns
+        -------
+        CartesianPath
+            New planned cartesian path
+
+        Raises
+        ------
+        TypeError
+            If cartesian path is not of expected type cartesian path
+            or if number_of_steps is not convertable to int
+        """
+
+        query_cartesian_path_service = ('xamlaPlanningServices/'
+                                        'query_cartesian_path')
+
+        if not isinstance(cartesian_path, CartesianPath):
+            raise TypeError('cartesian_path is not of expected type'
+                            ' CartesianPath')
+
+        number_of_steps = int(number_of_steps)
+
+        try:
+            service = rospy.ServiceProxy(
+                query_cartesian_path_service,
+                GetLinearCartesianPath)
+            response = service([p.to_posestamped_msg()
+                                for p in cartesian_path],
+                               number_of_steps)
+        except rospy.ServiceException as exc:
+            print ('service call for query cartesian path'
+                   ' failed, abort ')
+            raise_from(ServiceException('service call for query'
+                                        ' cartesian path'
+                                        ' failed, abort'), exc)
+
+        if response.error_code.val != MoveItErrorCodes.SUCCESS:
+            raise ServiceException('service call for query cartesian'
+                                   ' path was not successful. '
+                                   'service name:' +
+                                   query_cartesian_path_service +
+                                   ' error code: ' +
+                                   str(response.error_code.val))
+
+        return CartesianPath([Pose.from_posestamped_msg(p)
+                              for p in response.path])
+
+    @staticmethod
+    def query_joint_trajectory(joint_path, max_velocity, max_acceleration,
+                               max_devitation, delta_t):
+
+        query_joint_trajectory_service = ('xamlaPlanningService/'
+                                          'query_joint_trajectory')
+
+        if not isinstance(joint_path, JointPath):
+            raise TypeError('joint_path is not of expected type JointPath')
+
+        max_velocity = [float(v) for v in max_velocity]
+        max_acceleration = [float(v) for v in max_acceleration]
+        max_devitation = float(max_devitation)
+        delta_t = float(delta_t)
+
+        delta_t = 1 / delta_t if delta_t > 1.0 else delta_t
+
+        try:
+            service = rospy.ServiceProxy(
+                query_joint_trajectory_service,
+                GetOptimJointTrajectory)
+            response = service(joint_path.joints,
+                               [p.to_joint_path_point_message()
+                                for p in joint_path],
+                               max_velocity,
+                               max_acceleration,
+                               max_devitation,
+                               delta_t)
+        except rospy.ServiceException as exc:
+            print ('service call for query joint trajectory'
+                   ' failed, abort ')
+            raise_from(ServiceException('service call for query'
+                                        ' joint trajectory'
+                                        ' failed, abort'), exc)
+
+        if response.error_code.val != MoveItErrorCodes.SUCCESS:
+            raise ServiceException('service call for query joint'
+                                   ' trajectory was not successful. '
+                                   'service name:' +
+                                   query_joint_trajectory_service +
+                                   ' error code: ' +
+                                   str(response.error_code.val))
+
+        result_joint_set = JointSet(response.solution.joint_names)

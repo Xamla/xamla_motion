@@ -114,8 +114,8 @@ class PlanParameters(object):
             raise TypeError('joint_limits is not'
                             ' of expected type JointLimits')
 
-        if isinstance(args[0], str):
-            self.__move_group_name = args[0]
+        if isinstance(move_group_name, str):
+            self.__move_group_name = move_group_name
         else:
             raise TypeError('argument 1 (move_group_name) is not '
                             'of expected type str')

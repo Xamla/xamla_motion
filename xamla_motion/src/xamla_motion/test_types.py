@@ -54,4 +54,6 @@ print(tmp7)
 tmp8 = JointStates(tmp2, tmp2, None)
 print(tmp8)
 
+tmp9 = JointTrajectory(tmp1, None)
+
 pdb.set_trace()

@@ -307,19 +307,19 @@ class JointLimits(object):
             return False
 
         if not np.allclose(self.__max_velocity, other.max_velocity,
-                           rtol=r_tol, atol=a_tol):
+                           rtol=r_tol, atol=a_tol, equal_nan=True):
             return False
 
         if not np.allclose(self.__max_acceleration, other.max_acceleration,
-                           rtol=r_tol, atol=a_tol):
+                           rtol=r_tol, atol=a_tol, equal_nan=True):
             return False
 
         if not np.allclose(self.__min_position, other.min_position,
-                           rtol=r_tol, atol=a_tol):
+                           rtol=r_tol, atol=a_tol, equal_nan=True):
             return False
 
         if not np.allclose(self.__max_position, other.max_position,
-                           rtol=r_tol, atol=a_tol):
+                           rtol=r_tol, atol=a_tol, equal_nan=True):
             return False
         return True
 
