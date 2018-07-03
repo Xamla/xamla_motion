@@ -38,29 +38,29 @@ class JointLimits(object):
         Creates a JointLimits instance which only contains selected joints
     """
 
-    def __init__(self, joint_set, max_velocity, max_acceleration,
-                 min_position, max_position):
+    def __init__(self, joint_set, max_velocity=None, max_acceleration=None,
+                 min_position=None, max_position=None):
         """
         Initialization of JointLimits class
 
         If a specific joint has no limits for velocity, acceleration or position
-        than please set them to None (for list) or numpy.nan (for numpy.ndarray)
-        the specific joint has than no contrain for this limit
+        than please set them to None or numpy.nan (for numpy.ndarray)
+        the specific joint has than no constrain for this limit
 
         Parameters
         ----------
         joint_set : JointSet
             Set of joints for which joint limits are required
-        max_velocity : list of float or numpy.array(dtype=floating)
+        max_velocity : Iterable[float convertable] or None
             One dimension array which defines
             the maximal velocity for each joint
-        max_acceleration : list of float or numpy.array(dtype=floating)
+        max_acceleration : Iterable[float convertable] or None
             One dimension array which defines
             the maximal acceleration for each joint
-        min_position : list of float or numpy.array(dtype=floating)
+        min_position : Iterable[float convertable] or None
             One dimension array which defines
             the mininmal position for each joint
-        max_position : list of float or numpy.array(dtype=floating)
+        max_position : Iterable[float convertable] or None
             One dimension array which defines
             the maximal position for each joint
 
@@ -181,7 +181,7 @@ class JointLimits(object):
     @property
     def max_velocity(self):
         """
-        max_velocity: list of float or numpy.array(dtype=floating)
+        max_velocity: numpy.array(dtype=floating)
             One dimension array which defines the maximal
             velocity for each joint(readonly)
         """
@@ -190,7 +190,7 @@ class JointLimits(object):
     @property
     def max_acceleration(self):
         """
-        max_acceleration: list of float or numpy.array(dtype=floating)
+        max_acceleration: numpy.array(dtype=floating)
             One dimension array which defines the maximal
             acceleration for each joint(readonly)
         """
@@ -199,7 +199,7 @@ class JointLimits(object):
     @property
     def min_position(self):
         """
-        min_position: list of float or numpy.array(dtype=floating)
+        min_position: numpy.array(dtype=floating)
             One dimension array which defines the mininmal
             position for each joint(readonly)
         """
@@ -208,7 +208,7 @@ class JointLimits(object):
     @property
     def max_position(self):
         """
-        max_position: list of float or numpy.array(dtype=floating)
+        max_position: numpy.array(dtype=floating)
             One dimension array which defines the maximal
             position for each joint(readonly)
         """

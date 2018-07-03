@@ -20,7 +20,7 @@
 
 from __future__ import (absolute_import, division,
                         print_function)
-from future.builtins import map
+from future.builtins import map, range
 from future.utils import raise_from, raise_with_traceback
 
 import rospy
@@ -398,7 +398,7 @@ class MotionServices(object):
             response = service(move_group_name,
                                end_effector_link,
                                joint_path.joint_set,
-                               [p.to_joint_path_point_message()
+                               [p.to_joint_path_point_msg()
                                 for p in joint_path])
         except rospy.ServiceException as exc:
             print ('service call for query forward kinematics'
@@ -442,7 +442,7 @@ class MotionServices(object):
                 GetMoveItJointPath)
             response = service(move_group_name,
                                joint_path.joint_set,
-                               [p.to_joint_path_point_message()
+                               [p.to_joint_path_point_msg()
                                 for p in joint_path])
         except rospy.ServiceException as exc:
             print ('service call for query joint path'
@@ -632,7 +632,7 @@ class MotionServices(object):
                 query_joint_trajectory_service,
                 GetOptimJointTrajectory)
             response = service(joint_path.joint_set,
-                               [p.to_joint_path_point_message()
+                               [p.to_joint_path_point_msg()
                                 for p in joint_path],
                                max_velocity,
                                max_acceleration,
@@ -661,11 +661,12 @@ class MotionServices(object):
 
         return JointTrajectory(j, p)
 
-    def query_task_space_trajectory(self, endeffector_name, cartesian_path, seed,
+    @staticmethod
+    def query_task_space_trajectory(end_effector_name, cartesian_path, seed,
                                     max_xyz_velocity, max_xyz_acceleration,
                                     max_angular_velocity, max_angular_acceleration,
                                     ik_jump_threshold, max_deviation, collision_check,
-                                    delta_t)
+                                    delta_t):
         """
         Query a joint trajectory from task space poses
 
@@ -681,10 +682,10 @@ class MotionServices(object):
             max velocity for translation in m/s
         max_xyz_acceleration : float convertable
             max acceleration for translation in m/s^2
-        max_angular_velocity : float convertable 
+        max_angular_velocity : float convertable
             max angular velocity in rad/s
-        max_angular_acceleration : float convertable 
-            max angular acceleration in rad/s^2 
+        max_angular_acceleration : float convertable
+            max angular acceleration in rad/s^2
         ik_jump_threshold : float convertable
             maximal inverse kinematic jump
         max_deviation : float convertable
@@ -755,7 +756,7 @@ class MotionServices(object):
                                delta_t,
                                ik_jump_threshold,
                                max_deviation,
-                               seed.joint_set
+                               seed.joint_set,
                                seed.to_joint_path_point_msg(),
                                collision_check)
         except rospy.ServiceException as exc:
@@ -770,7 +771,7 @@ class MotionServices(object):
             raise ServiceException('service call for query cartesian'
                                    ' trajectory was not successful. '
                                    'service name:' +
-                                   query_joint_trajectory_service +
+                                   query_cartesian_trajectory_service +
                                    ' error code: ' +
                                    str(response.error_code.val))
 
@@ -780,3 +781,160 @@ class MotionServices(object):
              for p in response.solution.points]
 
         return JointTrajectory(j, p)
+
+    @staticmethod
+    def query_joint_path_collisions(move_group_name, joint_path):
+        """
+        Query collisions in joint path
+
+        Parameters
+        ----------
+        move_group_name : str convertable
+            Name of the move group for which a path should be check
+            for collisions
+        joint_path : JointPath
+            The path that should be check for collisions
+
+        Returns
+        -------
+        List[JointValuesCollision] or None
+            If collisions exists returns a list of
+            JointValuesCollisions else returns None
+
+        Raises
+        ------
+        TypeError
+            If move_group_name ist not str convertable or
+            if joint_path is not of type JointPath
+        """
+
+        query_joint_path_collisions = ('xamlaMoveGroupServices/'
+                                       'query_joint_position_collision_check')
+
+        move_group_name = str(move_group_name)
+
+        if not isinstance(joint_path, JointPath):
+            raise TypeError('joint_path is not of expected type JointPath')
+
+        try:
+            service = rospy.ServiceProxy(
+                query_joint_path_collisions,
+                QueryJointStateCollisions)
+            response = service(move_group_name,
+                               joint_path.joint_set,
+                               [p.to_joint_path_point_msg()
+                                for p in joint_path])
+        except rospy.ServiceException as exc:
+            print ('service call for query joint collisions'
+                   ' failed, abort ')
+            print(exc)
+            raise_from(ServiceException('service call for query'
+                                        ' joint collisions'
+                                        ' failed, abort'), exc)
+
+        if (len(response.in_collision) != len(joint_path) or
+            len(response.error_code) != len(joint_path) or
+                len(resonse.message) != len(joint_path)):
+            raise ServiceException('service call for query joint'
+                                   ' collisions was not successful. '
+                                   'service name:' +
+                                   query_joint_path_collisions +
+                                   ' error code: ' +
+                                   str(response.error_code.val))
+
+        result = [JointValuesCollisions(i, response.error_codes[i],
+                                        response.message[i])
+                  for i in range(0, len(joint_path))
+                  if response.in_collision[i]]
+
+    @staticmethod
+    def create_plan_parameters(move_group_name=None, joint_set=None,
+                               max_velocity=None, max_acceleration=None,
+                               sample_resolution=0.008, check_collision=True,
+                               velocity_scaling=1.0, acceleration_scaling=1.0):
+        """
+        Query a joint trajectory from joint path / joint positions
+
+        Parameters
+        ----------
+        move_group_name : str (optional query first)
+            move group for which plan parameters should be created
+        joint_set : JointSet (optional query similar)
+            joint set for which plan parameters should be created
+        max_velocity : Iterable[float convertable] (default max query)
+            Defines the maximal velocity for every joint
+        max_acceleration : Iterable[float convertable] (default max query)
+            Defines the maximal acceleration for every joint
+        sample_resolution : float convertable (optinal default 0.008 / 125Hz)
+            sample points frequency
+            if value is create as 1.0 the value is interpreted
+            as a value in seconds else the value is interpreted
+            as a value in Hz
+        check_collision : bool convertable (optinal default True)
+            check for collision of True
+        velocity_scaling : float convertable (optinal default 1.0)
+            scale query or user defined max velocity 
+            values between 0.0 and 1.0
+        acceleration_scaling : float convertable (optinal default 1.0)
+            scale query or user defined max acceleration 
+            values between 0.0 and 1.0
+
+        Returns
+        -------
+        PlanParameters
+            Instance of plan parameters with automatically
+            queried and/or user defined values
+
+        Raises
+        ------
+        ServiceError
+            If query services are not reachable or 
+            not finish successful
+        TypeError
+            If move group name is not of type None or str convertable
+            If joint_set is not of type None or JointSet
+            If a other parameters is not convertable
+        ValueError
+            If scaling parameters are not between 0.0 and 1.0
+        ArgumentError
+            If a argument is not set and also could not be 
+            quired automatically
+        """
+
+        if not move_group_name:
+            groups = MotionServices.query_available_move_groups()
+            if groups:
+                joint_set = joint_set if joint_set else groups[0].joint_set
+                for g in groups:
+                    if g.joint_set.is_similar(joint_set):
+                        move_group_name = g.name
+                        break
+            else:
+                raise ArgumentError('no move group name was provided and'
+                                    ' also no move group could'
+                                    ' automatically be quired')
+        elif not joint_set:
+            groups = MotionServices.query_available_move_groups()
+            for g in groups:
+                if g.name == move_group_name:
+                    joint_set = g.joint_set
+                    break
+            if not joint_set:
+                raise ArgumentError('no joint_set was provided and'
+                                    ' also no joint_set could'
+                                    ' automatically be quired')
+
+        if not max_velocity or not max_acceleration:
+            limits = MotionServices.query_joint_limits(joint_set)
+            if not max_velocity:
+                max_velocity = limits.max_velocity
+            if not max_acceleration:
+                max_acceleration = limits.max_acceleration
+
+        joint_limits = JointLimits(joint_set, max_velocity,
+                                   max_acceleration, None, None)
+        return PlanParameters(move_group_name, joint_limits,
+                              sample_resolution=sample_resolution,
+                              collision_check=check_collision,
+                              scale_velocity=velocity_scaling,
+                              scale_acceleration=acceleration_scaling)

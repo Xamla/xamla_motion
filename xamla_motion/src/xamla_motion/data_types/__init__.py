@@ -2,6 +2,7 @@
 
 from .joint_set import JointSet
 from .joint_values import JointValues
+from .joint_values_collision import JointValuesCollisions
 from .joint_states import JointStates
 from .joint_path import JointPath
 from .pose import Pose

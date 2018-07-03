@@ -325,14 +325,14 @@ class Pose(object):
         pose_stamped = PoseStamped()
         pose_stamped.header.frame_id = self.__frame_id
 
-        pose_stamped.position.x = self.__translation[0]
-        pose_stamped.position.y = self.__translation[1]
-        pose_stamped.position.z = self.__translation[2]
+        pose_stamped.pose.position.x = self.__translation[0]
+        pose_stamped.pose.position.y = self.__translation[1]
+        pose_stamped.pose.position.z = self.__translation[2]
 
-        pose_stamped.orientation.w = self.__quaternion[0]
-        pose_stamped.orientation.x = self.__quaternion[1]
-        pose_stamped.orientation.y = self.__quaternion[2]
-        pose_stamped.orientation.z = self.__quaternion[3]
+        pose_stamped.pose.orientation.w = self.__quaternion[0]
+        pose_stamped.pose.orientation.x = self.__quaternion[1]
+        pose_stamped.pose.orientation.y = self.__quaternion[2]
+        pose_stamped.pose.orientation.z = self.__quaternion[3]
 
         return pose_stamped
 

@@ -309,7 +309,7 @@ class JointValues(object):
             raise_from(ValueError('name ' + name +
                                   ' not exist in joint names'), exc)
 
-    def to_joint_path_point_message(self):
+    def to_joint_path_point_msg(self):
         """
         Transform to xamlamoveit_msgs JointPathMessage
         """
