@@ -1,3 +1,23 @@
+# joint_trajectory_points.py
+#
+# Copyright (c) 2018, Xamla and/or its affiliates. All rights reserved.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+#!/usr/bin/env python
+
 from __future__ import (absolute_import, division,
                         print_function)  # , unicode_literals)
 from future.builtins import map
@@ -72,7 +92,7 @@ class JointTrajectoryPoint(object):
         self.__efforts = self._init_check(efforts, 'efforts')
 
     def _init_check(self, joint_values, name, check=True):
-        if joint_values is None:
+        if not joint_values:
             return None
 
         if not isinstance(joint_values, JointValues):
@@ -135,7 +155,7 @@ class JointTrajectoryPoint(object):
 
     @staticmethod
     def _init_from_msg_helper(joint_set, values):
-        if values is not None:
+        if values:
             return JointValues(joint_set, values)
         else:
             return None
@@ -146,6 +166,7 @@ class JointTrajectoryPoint(object):
         joint_set : JointSet
             Set of joints for which the trajectory point contains values
         """
+        return self.__positions.joint_set
 
     @property
     def time_from_start(self):
@@ -171,7 +192,7 @@ class JointTrajectoryPoint(object):
             If defined available joint velocites of this trajectory point
             else None
         """
-        return self.__accelertations
+        return self.__velocities
 
     @property
     def accelerations(self):
@@ -180,7 +201,7 @@ class JointTrajectoryPoint(object):
             If defined available joint accelerations of this trajectory point
             else None
         """
-        return self.__accelertations
+        return self.__accelerations
 
     @property
     def efforts(self):

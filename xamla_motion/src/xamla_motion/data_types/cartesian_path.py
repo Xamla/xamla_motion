@@ -1,4 +1,4 @@
-# joint_path.py
+# cartesian_path.py
 #
 # Copyright (c) 2018, Xamla and/or its affiliates. All rights reserved.
 #

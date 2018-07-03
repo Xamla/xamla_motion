@@ -336,7 +336,7 @@ class JointPath(object):
         if id(other) == id(self):
             return True
 
-        if other.joints != self.__joints:
+        if other.joint_set != self.__joints:
             return False
 
         for i, point in enumerate(other):

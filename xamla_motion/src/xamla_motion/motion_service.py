@@ -36,7 +36,7 @@ class MotionServices(object):
 
     __instance = None
 
-    def __new__(cls, val):
+    def __new__(cls):
         if MotionServices.__instance is None:
             MotionServices.__instance = object.__new__(cls)
         MotionServices.__instance.velocity_scaling = 1.0
@@ -56,7 +56,7 @@ class MotionServices(object):
         Query all currently available move groups
 
         To query the move groups the ros service with the string
-        defined in query_move_group_serivce is called
+        defined in query_move_group_service is called
 
         Returns
         -------
@@ -74,7 +74,7 @@ class MotionServices(object):
             of an iterable type
         """
 
-        query_move_group_serivce = ('xamlaMoveGroupServices/'
+        query_move_group_service = ('xamlaMoveGroupServices/'
                                     'query_move_group_interface')
 
         try:
@@ -501,8 +501,9 @@ class MotionServices(object):
                                    ' error code: ' +
                                    str(response.error_code.val))
 
-        return JointPath(joint_path.joints, [JointValues(joint_path.joints, p)
-                                             for p in respones.path])
+        return JointPath(joint_path.joint_set,
+                         [JointValues(joint_path.joint_set, p.positions)
+                          for p in response.path])
 
     @staticmethod
     def query_cartesian_path(cartesian_path, number_of_steps=50):
@@ -515,14 +516,14 @@ class MotionServices(object):
         Parameters
         ----------
         cartesian_path : CartesianPath
-            Documentation
+            Sparce cartesian key poses
         number_of_steps : int convertable
-            Documentation
+            Number of dense poses
 
         Returns
         -------
         CartesianPath
-            New planned cartesian path
+            New planned cartesian path with dense poses
 
         Raises
         ------
@@ -567,17 +568,61 @@ class MotionServices(object):
 
     @staticmethod
     def query_joint_trajectory(joint_path, max_velocity, max_acceleration,
-                               max_devitation, delta_t):
+                               max_deviation, delta_t):
+        """
+        Query a joint trajectory from joint path / joint positions
 
-        query_joint_trajectory_service = ('xamlaPlanningService/'
+        Parameters
+        ----------
+        joint_path : JointPath
+            Defines the key joint positions the trajectory must reach
+        max_velocity : Iterable[float convertable]
+            Defines the maximal velocity for every joint
+        max_acceleration : Iterable[float convertable]
+            Defines the maximal acceleration for every joint
+        max_deviation : float convertable
+            Defines the maximal deviation of the joints to the
+            defined key points while executing the trajectory
+        delta_t : float convertable
+            Sampling points frequency or time
+            if value is create as 1.0 the value is interpreted
+            as a value in seconds else the value is interpreted
+            as a value in Hz
+
+        Returns
+        -------
+        JointTrajectory
+            An instance of JointTrajectory with dense JointTrajectoryPoints
+
+        Raises
+        ------
+        TypeError
+            If joint_path is not of expected type JointPath or
+            max_velocity or max_acceleration is not iterable or
+            values of max_velocity, max_acceleration or delta_t
+            are not convertable to float
+        ValueError
+            If max_velocity or max_acceleration have not the same
+            number of values has joints are defined in joint_path
+        """
+
+        query_joint_trajectory_service = ('xamlaPlanningServices/'
                                           'query_joint_trajectory')
 
         if not isinstance(joint_path, JointPath):
             raise TypeError('joint_path is not of expected type JointPath')
 
         max_velocity = [float(v) for v in max_velocity]
+        if len(max_velocity) != len(joint_path.joint_set):
+            raise ValueError('max_velocity has not the same number of values'
+                             ' as joints are defined in joint_path')
+
         max_acceleration = [float(v) for v in max_acceleration]
-        max_devitation = float(max_devitation)
+        if len(max_acceleration) != len(joint_path.joint_set):
+            raise ValueError('max_acceleration has not the same number of'
+                             ' values as joints are defined in joint_path')
+
+        max_deviation = float(max_deviation)
         delta_t = float(delta_t)
 
         delta_t = 1 / delta_t if delta_t > 1.0 else delta_t
@@ -586,16 +631,17 @@ class MotionServices(object):
             service = rospy.ServiceProxy(
                 query_joint_trajectory_service,
                 GetOptimJointTrajectory)
-            response = service(joint_path.joints,
+            response = service(joint_path.joint_set,
                                [p.to_joint_path_point_message()
                                 for p in joint_path],
                                max_velocity,
                                max_acceleration,
-                               max_devitation,
+                               max_deviation,
                                delta_t)
         except rospy.ServiceException as exc:
             print ('service call for query joint trajectory'
                    ' failed, abort ')
+            print(exc)
             raise_from(ServiceException('service call for query'
                                         ' joint trajectory'
                                         ' failed, abort'), exc)
@@ -608,4 +654,129 @@ class MotionServices(object):
                                    ' error code: ' +
                                    str(response.error_code.val))
 
-        result_joint_set = JointSet(response.solution.joint_names)
+        j = JointSet(response.solution.joint_names)
+
+        p = [JointTrajectoryPoint.from_joint_trajectory_point_msg(j, p)
+             for p in response.solution.points]
+
+        return JointTrajectory(j, p)
+
+    def query_task_space_trajectory(self, endeffector_name, cartesian_path, seed,
+                                    max_xyz_velocity, max_xyz_acceleration,
+                                    max_angular_velocity, max_angular_acceleration,
+                                    ik_jump_threshold, max_deviation, collision_check,
+                                    delta_t)
+        """
+        Query a joint trajectory from task space poses
+
+        Parameters
+        ----------
+        end_effector_name : str convertable
+            Name of the end effector for a trajectory should be quried
+        cartesian_path : CartesianPath
+            Define the key poses the trajectory must reach
+        seed : JointValues
+            numerical seed to control configuration of the robot
+        max_xyz_velocity : float convertable
+            max velocity for translation in m/s
+        max_xyz_acceleration : float convertable
+            max acceleration for translation in m/s^2
+        max_angular_velocity : float convertable 
+            max angular velocity in rad/s
+        max_angular_acceleration : float convertable 
+            max angular acceleration in rad/s^2 
+        ik_jump_threshold : float convertable
+            maximal inverse kinematic jump
+        max_deviation : float convertable
+            Defines the maximal deviation of the joints to the
+            defined key points while executing the trajectory
+        collision_check : bool convertable
+            If true check the trajectory is collision free
+        delta_t : float convertable
+             Sampling points frequency or time
+            if value is create as 1.0 the value is interpreted
+            as a value in seconds else the value is interpreted
+            as a value in Hz
+
+        Returns
+        -------
+        JointTrajectory
+            An instance of JointTrajectory with dense JointTrajectoryPoints
+
+        Raises
+        ------
+        TypeError
+            If cartesian_path is not of expected type CartesianPath or
+            if seed is not of expected type JointValues
+            max_* is not iterable or the values are not convertable
+            as expected
+        ValueError
+            If max_velocity or max_acceleration have not the same
+            number of values has joints are defined in joint_path
+        """
+
+        query_cartesian_trajectory_service = ('xamlaPlanningServices/'
+                                              'query_cartesian_trajectory')
+
+        if not isinstance(cartesian_path, CartesianPath):
+            raise TypeError(
+                'cartesian_path is not of expected type CartesianPath')
+
+        if not isinstance(seed, JointValues):
+            raise TypeError('seed is not of expected type JointValues')
+
+        max_xyz_velocity = float(max_xyz_velocity)
+
+        max_xyz_acceleration = float(max_xyz_acceleration)
+
+        max_angular_velocity = float(max_angular_velocity)
+
+        max_angular_acceleration = float(max_angular_acceleration)
+
+        end_effector_name = str(end_effector_name)
+        ik_jump_threshold = float(ik_jump_threshold)
+        max_deviation = float(max_deviation)
+        collision_check = bool(collision_check)
+        delta_t = float(delta_t)
+
+        delta_t = 1 / delta_t if delta_t > 1.0 else delta_t
+
+        try:
+            service = rospy.ServiceProxy(
+                query_cartesian_trajectory_service,
+                GetLinearCartesianTrajectory)
+            response = service(end_effector_name,
+                               [p.to_posestamped_msg()
+                                for p in cartesian_path],
+                               max_xyz_velocity,
+                               max_xyz_acceleration,
+                               max_angular_velocity,
+                               max_angular_acceleration,
+                               delta_t,
+                               ik_jump_threshold,
+                               max_deviation,
+                               seed.joint_set
+                               seed.to_joint_path_point_msg(),
+                               collision_check)
+        except rospy.ServiceException as exc:
+            print ('service call for query cartesian trajectory'
+                   ' failed, abort ')
+            print(exc)
+            raise_from(ServiceException('service call for query'
+                                        ' cartesian trajectory'
+                                        ' failed, abort'), exc)
+
+        if response.error_code.val != MoveItErrorCodes.SUCCESS:
+            raise ServiceException('service call for query cartesian'
+                                   ' trajectory was not successful. '
+                                   'service name:' +
+                                   query_joint_trajectory_service +
+                                   ' error code: ' +
+                                   str(response.error_code.val))
+
+        j = JointSet(response.solution.joint_names)
+
+        p = [JointTrajectoryPoint.from_joint_trajectory_point_msg(j, p)
+             for p in response.solution.points]
+
+        return JointTrajectory(j, p)

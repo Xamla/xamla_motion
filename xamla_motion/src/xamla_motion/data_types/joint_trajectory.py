@@ -1,3 +1,23 @@
+# joint_trajectory.py
+#
+# Copyright (c) 2018, Xamla and/or its affiliates. All rights reserved.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+#!/usr/bin/env python
+
 from __future__ import (absolute_import, division,
                         print_function)  # , unicode_literals)
 from future.builtins import map
@@ -59,7 +79,7 @@ class JointTrajectoryFlags(object):
 
     @has_effort.setter
     def has_effort(self, state):
-        if has_effort:
+        if state:
             self.__value |= self.__has_effort
         else:
             self.__value &= (~self.__has_effort)
@@ -96,7 +116,40 @@ class JointTrajectoryFlags(object):
 
 class JointTrajectory(object):
 
+    """
+    Class JointTrajectory
+
+    """
+
     def __init__(self, joint_set, points, valid=True):
+        """
+        Initialize class JointTrajectory
+
+        Parameters
+        ----------
+        joint_set : JointSet
+            Set of joints for which JointTrajectory should be defined
+        points : Iterable[JointTrajectoryPoint]
+            An Iterable of JointTrajectoryPoint which concretely defines
+            the trajectory
+        valid : bool (optinal)
+            Defines if trajectory is avalid trajectory or not
+
+        Returns
+        -------
+        JointTrajectory
+            An instance of JointTrajectory
+
+        Raises
+        ------
+        TypeError
+            If joint_set is not of type JointSet or 
+            if points is not of type iterable of 
+            JointTrajectoryPoints or None
+        ValueError
+            If time from start is no ascending between points or
+            joint set of points is not the same as of this JointTrajectory
+        """
 
         if not isinstance(joint_set, JointSet):
             raise TypeError('joint_set is not of expected type JointSet')
@@ -104,10 +157,10 @@ class JointTrajectory(object):
         if (points != None and (not isinstance(points, Iterable) and
                                 any(not isinstance(p, JointTrajectoryPoint)
                                     for p in points))):
-            raise TypeError('points is not one of expected type None or '
+            raise TypeError('points is not one of expected types None or '
                             'Iterable of JointTrajectoryPoints')
 
-        self.__flags = JointTrajectoryFlags(0)
+        self.__flags = JointTrajectoryFlags(14)
 
         if valid:
             self.__flags.is_valid = True
@@ -117,12 +170,186 @@ class JointTrajectory(object):
         if points == None:
             self.__points = None
             return
+        else:
+            self.__points = list(points)
 
-        last_time = timedelta(days=0, seconds=0, mircoseconds=0)
+        last_time = timedelta(days=0, seconds=0, microseconds=0)
         for i, p in enumerate(points):
             if p.time_from_start < last_time:
-                pass
+                raise ValueError('time_from_start values of trajectory'
+                                 ' points must be acending.'
+                                 ' Not the case for element: '+str(i))
+
+            last_time = p.time_from_start
+
+            if p.joint_set != self.__joint_set:
+                raise ValueError('Provided trajectory point ' + str(i) +
+                                 ' has values for different joint set')
+
+            if p.velocities == None:
+                self.__flags.has_velocity = False
+
+            if p.accelerations == None:
+                self.__flags.has_acceleration = False
+
+            if p.efforts == None:
+                self.__flags.has_effort = False
 
     @staticmethod
     def empty():
         return JointTrajectory(JointSet.empty(), None)
+
+    @property
+    def joint_set(self):
+        """
+        joint_set : JointSet (readonly)
+            Set of joints for which the trajectory contains values
+        """
+        return self.__joint_set
+
+    @property
+    def points(self):
+        """
+        points : List[JointTrajectoryPoints] (readonly)
+            List of JointTrajectoryPoints which define the trajectory
+        """
+        return self.__points
+
+    @property
+    def is_valid(self):
+        """
+        is_valid : bool (readonly)
+            True if trajectory is a valid trajectory
+        """
+        return self.__flags.is_valid
+
+    @property
+    def has_velocity(self):
+        """
+        has_velocity : bool (readonly)
+            True if trajectory has velocities for every point
+        """
+        return self.__flags.has_velocity
+
+    @property
+    def has_acceleration(self):
+        """
+        is_acceleration : bool (readonly)
+            True if trajectory has accelerations for every point
+        """
+        return self.__flags.has_acceleration
+
+    @property
+    def has_effort(self):
+        """
+        has_effort : bool (readonly)
+            True if trajectory has efforts for every point
+        """
+        return self.__flags.has_effort
+
+    @property
+    def positions(self):
+        """
+        positions : List[JointValues]
+            List of JointValues where each item is the positions field
+            of JointTrajectoryPoints
+        """
+        return [p.positions for p in self.__points]
+
+    @property
+    def velocities(self):
+        """
+        velocities : List[JointValues]
+            List of JointValues where each item is the velocities field
+            of JointTrajectoryPoints
+        """
+        return [p.velocities for p in self.__points]
+
+    @property
+    def accelerations(self):
+        """
+        accelerations : List[JointValues]
+            List of JointValues where each item is the accelerations field
+            of JointTrajectoryPoints
+        """
+        return [p.accelerations for p in self.__points]
+
+    @property
+    def efforts(self):
+        """
+        positions : List[JointValues]
+            List of JointValues where each item is the efforts field
+            of JointTrajectoryPoints
+        """
+        return [p.efforts for p in self.__points]
+
+    @property
+    def time_from_start(self):
+        """
+        positions : List[datatime.timedelta]
+            List of timedeltas where each item is the time_from_start field
+            of JointTrajectoryPoints
+        """
+        return [p.time_from_start for p in self.__points]
+
+    def __getitem__(self, key):
+        """
+        Returns value by joint name or index
+
+        Parameters
+        ----------
+        key : int  or slice
+            index of joint or slice for which the values are requested
+
+        Returns
+        -------
+        JointValues or List[JointValues]
+            Returns a instance of JointValues or list of JointValues 
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If key is not int or slice
+        IndexError :
+            If index is out of range
+
+        """
+        if isinstance(key, (int, slice)):
+            try:
+                return self.__points[key]
+            except IndexError as exc:
+                raise IndexError('index out of range')
+        else:
+            raise TypeError(
+                'key is not one of expected types int or slice ')
+
+    def __len__(self):
+        return self.__points.__len__()
+
+    def __iter__(self):
+        return self.__points.__iter__()
+
+    def __str__(self):
+        return self.__points.__str__()
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        if id(other) == id(self):
+            return True
+
+        if other.joint_set != self.__joint_set:
+            return False
+
+        for i, point in enumerate(other):
+            if point != self.__points[i]:
+                return False
+
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

@@ -72,11 +72,11 @@ class JointStates(object):
         self.__velocities = None
         self.__efforts = None
 
-        if velocities != None:
+        if velocities:
             self.__velocities = self._init_check(velocities,
                                                  'velocities')
 
-        if efforts != None:
+        if efforts:
             self.__efforts = self._init_check(efforts,
                                               'efforts')
 

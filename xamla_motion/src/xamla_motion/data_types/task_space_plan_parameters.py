@@ -54,7 +54,7 @@ class TaskSpacePlanParameters(object):
             Limits of the end effector in task space
         kwargs : dict
             The argv dict is used to set parameters which have default values
-            this are sample_resolution (default = 0.008),
+            this are sample_resolution (default = 0.008 / 125 Hz),
             collision_check (default = True), max_deviation (default = 0.2),
             ik_jump_threshold (default = 1.2), scale_velocity (default = 1.0) 
             and scale_acceleration (default = 1.0)
