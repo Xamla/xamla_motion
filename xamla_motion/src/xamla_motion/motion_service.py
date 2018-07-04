@@ -25,33 +25,42 @@ from future.utils import raise_from, raise_with_traceback
 
 import rospy
 import pdb
+import numpy as np
+from datatime import timedelta
+
 from xamlamoveit_msgs.srv import *
 from moveit_msgs.msg import MoveItErrorCodes
 
 from xamla_motion_exceptions import ServiceException, ArgumentError
 from data_types import *
+from collections import Iterable
 
 
-class MotionServices(object):
+class MotionService(object):
 
     __instance = None
+    __movej_action = 'moveJ_action'
+    __query_inverse_kinematics_service = "xamlaMoveGroupServices/query_ik"
 
     def __new__(cls):
-        if MotionServices.__instance is None:
-            MotionServices.__instance = object.__new__(cls)
-        MotionServices.__instance.velocity_scaling = 1.0
-        MotionServices.__instance.acceleration_scaling = 1.0
-        return MotionServices.__instance
+        if cls.__instance is None:
+            cls.__instance = object.__new__(cls)
+        cls.__instance.velocity_scaling = 1.0
+        cls.__instance.acceleration_scaling = 1.0
+        return cls.__instance
 
     def __init__(self):
+        try:
+            self.__ik_service = rospy.ServiceProxy(
+                self.__query_inverse_kinematics_service,
+                GetIKSolution)
+        except rospy.ServiceException as exc:
+            raise_from(ServiceException('init service for query'
+                                        ' inverse kinematics failed,'
+                                        ' abort '), exc)
 
-        self.__movej_action = 'moveJ_action'
-
-        self.__joint_limits_param = ('robot_description_planning/'
-                                     'joint_limits')
-
-    @staticmethod
-    def query_available_move_groups():
+    @classmethod
+    def query_available_move_groups(cls):
         """
         Query all currently available move groups
 
@@ -98,8 +107,8 @@ class MotionServices(object):
                                                g.end_effector_link_names))
         return groups
 
-    @staticmethod
-    def query_available_end_effectors():
+    @classmethod
+    def query_available_end_effectors(cls):
         """
         Query all currently available end effectors
 
@@ -122,7 +131,7 @@ class MotionServices(object):
             of an iterable type
         """
         try:
-            move_groups = MotionServices.query_available_move_groups()
+            move_groups = cls.query_available_move_groups()
         except (ServiceException, TypeError) as exc:
             raise exc
 
@@ -140,8 +149,8 @@ class MotionServices(object):
 
         return end_effectors
 
-    @staticmethod
-    def query_endeffector_limits(name):
+    @classmethod
+    def query_endeffector_limits(cls, name):
         """
         Query end effector limits from ros param
 
@@ -201,8 +210,8 @@ class MotionServices(object):
 
         raise RuntimeError('Requested end effector name not exists')
 
-    @staticmethod
-    def query_joint_limits(joint_set):
+    @classmethod
+    def query_joint_limits(cls, joint_set):
         """
         Query end joint limits from ros param
 
@@ -254,8 +263,8 @@ class MotionServices(object):
 
         return JointLimits(joint_set, maxVel, maxAcc, minPos, maxPos)
 
-    @staticmethod
-    def query_joint_states(joint_set):
+    @classmethod
+    def query_joint_states(cls, joint_set):
         """
         Query joint states by calling the providing ros service
 
@@ -317,8 +326,8 @@ class MotionServices(object):
 
         return JointStates(positions, velocities, efforts)
 
-    @staticmethod
-    def query_pose(move_group_name,
+    @classmethod
+    def query_pose(cls, move_group_name,
                    joint_positions, end_effector_link=''):
         """
         Computes the pose by applying forward kinematics
@@ -351,11 +360,11 @@ class MotionServices(object):
                             ' expected type JointValues')
 
         joint_path = JointPath.from_one_point(joint_positions)
-        return MotionServices.query_pose_many(move_group_name, joint_path,
-                                              end_effector_link)[0]
+        return cls.query_pose_many(move_group_name, joint_path,
+                                   end_effector_link)[0]
 
-    @staticmethod
-    def query_pose_many(move_group_name,
+    @classmethod
+    def query_pose_many(cls, move_group_name,
                         joint_path, end_effector_link=''):
         """
         Query the poses from joint path points by applying forward kinematics
@@ -427,8 +436,8 @@ class MotionServices(object):
         return list(map(lambda x: Pose.from_posestamped_msg(x),
                         response.solutions))
 
-    @staticmethod
-    def _query_moveit_joint_path(move_group_name, joint_path):
+    @classmethod
+    def _query_moveit_joint_path(cls, move_group_name, joint_path):
 
         query_joint_path_service = ('xamlaPlanningServices/'
                                     'query_joint_path')
@@ -453,8 +462,8 @@ class MotionServices(object):
 
         return response
 
-    @staticmethod
-    def query_collision_free_joint_path(move_group_name, joint_path):
+    @classmethod
+    def query_collision_free_joint_path(cls, move_group_name, joint_path):
         """
         Query a collision free joint path from a user defined joint path
 
@@ -490,8 +499,8 @@ class MotionServices(object):
 
         move_group_name = str(move_group_name)
 
-        response = MotionServices._query_moveit_joint_path(move_group_name,
-                                                           joint_path)
+        response = cls._query_moveit_joint_path(move_group_name,
+                                                joint_path)
 
         if response.error_code.val != MoveItErrorCodes.SUCCESS:
             raise ServiceException('service call for query collision free'
@@ -505,8 +514,8 @@ class MotionServices(object):
                          [JointValues(joint_path.joint_set, p.positions)
                           for p in response.path])
 
-    @staticmethod
-    def query_cartesian_path(cartesian_path, number_of_steps=50):
+    @classmethod
+    def query_cartesian_path(cls, cartesian_path, number_of_steps=50):
         """
         Query a complete cartesian path
 
@@ -566,8 +575,8 @@ class MotionServices(object):
         return CartesianPath([Pose.from_posestamped_msg(p)
                               for p in response.path])
 
-    @staticmethod
-    def query_joint_trajectory(joint_path, max_velocity, max_acceleration,
+    @classmethod
+    def query_joint_trajectory(cls, joint_path, max_velocity, max_acceleration,
                                max_deviation, delta_t):
         """
         Query a joint trajectory from joint path / joint positions
@@ -641,7 +650,6 @@ class MotionServices(object):
         except rospy.ServiceException as exc:
             print ('service call for query joint trajectory'
                    ' failed, abort ')
-            print(exc)
             raise_from(ServiceException('service call for query'
                                         ' joint trajectory'
                                         ' failed, abort'), exc)
@@ -661,8 +669,8 @@ class MotionServices(object):
 
         return JointTrajectory(j, p)
 
-    @staticmethod
-    def query_task_space_trajectory(end_effector_name, cartesian_path, seed,
+    @classmethod
+    def query_task_space_trajectory(cls, end_effector_name, cartesian_path, seed,
                                     max_xyz_velocity, max_xyz_acceleration,
                                     max_angular_velocity, max_angular_acceleration,
                                     ik_jump_threshold, max_deviation, collision_check,
@@ -762,7 +770,6 @@ class MotionServices(object):
         except rospy.ServiceException as exc:
             print ('service call for query cartesian trajectory'
                    ' failed, abort ')
-            print(exc)
             raise_from(ServiceException('service call for query'
                                         ' cartesian trajectory'
                                         ' failed, abort'), exc)
@@ -782,8 +789,8 @@ class MotionServices(object):
 
         return JointTrajectory(j, p)
 
-    @staticmethod
-    def query_joint_path_collisions(move_group_name, joint_path):
+    @classmethod
+    def query_joint_path_collisions(cls, move_group_name, joint_path):
         """
         Query collisions in joint path
 
@@ -827,7 +834,6 @@ class MotionServices(object):
         except rospy.ServiceException as exc:
             print ('service call for query joint collisions'
                    ' failed, abort ')
-            print(exc)
             raise_from(ServiceException('service call for query'
                                         ' joint collisions'
                                         ' failed, abort'), exc)
@@ -847,37 +853,39 @@ class MotionServices(object):
                   for i in range(0, len(joint_path))
                   if response.in_collision[i]]
 
-    @staticmethod
-    def create_plan_parameters(move_group_name=None, joint_set=None,
+    @classmethod
+    def create_plan_parameters(cls, move_group_name=None, joint_set=None,
                                max_velocity=None, max_acceleration=None,
-                               sample_resolution=0.008, check_collision=True,
-                               velocity_scaling=1.0, acceleration_scaling=1.0):
+                               **kwargs):
         """
-        Query a joint trajectory from joint path / joint positions
+        Create PlanParameters from user defined and/or quried inputs
 
         Parameters
         ----------
-        move_group_name : str (optional query first)
+        move_group_name : str (optional  default query first)
             move group for which plan parameters should be created
-        joint_set : JointSet (optional query similar)
+        joint_set : JointSet (optional default query similar)
             joint set for which plan parameters should be created
-        max_velocity : Iterable[float convertable] (default max query)
+        max_velocity : Iterable[float convertable] (optional default max query)
             Defines the maximal velocity for every joint
-        max_acceleration : Iterable[float convertable] (default max query)
+        max_acceleration : Iterable[float convertable] (op default max query)
             Defines the maximal acceleration for every joint
-        sample_resolution : float convertable (optinal default 0.008 / 125Hz)
-            sample points frequency
-            if value is create as 1.0 the value is interpreted
-            as a value in seconds else the value is interpreted
-            as a value in Hz
-        check_collision : bool convertable (optinal default True)
-            check for collision of True
-        velocity_scaling : float convertable (optinal default 1.0)
-            scale query or user defined max velocity 
-            values between 0.0 and 1.0
-        acceleration_scaling : float convertable (optinal default 1.0)
-            scale query or user defined max acceleration 
-            values between 0.0 and 1.0
+        kwargs : dict
+            sample_resolution : float convertable (optional default 0.008/125Hz)
+                sample points frequency
+                if value is create as 1.0 the value is interpreted
+                as a value in seconds else the value is interpreted
+                as a value in Hz
+            check_collision : bool convertable (optional default True)
+                check for collision if True
+            max_deviation : float convertable (optional default 0.2)
+                max deviation from fly by points
+            velocity_scaling : float convertable (optional default 1.0)
+                scale query or user defined max velocity
+                values between 0.0 and 1.0
+            acceleration_scaling : float convertable (optional default 1.0)
+                scale query or user defined max acceleration
+                values between 0.0 and 1.0
 
         Returns
         -------
@@ -888,21 +896,21 @@ class MotionServices(object):
         Raises
         ------
         ServiceError
-            If query services are not reachable or 
+            If query services are not reachable or
             not finish successful
         TypeError
             If move group name is not of type None or str convertable
             If joint_set is not of type None or JointSet
-            If a other parameters is not convertable
+            If an other parameter is not convertable
         ValueError
             If scaling parameters are not between 0.0 and 1.0
         ArgumentError
-            If a argument is not set and also could not be 
+            If a argument is not set and also could not be
             quired automatically
         """
 
         if not move_group_name:
-            groups = MotionServices.query_available_move_groups()
+            groups = cls.query_available_move_groups()
             if groups:
                 joint_set = joint_set if joint_set else groups[0].joint_set
                 for g in groups:
@@ -914,7 +922,7 @@ class MotionServices(object):
                                     ' also no move group could'
                                     ' automatically be quired')
         elif not joint_set:
-            groups = MotionServices.query_available_move_groups()
+            groups = cls.query_available_move_groups()
             for g in groups:
                 if g.name == move_group_name:
                     joint_set = g.joint_set
@@ -925,7 +933,7 @@ class MotionServices(object):
                                     ' automatically be quired')
 
         if not max_velocity or not max_acceleration:
-            limits = MotionServices.query_joint_limits(joint_set)
+            limits = cls.query_joint_limits(joint_set)
             if not max_velocity:
                 max_velocity = limits.max_velocity
             if not max_acceleration:
@@ -933,8 +941,499 @@ class MotionServices(object):
 
         joint_limits = JointLimits(joint_set, max_velocity,
                                    max_acceleration, None, None)
-        return PlanParameters(move_group_name, joint_limits,
-                              sample_resolution=sample_resolution,
-                              collision_check=check_collision,
-                              scale_velocity=velocity_scaling,
-                              scale_acceleration=acceleration_scaling)
+
+        return PlanParameters(move_group_name, joint_limits, **kwargs)
+
+    @classmethod
+    def create_task_space_plan_parameters(cls, end_effector_name=None,
+                                          max_xyz_velocity=None,
+                                          max_xyz_acceleration=None,
+                                          max_angular_velocity=None,
+                                          max_angular_acceleration=None,
+                                          **kwargs):
+        """
+        Creates TakesSpacePlanParameters from user defined or queried inputs
+
+        Parameters
+        ----------
+        move_group_name : str (optional default query first)
+            move group for which plan parameters should be created
+        max_xyz_velocity : float convertable or None
+            Defines the maximal xyz velocity [m/s]
+        max_xyz_acceleration : float convertable
+            Defines the maximal xyz acceleration [m/s^2]
+        max_angular_velocity : float convertable or None
+            Defines the maximal angular velocity [rad/s]
+        max_angular_acceleration : float convertable or None
+            Defines the maximal angular acceleration [rad/s^2]
+        kwargs : dict
+            sample_resolution : float convertable (optional default 0.008/125Hz)
+                sample points frequency
+                if value is create as 1.0 the value is interpreted
+                as a value in seconds else the value is interpreted
+                as a value in Hz
+            check_collision : bool convertable (optional default True)
+                check for collision if True
+            ik_jump_threshold : float convertable (optional default 1.2)
+                maximal inverse kinematic jump
+            max_deviation : float convertable (optional default 0.2)
+                max deviation from fly by points
+            velocity_scaling : float convertable (optional default 1.0)
+                scale query or user defined max velocity
+                values between 0.0 and 1.0
+            acceleration_scaling : float convertable (optional default 1.0)
+                scale query or user defined max acceleration
+                values between 0.0 and 1.0
+
+        Returns
+        -------
+        TaskSpacePlanParameters
+            Instance of TaskSpacePlanParameters with automatically
+            queried and/or user defined values
+
+        Raises
+        ------
+        ServiceError
+            If query services are not reachable or
+            not finish successful
+        TypeError
+            If end_effector_name is not of type None or str convertable
+            If an other parameter is not convertable
+        ValueError
+            If scaling parameters are not between 0.0 and 1.0
+        ArgumentError
+            If a argument is not set and also could not be
+            quired automatically
+        """
+
+        if not end_effector_name:
+            groups = cls.query_available_move_groups()
+            if groups:
+                for g in groups:
+                    if g.end_effector_link_names:
+                        end_effector_name = g.end_effector_names[0]
+                        break
+            if not end_effector_name:
+                raise ArgumentError('no end effector name was provided and'
+                                    ' also end effector name could'
+                                    ' automatically be quired')
+
+        if (not max_xyz_velocity or not max_xyz_acceleration or
+                not max_angular_velocity or not max_angular_acceleration):
+            limits = cls.query_endeffector_limits(end_effector_name)
+
+            if not max_xyz_velocity:
+                max_xyz_velocity = limits.max_xyz_velocity
+            if not max_xyz_acceleration:
+                max_xyz_acceleration = limits.max_xyz_acceleration
+            if not max_angular_velocity:
+                max_angular_velocity = limits.max_angular_velocity
+            if not max_angular_acceleration:
+                max_angular_acceleration = limits.max_angular_acceleration
+
+        end_effector_limits = EndEffectorLimits(max_xyz_velocity,
+                                                max_xyz_acceleration,
+                                                max_angular_velocity,
+                                                max_angular_acceleration)
+
+        return TaskSpacePlanParameters(end_effector_name,
+                                       end_effector_limits,
+                                       **kwargs)
+
+    @classmethod
+    def plan_collision_free_joint_path(cls, path, parameters):
+        """
+        Plans a collision free joint path by query it
+
+        Parameters
+        ----------
+        path : JointPath
+            joint path which should be replanned to be
+            collision free
+        parameters : PlanParameters
+            plan parameters which defines the limits and
+            move group
+
+        Returns
+        -------
+        JointPath
+            the replanned collision free joint path
+
+        Raises
+        ------
+        TypeError
+            If path is not of type JointPath or
+            if parameters is not of type PlanParameters
+        ValueError
+            If parameters joint set is not equal or sub
+            set of the path joint set and therefore
+            reordering was not possible
+        ServiceError
+            If query service is not available or finish
+            unsuccessfully
+        """
+
+        if not isinstance(path, JointPath):
+            raise TypeError('path is not of expected'
+                            ' type JointPath')
+
+        if not isinstance(parameters, PlanParameters):
+            raise TypeError('parameters is not of expected'
+                            ' type PlanParameters')
+
+        # reorder path in respect to plan parameter joint_set
+        path = JointPath(parameters.joint_set, path.points)
+
+        return cls.query_collision_free_joint_path(parameters.move_group_name,
+                                                   path)
+
+    @classmethod
+    def plan_move_cartesian(cls, path, num_steps, parameters):
+        """
+        Plans cartesian path from sparse cartesian path
+
+        Parameters
+        ----------
+        path : JointPath
+            joint path which should be replanned to be
+            collision free
+        num_steps : int convertable
+            number of finial poses in path
+        parameters : PlanParameters
+            plan parameters which defines the limits and
+            move group
+
+        Returns
+        -------
+        JointPath
+            the replanned collision free joint path
+
+        Raises
+        ------
+        TypeError
+            If path is not of type CartesianPath or
+            if parameters is not of type PlanParameters
+        ServiceError
+            If query service is not available or finish
+            unsuccessfully
+        """
+
+        if not isinstance(path, CartesianPath):
+            raise TypeError('path is not of expected'
+                            ' type CartesianPath')
+
+        if not isinstance(parameters, PlanParameters):
+            raise TypeError('parameters is not of expected'
+                            ' type PlanParameters')
+
+        num_steps = int(num_steps)
+
+        return cls.query_cartesian_path(path, num_steps)
+
+    @classmethod
+    def plan_move_pose_linear(cls, path, seed, parameters):
+        """
+        Plans trajectory with linear movements from a cartesian path
+
+        Parameters
+        ----------
+        path : CartesianPath
+            cartesian path with poses the trajectory must reach
+        seed : JointValues
+            numerical seed to control configuration
+        parameters : TaskSpacePlanParameters
+            plan parameters which defines the limits, settings
+            and end effector name
+
+        Returns
+        -------
+        JointTrajectory
+            Planned joint trajectory which reach the poses
+            defined in path under the constraints of
+            parameters
+
+        Raises
+        ------
+        TypeError
+            If path is not of type CartesianPath or
+            if parameters is not of type TaskSpacePlanParameters or
+            if seed is not of type JointValues
+        ServiceError
+            If query service is not available or finish
+            unsuccessfully
+        """
+
+        if not isinstance(path, CartesianPath):
+            raise TypeError('path is not of expected type CartesianPath')
+
+        if not isinstance(seed, JointValues):
+            raise TypeError('seed is not of expected type JointValues')
+
+        if not isinstance(parameter, TaskSpacePlanParameters):
+            raise TypeError('parameters is not of expected type'
+                            ' TaskSpacePlanParameters')
+
+        p = parameters
+        return cls.query_task_space_trajectory(p.end_effector_name,
+                                               path,
+                                               seed,
+                                               p.max_xyz_velocity,
+                                               p.max_xyz_acceleration,
+                                               p.max_angular_velocity,
+                                               p.max_angular_acceleration,
+                                               p.ik_jump_threshold,
+                                               p.max_deviation,
+                                               p.collision_check,
+                                               p.sample_resolution)
+
+    @classmethod
+    def plan_move_joint(cls, path, parameters):
+        """
+        Plans trajectory from a joint path
+
+        Parameters
+        ----------
+        path : JointPath
+            joint path with positions the trajectory must reach
+        parameters : PlanParameters
+            plan parameters which defines the limits, settings
+            and move group name
+
+        Returns
+        -------
+        JointTrajectory
+            Planned joint trajectory which reach the positions
+            defined in path under the constraints of
+            parameters
+
+        Raises
+        ------
+        TypeError
+            If path is not of type JointPath or
+            if parameters is not of type PlanParameters or
+        ValueError
+            If parameters joint set is not equal or sub
+            set of the path joint set and therefore
+            reordering was not possible
+        ServiceError
+            If query service is not available or finish
+            unsuccessfully
+        """
+
+        if not isinstance(path, JointPath):
+            raise TypeError('path is not of expected type JointPath')
+
+        if not isinstance(parameter, PlanParameters):
+            raise TypeError('parameters is not of expected type'
+                            ' PlanParameters')
+
+        path = JointPath(parameters.joints_set, path.points)
+
+        max_velocity = parameters.max_velocity
+        max_acc = parameters.max_acceleration
+
+        vel_isnan = np.isnan(parameters.max_velocity)
+        acc_isnan = np.isnan(parameters.max_acceleration)
+        if any(vel_isnan) or any(acc_isnan):
+            limits = cls.query_joint_limits(path.joint_set)
+            if any(vel_isnan):
+                max_velocity = [limits.max_velocity[i] *
+                                parameters.velocity_scaling
+                                if vel_isnan[i] else l
+                                for i, l in enumerate(parameters.max_velocity)]
+
+            if any(vel_isnan):
+                max_acc = [limits.max_accleration[i] *
+                           parameters.acceleration_scaling
+                           if vel_isnan[i] else l
+                           for i, l in enumerate(parameters.max_acceleration)]
+
+        return cls.query_joint_trajectory(path,
+                                          max_velocity,
+                                          max_acc,
+                                          parameters.max_deviation
+                                          parameters.sample_resolution)
+
+        # to do ExecuteJointTrajectory and ExecuteJointTrajectorySupervised
+
+        def query_inverse_kinematics(self, pose, parameters,
+                                     seed=[],
+                                     end_effector_link='',
+                                     timeout=None,
+                                     attempts=1):
+            """
+            Query inverse kinematic solutions one pose
+
+            Parameters
+            ----------
+            pose : pose
+                Pose to transform to joint space
+            parameters : PlanParameters
+                Plan parameters which defines the limits, settings
+                and move group name
+            seed : JointValues (optional)
+                Numerical seed to control joint configuration
+            end_effector_link : str convertable (optinal)
+                necessary if poses are defined for end effector link
+            timeout : datatime.timedelta
+                timeout 
+            attempts : int convertable
+                Attempts to find a solution or each pose
+
+            Returns
+            -------
+            IkResult
+                Instance of IkResult with all found solutions as
+                a JointPath and error codes
+
+            Raises
+            ------
+            TypeError
+                If pose is not of type Pose or
+                parameters is not of type PlanParameters
+                or seed is not empty list or type JointValues
+                or the other parameters are not convertable
+                to defined types
+            ValueError
+                If parameters joint set is not equal or sub
+                set of the seed joint set if defined and therefore
+                reordering was not possible 
+            ServiceError
+                If query service is not available
+            """
+
+            if not isinstance(pose, Pose):
+                raise TypeError('pose is not of expected type Pose')
+
+            ipath = CartesianPath.from_one_point(pose)
+
+            result = self.query_inverse_kinematics_many(ipath,
+                                                        parameters,
+                                                        seed,
+                                                        end_effector_link,
+                                                        timeout,
+                                                        attempts)
+
+            if not result.succeeded
+                raise ServiceException('service call for query inverse'
+                                       ' kinematics was not successful')
+
+            return result.path[0]
+
+        def query_inverse_kinematics_many(self, path, parameters,
+                                          seed=[],
+                                          end_effector_link='',
+                                          timeout=None,
+                                          attempts=1,
+                                          const_seed=False):
+            """
+            Query inverse kinematic solutions for all point in path
+
+            Parameters
+            ----------
+            path : CartesianPath
+                Path with poses to transform to joint space
+            parameters : PlanParameters
+                Plan parameters which defines the limits, settings
+                and move group name
+            seed : JointValues (optional)
+                Numerical seed to control joint configuration
+            end_effector_link : str convertable (optinal)
+                necessary if poses are defined for end effector link
+            timeout : datatime.timedelta
+                timeout 
+            attempts : int convertable
+                Attempts to find a solution or each pose
+            const_seed : bool convertable
+                todo
+
+            Returns
+            -------
+            IkResult
+                Instance of IkResult with all found solutions as
+                a JointPath and error codes
+
+            Raises
+            ------
+            TypeError
+                If path is not of type CartesianPath or
+                parameters is not of type PlanParameters
+                or seed is not empty list or type JointValues
+                or the other parameters are not convertable
+                to defined types
+            ValueError
+                If parameters joint set is not equal or sub
+                set of the seed joint set if defined and therefore
+                reordering was not possible 
+            ServiceError
+                If query service is not available
+            """
+
+            if not isinstance(path, CartesianPath):
+                raise TypeError('path is not of expected type CartesianPath')
+
+            if not isinstance(parameters, PlanParameters):
+                raise TypeError('parameters is not of expected'
+                                ' type PlanParameters')
+
+            if (seed and not isinstance(seed, JointValues)):
+                raise TypeError('seed is not of expected'
+                                ' type JointValues')
+            elif (seed and seed.join_set != parameters.join_set and
+                  joint_positions_seed.is_similar(parameters.joint_set)):
+                seed = seed.reorder(parameters.join_set)
+            elif seed:
+                raise ValueError('joint set of parameters and seed do not'
+                                 ' match and reording is not possible')
+
+            if timeout and not isinstance(timeout, timedelta):
+                raise TypeError('timeout is not of expected type timedelta')
+            else
+                timeout = timedelta(milliseconds=200)
+
+            end_effector_link = str(end_effector_link)
+            attempts = int(attempts)
+            const_seed = bool(const_seed)
+
+            try:
+            response = self.__ik_service(parameters.move_group_name,
+                                         parameters.joint_set.names,
+                                         end_effector_link,
+                                         seed,
+                                         const_seed,
+                                         [p.to_posestamped_msg()
+                                          for p in path],
+                                         parameters.collision_check,
+                                         attempts,
+                                         timeout)
+            except rospy.ServiceException as exc:
+                print ('service call for query inverse kinematics'
+                       ' failed, abort ')
+                raise_from(ServiceException('service call for query'
+                                            ' inverse kinematics'
+                                            ' failed, abort'), exc)
+
+            f = JointValues.from_joint_path_point_msg
+            joint_path = JointPath(parameters.joint_set,
+                                   [f(parameters.joint_set, p)
+                                    for p in response.solutions])
+
+            error_codes = [e if e.val != 0 else MoveItErrorCodes.FAILURE
+                           for e in error_codes]
+
+            return IkResults(joint_path, error_codes)
+
+        def plan_cartesian_path(self, waypoints, parameters)
+            """
+            Plan a joint trajectory from a cartesian path and plan parameters
+
+            Parameters
+            ----------
+            """
+
+            seed = self.query_joint_states(parameter.joint_set).positions
+            result = self.query_inverse_kinematics_many(waypoints,
+                                                        parameters,
+                                                        seed).Path
+            return self.plan_collision_free_joint_path(joint_path,
+                                                       parameters)

@@ -56,8 +56,8 @@ class TaskSpacePlanParameters(object):
             The argv dict is used to set parameters which have default values
             this are sample_resolution (default = 0.008 / 125 Hz),
             collision_check (default = True), max_deviation (default = 0.2),
-            ik_jump_threshold (default = 1.2), scale_velocity (default = 1.0) 
-            and scale_acceleration (default = 1.0)
+            ik_jump_threshold (default = 1.2), velocity_scaling (default = 1.0) 
+            and acceleration_scaling (default = 1.0)
 
         Returns
         ------
@@ -75,42 +75,63 @@ class TaskSpacePlanParameters(object):
         >>> p = TaskSpacePlanParameters('tool1', endeffector_limits, max_deviation=0.1)
         """
 
-        self.__sample_resolution = kwargs.get("sample_resolution", 0.08)
-        if not isinstance(self.__sample_resolution, float):
-            raise TypeError('sample_resolution is not of expected type float')
-        self.__collision_check = kwargs.get("collision_check", True)
-        if not isinstance(self.__collision_check, bool):
-            raise TypeError('collision_check is not of expected type bool')
-        self.__max_deviation = kwargs.get("max_deviation", 0.2)
-        if not isinstance(self.__sample_resolution, float):
-            raise TypeError('sample_resolution is not of expected type float')
-        self.__ik_jump_threshold = kwargs.get("ik_jump_threshold", 1.2)
-        if not isinstance(self.__ik_jump_threshold, float):
-            raise TypeError('ik_jump_threshold is not of expected type float')
-        self.__scale_velocity = kwargs.get("scale_velocity", 1.0)
-        if not isinstance(self.__scale_velocity, float):
-            raise TypeError('scale_velocity is not of expected type float')
-        if self.__scale_velocity < 0.0 or self.__scale_velocity > 1.0:
-            raise ValueError('scale_velocity is not in expected range'
-                             'between 0.0 and 1.0')
-        self.__scale_acceleration = kwargs.get("acceleration_velocity", 1.0)
-        if not isinstance(self.__scale_acceleration, float):
-            raise TypeError('scale_acceleration is not of expected type float')
-        if self.__scale_acceleration < 0.0 or self.__scale_acceleration > 1.0:
-            raise ValueError('scale_acceleration is not in expected range'
+        # if you change defaults here please also edit documentation in
+        # motion_service.py create_task_space_plan_parameters()
+        try:
+            self.__sample_resolution = float(kwargs.get("sample_resolution",
+                                                        0.08))
+        except TypeError as exc:
+            raise TypeError('sample_resolution can not be converted to float')
+
+        try:
+            self.__collision_check = bool(kwargs.get("collision_check",
+                                                     True))
+        except TypeError as exc:
+            raise TypeError('collision_check can not be converted to bool')
+
+        try:
+            self.__ik_jump_threshold = float(kwargs.get("ik_jump_threshold",
+                                                        1.2))
+        except TypeError as exc:
+            raise TypeError('ik_jump_threshold can not be converted to float')
+
+        try:
+            self.__max_deviation = float(kwargs.get("max_deviation",
+                                                    0.2))
+        except TypeError as exc:
+            raise TypeError('max_deviation can not be converted to float')
+
+        try:
+            self.__velocity_scaling = float(kwargs.get("velocity_scaling",
+                                                       1.0))
+        except TypeError as exc:
+            raise TypeError('velocity_scaling can not be converted to float')
+        if self.__velocity_scaling < 0.0 or self.__velocity_scaling > 1.0:
+            raise ValueError('velocity_scaling is not in expected range'
                              'between 0.0 and 1.0')
 
-        if isinstance(ende_effector_limits, EndeffectorLimits):
+        try:
+            self.__acceleration_scaling = float(kwargs.get(
+                "acceleration_scaling",
+                1.0))
+        except TypeError as exc:
+            raise TypeError('acceleration_scaling can not'
+                            ' be converted to float')
+        if self.__acceleration_scaling < 0.0 or self.__acceleration_scaling > 1.0:
+            raise ValueError('acceleration_scaling is not in expected range'
+                             'between 0.0 and 1.0')
+
+        if isinstance(ende_effector_limits, EndEffectorLimits):
             s_x_velocity = (ende_effector_limits.max_xyz_velocity
-                            * self.__scale_velocity)
+                            * self.__velocity_scaling)
             s_x_acceleration = (ende_effector_limits.max_xyz_acceleration
-                                * self.__scale_acceleration)
+                                * self.__acceleration_scaling)
             s_a_velocity = (ende_effector_limits.max_angular_velocity
-                            * self.__scale_velocity)
+                            * self.__velocity_scaling)
             s_a_acceleration = (ende_effector_limits.max_angular_acceleration
-                                * self.__scale_acceleration)
+                                * self.__acceleration_scaling)
 
-            self.__endeffector_limits = EndeffectorLimits(s_x_velocity,
+            self.__endeffector_limits = EndEffectorLimits(s_x_velocity,
                                                           s_x_acceleration,
                                                           s_a_velocity,
                                                           s_a_acceleration)

@@ -142,7 +142,7 @@ class CartesianPath(object):
             A deque of Pose which represent the cartesian poses
             which are describe the path
         """
-        return self.__joints
+        return self.__points
 
     @property
     def Positions(self):

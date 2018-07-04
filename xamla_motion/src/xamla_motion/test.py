@@ -4,10 +4,10 @@ from __future__ import (absolute_import, division,
 from future.utils import raise_from, raise_with_traceback
 
 from data_types import *
-from motion_service import MotionServices
+from motion_service import MotionService
 import pdb
 
-motion_service = MotionServices()
+motion_service = MotionService()
 
 print('----------------query move groups---------------')
 groups = motion_service.query_available_move_groups()
@@ -118,18 +118,34 @@ print(pose)
 
 # print(collisions)
 
-print('---------create plan parameters------------')
+# print('---------create plan parameters------------')
 
-plan_parameters0 = motion_service.create_plan_parameters()
-print(plan_parameters0)
-plan_parameters1 = motion_service.create_plan_parameters(groups[0].name)
-print(plan_parameters1)
-plan_parameters2 = motion_service.create_plan_parameters(groups[0].name,
-                                                         groups[0].joint_set)
-print(plan_parameters2)
+# plan_parameters0 = motion_service.create_plan_parameters()
+# print(plan_parameters0)
+# plan_parameters1 = motion_service.create_plan_parameters(groups[0].name)
+# print(plan_parameters1)
+# plan_parameters2 = motion_service.create_plan_parameters(groups[0].name,
+#                                                          groups[0].joint_set)
+# print(plan_parameters2)
 
-max_velocities = [1.0]*len(groups[0].joint_set)
-plan_parameters3 = motion_service.create_plan_parameters(groups[0].name,
-                                                         None,
-                                                         max_velocities)
-print(plan_parameters3)
+# max_velocities = ['1.0']*len(groups[0].joint_set)
+# plan_parameters3 = motion_service.create_plan_parameters(groups[0].name,
+#                                                          None,
+#                                                          max_velocities,
+#                                                          velocity_scaling=0.6)
+# print(plan_parameters3)
+
+
+print('---------create task space plan parameters------------')
+
+t_plan_parameters0 = motion_service.create_task_space_plan_parameters()
+print(t_plan_parameters0)
+t_plan_parameters1 = motion_service.create_task_space_plan_parameters(
+    list(end_effectors)[0])
+print(t_plan_parameters1)
+
+max_xyz_velocities = 1.0
+t_plan_parameters3 = motion_service.create_task_space_plan_parameters(list(end_effectors)[0],
+                                                                      max_xyz_velocities,
+                                                                      velocity_scaling=0.6)
+print(t_plan_parameters3)

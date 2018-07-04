@@ -39,13 +39,13 @@ class EndEffectorLimits(object):
 
         Parameters
         ----------
-        max_xyz_velocity : float convertable
+        max_xyz_velocity : float convertable or None 
             Defines the maximal xyz velocity [m/s]
-        max_xyz_acceleration : float convertable (read only)
+        max_xyz_acceleration : float convertable 
             Defines the maximal xyz acceleration [m/s^2]
-        max_angular_velocity : float convertable (read only)
+        max_angular_velocity : float convertable or None
             Defines the maximal angular velocity [rad/s]
-        max_angular_acceleration : float convertable (read only)
+        max_angular_acceleration : float convertable or None
             Defines the maximal angular acceleration [rad/s^2]
 
         Returns
@@ -57,15 +57,25 @@ class EndEffectorLimits(object):
             TypeError : type mismatch
                 If one of the parameters is not convertable to float
         """
-        self.__max_xyz_velocity = np.float64(max_xyz_velocity)
-        self.__max_xyz_acceleration = np.float64(max_xyz_acceleration)
-        self.__max_angular_velocity = np.float64(max_angular_velocity)
-        self.__max_angular_acceleration = np.float64(max_angular_acceleration)
+
+        self.__max_xyz_velocity = None
+        self.__max_xyz_acceleration = None
+        self.__max_angular_velocity = None
+        self.__max_angular_acceleration = None
+
+        if max_xyz_velocity:
+            self.__max_xyz_velocity = float(max_xyz_velocity)
+        if max_xyz_acceleration:
+            self.__max_xyz_acceleration = float(max_xyz_acceleration)
+        if max_angular_velocity:
+            self.__max_angular_velocity = float(max_angular_velocity)
+        if max_angular_acceleration:
+            self.__max_angular_acceleration = float(max_angular_acceleration)
 
     @property
     def max_xyz_velocity(self):
         """
-        max_xyz_velocity : numpy float (read only)
+        max_xyz_velocity : float or None(read only)
             Maximal xyz velocity [m/s]
         """
         return self.__max_xyz_velocity
@@ -73,7 +83,7 @@ class EndEffectorLimits(object):
     @property
     def max_xyz_acceleration(self):
         """
-        max_xyz_acceleration : numpy float (read only)
+        max_xyz_acceleration : float or None(read only)
             Max xyz acceleration [m/(s^2)]
         """
         return self.__max_xyz_acceleration
@@ -81,7 +91,7 @@ class EndEffectorLimits(object):
     @property
     def max_angular_velocity(self):
         """
-        max_angular_velocity: numpy float(read only)
+        max_angular_velocity: float or None(read only)
             Max angular velocity[rad/s]
         """
         return self.__max_angular_velocity
@@ -89,7 +99,7 @@ class EndEffectorLimits(object):
     @property
     def max_angular_acceleration(self):
         """
-        max_angular_acceleration: numpy float(read only)
+        max_angular_acceleration: float or None(read only)
             Max angular acceleration[rad/(s ^ 2)]
         """
         return self.__max_angular_acceleration

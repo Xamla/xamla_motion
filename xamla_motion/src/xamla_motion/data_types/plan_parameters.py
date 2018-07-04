@@ -20,7 +20,7 @@
 
 from __future__ import (absolute_import, division,
                         print_function)  # , unicode_literals)
-#from future.builtins import *
+# from future.builtins import *
 from future.utils import raise_from, raise_with_traceback
 from copy import deepcopy
 
@@ -55,7 +55,7 @@ class PlanParameters(object):
             The argv dict is used to set parameters which have default values
             this are sample_resolution (default = 0.008 / 125 hz),
             collision_check (default = True), max_deviation (default = 0.2),
-            scale_velocity (default = 1.0) and scale_acceleration (
+            velocity_scaling (default = 1.0) and acceleration_scaling (
                 default = 1.0)
 
         Returns
@@ -65,7 +65,7 @@ class PlanParameters(object):
         Raises
         ------
             TypeError : type mismatch
-                If joint_limits is not of expected type JointLimts 
+                If joint_limits is not of expected type JointLimts
 
         Examples
         --------
@@ -79,32 +79,50 @@ class PlanParameters(object):
         >>> p = PlanParameters('left_arm', joint_Limits, scale_velocity=0.5)
         """
 
-        self.__sample_resolution = kwargs.get("sample_resolution", 0.08)
-        if not isinstance(self.__sample_resolution, float):
-            raise TypeError('sample_resolution is not of expected type float')
-        self.__collision_check = kwargs.get("collision_check", True)
-        if not isinstance(self.__collision_check, bool):
-            raise TypeError('collision_check is not of expected type bool')
-        self.__max_deviation = kwargs.get("max_deviation", 0.2)
-        if not isinstance(self.__sample_resolution, float):
-            raise TypeError('sample_resolution is not of expected type float')
-        self.__scale_velocity = kwargs.get("scale_velocity", 1.0)
-        if not isinstance(self.__scale_velocity, float):
-            raise TypeError('scale_velocity is not of expected type float')
-        if self.__scale_velocity < 0.0 or self.__scale_velocity > 1.0:
-            raise ValueError('scale_velocity is not in expected range'
+        # if you change defaults here please also edit documentation in
+        # motion_service.py create_plan_parameters()
+        try:
+            self.__sample_resolution = float(kwargs.get("sample_resolution",
+                                                        0.08))
+        except TypeError as exc:
+            raise TypeError('sample_resolution can not be converted to float')
+
+        try:
+            self.__collision_check = bool(kwargs.get("collision_check",
+                                                     True))
+        except TypeError as exc:
+            raise TypeError('collision_check can not be converted to bool')
+
+        try:
+            self.__max_deviation = float(kwargs.get("max_deviation",
+                                                    0.2))
+        except TypeError as exc:
+            raise TypeError('max_deviation can not be converted to float')
+
+        try:
+            self.__velocity_scaling = float(kwargs.get("velocity_scaling",
+                                                       1.0))
+        except TypeError as exc:
+            raise TypeError('velocity_scaling can not be converted to float')
+        if self.__velocity_scaling < 0.0 or self.__velocity_scaling > 1.0:
+            raise ValueError('velocity_scaling is not in expected range'
                              'between 0.0 and 1.0')
-        self.__scale_acceleration = kwargs.get("acceleration_velocity", 1.0)
-        if not isinstance(self.__scale_acceleration, float):
-            raise TypeError('scale_acceleration is not of expected type float')
-        if self.__scale_acceleration < 0.0 or self.__scale_acceleration > 1.0:
-            raise ValueError('scale_acceleration is not in expected range'
+
+        try:
+            self.__acceleration_scaling = float(kwargs.get(
+                "acceleration_scaling",
+                1.0))
+        except TypeError as exc:
+            raise TypeError('acceleration_scaling can not'
+                            ' be converted to float')
+        if self.__acceleration_scaling < 0.0 or self.__acceleration_scaling > 1.0:
+            raise ValueError('acceleration_scaling is not in expected range'
                              'between 0.0 and 1.0')
 
         if isinstance(joint_limits, JointLimits):
-            max_s_velocity = joint_limits.max_velocity * self.__scale_velocity
+            max_s_velocity = joint_limits.max_velocity * self.__velocity_scaling
             max_s_acceleration = (joint_limits.max_acceleration
-                                  * self.__scale_acceleration)
+                                  * self.__acceleration_scaling)
             self.__joint_limits = JointLimits(joint_limits.joint_set,
                                               max_s_velocity,
                                               max_s_acceleration,

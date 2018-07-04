@@ -15,3 +15,4 @@ from .end_effector_limits import EndEffectorLimits
 from .joint_limits import JointLimits
 from .plan_parameters import PlanParameters
 from .task_space_plan_parameters import TaskSpacePlanParameters
+from .ik_results import IkResults

@@ -48,6 +48,10 @@ class JointValues(object):
         Creates a transformed version of JointValues
     select(names)
         Creates a JointValue instance which only contains selected joints
+    from_joint_path_point_msg
+        Creates an instance of JointValues from a JointPathPoint ros message
+    to_joint_path_point_msg
+        Transform to xamlamoveit_msgs JointPathMessage
     """
 
     def __init__(self, joint_set, values):
@@ -107,6 +111,33 @@ class JointValues(object):
             raise exc
 
         self.__values.flags.writeable = False
+
+    @classmethod
+    def from_joint_path_point_msg(cls, joint_set, msg):
+        """
+        Creates an instance of JointValues from a JointPathPoint ros message
+
+        Parameters
+        ----------
+        joint_set : JointSet
+            Joint set to assign joint with values
+        msg : JointPathPoint ros message
+            Message which should be transformed to JointValues
+
+        Returns
+        JointValues
+            New instance of JointValues
+
+        Raises
+        ------
+        TypeError
+            If joint_set is not of type JointSet
+        """
+
+        if not isinstance(joint_set, JointSet):
+            raise TypeError('joint_set is not of expected type JointSet')
+
+        return cls(joint_set, msg.positions)
 
     @staticmethod
     def empty():
