@@ -166,7 +166,7 @@ class PlanParameters(object):
             The argv dict is used to set parameters which have default values
             this are sample_resolution (default = 0.008),
             collision_check (default = True), max_deviation (default = 0.2),
-            scale_velocity (default = 1.0) and scale_acceleration (
+            velocity_scaling (default = 1.0) and acceleration_scaling (
                 default = 1.0)
         """
 
@@ -198,6 +198,46 @@ class PlanParameters(object):
         return self.__joint_limits
 
     @property
+    def joint_set(self):
+        """
+        joint_set : JointSet (read only)
+            set of joints for which the limits are defined
+        """
+        return self.__joint_limits.joint_set
+
+    @property
+    def max_velocity(self):
+        """
+        max_velocity : numpy.array(dtype=floating) (read only)
+            maximal velocities
+        """
+        return self.__joint_limits.max_velocity
+
+    @property
+    def max_acceleration(self):
+        """
+        max_acceleration : numpy.array(dtype=floating) (read only)
+            maximal acceleration
+        """
+        return self.__joint_limits.max_acceleration
+
+    @property
+    def min_position(self):
+        """
+        min_position : numpy.array(dtype=floating) (read only)
+            position limit minimum
+        """
+        return self.__joint_limits.min_position
+
+    @property
+    def max_position(self):
+        """
+        max_position : numpy.array(dtype=floating) (read only)
+            position limit maximum
+        """
+        return self.__joint_limits.max_position
+
+    @property
     def sample_resolution(self):
         """
         sample_resolution: float
@@ -221,6 +261,24 @@ class PlanParameters(object):
             when fly-by-points in joint space
         """
         return self.__max_deviation
+
+    @property
+    def velocity_scaling(self):
+        """
+        velocity_scaling: float (read only)
+            scaling factor which was applied to input velocity limits
+            range between 0.0 and 1.0
+        """
+        return self.__velocity_scaling
+
+    @property
+    def acceleration_scaling(self):
+        """
+        acceleration_scaling: float (read only)
+            scaling factor which was applied to input acceleration limits
+            range between 0.0 and 1.0
+        """
+        return self.__acceleration_scaling
 
     def __iter__(self):
         return self.__joint_limits.__iter__()

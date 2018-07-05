@@ -103,7 +103,7 @@ class CartesianPath(object):
             raise TypeError('joint_values is not of expected'
                             ' type Pose')
 
-        return cls(point.joint_set, [point])
+        return cls([point])
 
     @classmethod
     def from_start_stop_point(cls, start, stop):
@@ -133,7 +133,7 @@ class CartesianPath(object):
             raise TypeError('start or/and stop are not of'
                             'expected type Pose')
 
-        return cls(start.joint_set, [start, stop])
+        return cls([start, stop])
 
     @property
     def points(self):

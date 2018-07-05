@@ -168,7 +168,7 @@ class JointPath(object):
             A deque of JointValues which represent the joint configurations
             which are describe the path
         """
-        return self.__joints
+        return self.__points
 
     def prepend(self, points):
         """

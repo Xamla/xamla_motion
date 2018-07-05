@@ -25,9 +25,10 @@ from future.utils import raise_from, raise_with_traceback
 
 from datetime import timedelta
 import numpy as np
+import rospy
 
 from data_types import JointSet, JointValues
-from trajectory_msgs.msg import JointTrajectoryPoint
+import trajectory_msgs.msg
 
 
 class JointTrajectoryPoint(object):
@@ -41,6 +42,8 @@ class JointTrajectoryPoint(object):
     add_time_offset
         Creates a new instance of this JointTrajectoryPoint with same
         position, vel, acc, eff but with a modified time_from_start
+    to_joint_trajectory_point_msg(self):
+        Converts JointTrajectoryPoint to JointTrajectoryPoint ros message
     """
 
     def __init__(self, time_from_start, positions, velocities=None,
@@ -110,7 +113,7 @@ class JointTrajectoryPoint(object):
         Creates an instance of JointTrajectoryPoint from ros message
 
         Creates an instance of JointTrajectoryPoint from the ros message
-        trajectory_msgs/JointTrajecoryPoint
+        trajectory_msgs/JointTrajectoryPoint
 
         Parameters
         ----------
@@ -243,6 +246,36 @@ class JointTrajectoryPoint(object):
                              self.__velocities,
                              self.__accelerations,
                              self.__efforts)
+
+    def to_joint_trajectory_point_msg(self):
+        """
+        Converts JointTrajectoryPoint to JointTrajectoryPoint ros message
+
+        trajectory_msgs/JointTrajectoryPoint.msg
+
+        Returns
+        -------
+        JointTrajectoryPoint msg
+            New instance of JointTrajectoryPoint with the values 
+            of the ros message
+
+        """
+        msg = trajectory_msgs.msg.JointTrajectoryPoint()
+
+        msg.positions = list(self.__positions.values)
+        if self.__velocities:
+            msg.velocities = list(self.__velocities.values)
+        if self.__accelerations:
+            msg.accelerations = list(self.__accelerations.values)
+        if self.__efforts:
+            msg.effort = list(self.__efforts.values)
+
+        secs = (self.__time_from_start.days * 24*3600 +
+                self.__time_from_start.seconds)
+        nsecs = self.__time_from_start.microseconds * 1000
+        msg.time_from_start = rospy.Duration(secs, nsecs)
+
+        return msg
 
     def __str__(self):
         s = '\n'.join(['  '+k+' = ' + str(v)

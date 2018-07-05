@@ -25,6 +25,9 @@ from future.utils import raise_from, raise_with_traceback
 
 from datetime import timedelta
 import numpy as np
+import rospy
+from std_msgs.msg import Header
+import trajectory_msgs
 
 from data_types import JointSet
 from data_types import JointTrajectoryPoint
@@ -291,6 +294,37 @@ class JointTrajectory(object):
             of JointTrajectoryPoints
         """
         return [p.time_from_start for p in self.__points]
+
+    def to_joint_trajectory_msg(self, seq=0, frame_id=''):
+        """
+        Converts JointTrajectory to JointTrajectory ros message
+
+        trajectory_msgs/JointTrajectory.msg
+
+        Parameters
+        ----------
+        seq : int (default 0)
+            set seq field of message header
+        frame_id : int (default 0)
+            set frame_id field of message header 
+
+        Returns
+        -------
+        JointTrajectory ros message
+            Instance of JointTrajectory ros message
+        """
+
+        msg = trajectory_msgs.msg.JointTrajectory()
+
+        msg.joint_names = self.__joint_set.names
+        msg.points = [p.to_joint_trajectory_point_msg()
+                      for p in self.__points]
+
+        msg.header.seq = seq
+        msg.header.frame_id = frame_id
+        msg.header.stamp = rospy.Time.now()
+
+        return msg
 
     def __getitem__(self, key):
         """

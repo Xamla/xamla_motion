@@ -225,7 +225,7 @@ class Pose(object):
                                  msg.pose.orientation.y,
                                  msg.pose.orientation.z])
 
-        return cls(translation, quaternion)
+        return cls(translation, quaternion, msg.header.frame_id)
 
     @property
     def frame_id(self):

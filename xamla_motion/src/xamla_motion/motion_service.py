@@ -24,16 +24,25 @@ from future.builtins import map, range
 from future.utils import raise_from, raise_with_traceback
 
 import rospy
+import actionlib
 import pdb
 import numpy as np
-from datatime import timedelta
+from datetime import timedelta
 
 from xamlamoveit_msgs.srv import *
+from xamlamoveit_msgs.msg import *
 from moveit_msgs.msg import MoveItErrorCodes
+from std_srvs.srv import SetBool
 
 from xamla_motion_exceptions import ServiceException, ArgumentError
 from data_types import *
 from collections import Iterable
+
+try:
+    import asyncio
+except ImportError:
+    # Trollius >= 0.3 was renamed
+    import trollius as asyncio
 
 
 class MotionService(object):
@@ -54,10 +63,17 @@ class MotionService(object):
             self.__ik_service = rospy.ServiceProxy(
                 self.__query_inverse_kinematics_service,
                 GetIKSolution)
+
         except rospy.ServiceException as exc:
             raise_from(ServiceException('init service for query'
                                         ' inverse kinematics failed,'
                                         ' abort '), exc)
+
+        try:
+            self.__m_action = actionlib.SimpleActionClient(self.__movej_action,
+                                                           moveJAction)
+        except expression as identifier:
+            pass
 
     @classmethod
     def query_available_move_groups(cls):
@@ -1169,7 +1185,7 @@ class MotionService(object):
         if not isinstance(seed, JointValues):
             raise TypeError('seed is not of expected type JointValues')
 
-        if not isinstance(parameter, TaskSpacePlanParameters):
+        if not isinstance(parameters, TaskSpacePlanParameters):
             raise TypeError('parameters is not of expected type'
                             ' TaskSpacePlanParameters')
 
@@ -1187,7 +1203,7 @@ class MotionService(object):
                                                p.sample_resolution)
 
     @classmethod
-    def plan_move_joint(cls, path, parameters):
+    def plan_move_joints(cls, path, parameters):
         """
         Plans trajectory from a joint path
 
@@ -1223,11 +1239,11 @@ class MotionService(object):
         if not isinstance(path, JointPath):
             raise TypeError('path is not of expected type JointPath')
 
-        if not isinstance(parameter, PlanParameters):
+        if not isinstance(parameters, PlanParameters):
             raise TypeError('parameters is not of expected type'
                             ' PlanParameters')
 
-        path = JointPath(parameters.joints_set, path.points)
+        path = JointPath(parameters.joint_set, path.points)
 
         max_velocity = parameters.max_velocity
         max_acc = parameters.max_acceleration
@@ -1236,204 +1252,482 @@ class MotionService(object):
         acc_isnan = np.isnan(parameters.max_acceleration)
         if any(vel_isnan) or any(acc_isnan):
             limits = cls.query_joint_limits(path.joint_set)
+
             if any(vel_isnan):
                 max_velocity = [limits.max_velocity[i] *
                                 parameters.velocity_scaling
                                 if vel_isnan[i] else l
                                 for i, l in enumerate(parameters.max_velocity)]
 
-            if any(vel_isnan):
-                max_acc = [limits.max_accleration[i] *
+            if any(acc_isnan):
+                max_acc = [limits.max_acceleration[i] *
                            parameters.acceleration_scaling
-                           if vel_isnan[i] else l
+                           if acc_isnan[i] else l
                            for i, l in enumerate(parameters.max_acceleration)]
 
         return cls.query_joint_trajectory(path,
                                           max_velocity,
                                           max_acc,
-                                          parameters.max_deviation
+                                          parameters.max_deviation,
                                           parameters.sample_resolution)
 
-        # to do ExecuteJointTrajectory and ExecuteJointTrajectorySupervised
+    # to do ExecuteJointTrajectory and ExecuteJointTrajectorySupervised
 
-        def query_inverse_kinematics(self, pose, parameters,
-                                     seed=[],
-                                     end_effector_link='',
-                                     timeout=None,
-                                     attempts=1):
-            """
-            Query inverse kinematic solutions one pose
+    async def execute_joint_trajectory(self, trajectory, check_collision):
+        """
+        Executes a joint trajectory
 
-            Parameters
-            ----------
-            pose : pose
-                Pose to transform to joint space
-            parameters : PlanParameters
-                Plan parameters which defines the limits, settings
-                and move group name
-            seed : JointValues (optional)
-                Numerical seed to control joint configuration
-            end_effector_link : str convertable (optinal)
-                necessary if poses are defined for end effector link
-            timeout : datatime.timedelta
-                timeout 
-            attempts : int convertable
-                Attempts to find a solution or each pose
+        Parameters
+        ----------
+        trajectory : JointTrajectory 
+            Joint trajectory which should be executed
+        check_collision : bool convertable
+            If True check for collision while executing
 
-            Returns
-            -------
-            IkResult
-                Instance of IkResult with all found solutions as
-                a JointPath and error codes
+        Returns
+        -------
+        result : int
+            Result of the trajectory execution
 
-            Raises
-            ------
-            TypeError
-                If pose is not of type Pose or
-                parameters is not of type PlanParameters
-                or seed is not empty list or type JointValues
-                or the other parameters are not convertable
-                to defined types
-            ValueError
-                If parameters joint set is not equal or sub
-                set of the seed joint set if defined and therefore
-                reordering was not possible 
-            ServiceError
-                If query service is not available
-            """
+        Raises
+        ------
+        TypeError 
+            If trajectory is not of type JointTrajectory
+            or if check_collision is not convertable to bool
+        """
 
-            if not isinstance(pose, Pose):
-                raise TypeError('pose is not of expected type Pose')
+        if not isinstance(trajectory, JointTrajectory):
+            raise TypeError('trajectory is not of expected type'
+                            ' joint trajectory')
 
-            ipath = CartesianPath.from_one_point(pose)
+        check_collision = bool(check_collision)
 
-            result = self.query_inverse_kinematics_many(ipath,
-                                                        parameters,
-                                                        seed,
-                                                        end_effector_link,
-                                                        timeout,
-                                                        attempts)
+        goal = moveJGoal(trajectory=trajectory.to_joint_trajectory_msg(),
+                         check_collision=check_collision)
 
-            if not result.succeeded
-                raise ServiceException('service call for query inverse'
-                                       ' kinematics was not successful')
+        self.__m_action.send_goal_and_wait(goal)
+        response = self.__m_action.get_result()
 
-            return result.path[0]
+        if not response:
+            raise RuntimeError('Unexpected result received by'
+                               ' SimpleActionClient for moveJ action')
 
-        def query_inverse_kinematics_many(self, path, parameters,
-                                          seed=[],
-                                          end_effector_link='',
-                                          timeout=None,
-                                          attempts=1,
-                                          const_seed=False):
-            """
-            Query inverse kinematic solutions for all point in path
+        response.result
 
-            Parameters
-            ----------
-            path : CartesianPath
-                Path with poses to transform to joint space
-            parameters : PlanParameters
-                Plan parameters which defines the limits, settings
-                and move group name
-            seed : JointValues (optional)
-                Numerical seed to control joint configuration
-            end_effector_link : str convertable (optinal)
-                necessary if poses are defined for end effector link
-            timeout : datatime.timedelta
-                timeout 
-            attempts : int convertable
-                Attempts to find a solution or each pose
-            const_seed : bool convertable
-                todo
+    def query_inverse_kinematics(self, pose, parameters,
+                                 seed=[],
+                                 end_effector_link='',
+                                 timeout=None,
+                                 attempts=1):
+        """
+        Query inverse kinematic solutions one pose
 
-            Returns
-            -------
-            IkResult
-                Instance of IkResult with all found solutions as
-                a JointPath and error codes
+        Parameters
+        ----------
+        pose : pose
+            Pose to transform to joint space
+        parameters : PlanParameters
+            Plan parameters which defines the limits, settings
+            and move group name
+        seed : JointValues (optional)
+            Numerical seed to control joint configuration
+        end_effector_link : str convertable (optinal)
+            necessary if poses are defined for end effector link
+        timeout : datatime.timedelta
+            timeout
+        attempts : int convertable
+            Attempts to find a solution or each pose
 
-            Raises
-            ------
-            TypeError
-                If path is not of type CartesianPath or
-                parameters is not of type PlanParameters
-                or seed is not empty list or type JointValues
-                or the other parameters are not convertable
-                to defined types
-            ValueError
-                If parameters joint set is not equal or sub
-                set of the seed joint set if defined and therefore
-                reordering was not possible 
-            ServiceError
-                If query service is not available
-            """
+        Returns
+        -------
+        IkResult
+            Instance of IkResult with all found solutions as
+            a JointPath and error codes
 
-            if not isinstance(path, CartesianPath):
-                raise TypeError('path is not of expected type CartesianPath')
+        Raises
+        ------
+        TypeError
+            If pose is not of type Pose or
+            parameters is not of type PlanParameters
+            or seed is not empty list or type JointValues
+            or the other parameters are not convertable
+            to defined types
+        ValueError
+            If parameters joint set is not equal or sub
+            set of the seed joint set if defined and therefore
+            reordering was not possible
+        ServiceError
+            If query service is not available
+        """
 
-            if not isinstance(parameters, PlanParameters):
-                raise TypeError('parameters is not of expected'
-                                ' type PlanParameters')
+        if not isinstance(pose, Pose):
+            raise TypeError('pose is not of expected type Pose')
 
-            if (seed and not isinstance(seed, JointValues)):
+        ipath = CartesianPath.from_one_point(pose)
+
+        result = self.query_inverse_kinematics_many(ipath,
+                                                    parameters,
+                                                    seed,
+                                                    end_effector_link,
+                                                    timeout,
+                                                    attempts)
+
+        if not result.succeeded:
+            raise ServiceException('service call for query inverse'
+                                   ' kinematics was not successful')
+
+        return result.path[0]
+
+    def query_inverse_kinematics_many(self, path, parameters,
+                                      seed=[],
+                                      end_effector_link='',
+                                      timeout=None,
+                                      attempts=1,
+                                      const_seed=False):
+        """
+        Query inverse kinematic solutions for all point in path
+
+        Parameters
+        ----------
+        path : CartesianPath
+            Path with poses to transform to joint space
+        parameters : PlanParameters
+            Plan parameters which defines the limits, settings
+            and move group name
+        seed : JointValues (optional)
+            Numerical seed to control joint configuration
+        end_effector_link : str convertable (optinal)
+            necessary if poses are defined for end effector link
+        timeout : datatime.timedelta
+            timeout
+        attempts : int convertable
+            Attempts to find a solution or each pose
+        const_seed : bool convertable
+            todo
+
+        Returns
+        -------
+        IkResult
+            Instance of IkResult with all found solutions as
+            a JointPath and error codes
+
+        Raises
+        ------
+        TypeError
+            If path is not of type CartesianPath or
+            parameters is not of type PlanParameters
+            or seed is not empty list or type JointValues
+            or the other parameters are not convertable
+            to defined types
+        ValueError
+            If parameters joint set is not equal or sub
+            set of the seed joint set if defined and therefore
+            reordering was not possible
+        ServiceError
+            If query service is not available
+        """
+
+        if not isinstance(path, CartesianPath):
+            raise TypeError('path is not of expected type CartesianPath')
+
+        if not isinstance(parameters, PlanParameters):
+            raise TypeError('parameters is not of expected'
+                            ' type PlanParameters')
+
+        if seed:
+            if not isinstance(seed, JointValues):
                 raise TypeError('seed is not of expected'
                                 ' type JointValues')
-            elif (seed and seed.join_set != parameters.join_set and
-                  joint_positions_seed.is_similar(parameters.joint_set)):
-                seed = seed.reorder(parameters.join_set)
-            elif seed:
+            elif seed.joint_set == parameters.joint_set:
+                pass
+            elif seed.is_similar(parameters.joint_set):
+                seed = seed.reorder(parameters.joint_set)
+            else:
                 raise ValueError('joint set of parameters and seed do not'
                                  ' match and reording is not possible')
 
-            if timeout and not isinstance(timeout, timedelta):
-                raise TypeError('timeout is not of expected type timedelta')
-            else
-                timeout = timedelta(milliseconds=200)
+        if timeout and not isinstance(timeout, timedelta):
+            raise TypeError('timeout is not of expected type timedelta')
+        else:
+            timeout = timedelta(milliseconds=200)
 
-            end_effector_link = str(end_effector_link)
-            attempts = int(attempts)
-            const_seed = bool(const_seed)
+        end_effector_link = str(end_effector_link)
+        attempts = int(attempts)
+        const_seed = bool(const_seed)
 
-            try:
+        duration = self._ros_duration_from_timedelta(timeout)
+
+        try:
             response = self.__ik_service(parameters.move_group_name,
                                          parameters.joint_set.names,
                                          end_effector_link,
-                                         seed,
+                                         seed.to_joint_path_point_msg(),
                                          const_seed,
                                          [p.to_posestamped_msg()
-                                          for p in path],
+                                             for p in path],
                                          parameters.collision_check,
                                          attempts,
-                                         timeout)
-            except rospy.ServiceException as exc:
-                print ('service call for query inverse kinematics'
-                       ' failed, abort ')
-                raise_from(ServiceException('service call for query'
-                                            ' inverse kinematics'
-                                            ' failed, abort'), exc)
+                                         duration)
+        except rospy.ServiceException as exc:
+            print ('service call for query inverse kinematics'
+                   ' failed, abort ')
+            raise_from(ServiceException('service call for query'
+                                        ' inverse kinematics'
+                                        ' failed, abort'), exc)
 
-            f = JointValues.from_joint_path_point_msg
-            joint_path = JointPath(parameters.joint_set,
-                                   [f(parameters.joint_set, p)
-                                    for p in response.solutions])
+        f = JointValues.from_joint_path_point_msg
+        joint_path = JointPath(parameters.joint_set,
+                               [f(parameters.joint_set, p)
+                                for p in response.solutions])
 
-            error_codes = [e if e.val != 0 else MoveItErrorCodes.FAILURE
-                           for e in error_codes]
+        error_codes = [e.val if e.val != 0 else MoveItErrorCodes.FAILURE
+                       for e in response.error_codes]
 
-            return IkResults(joint_path, error_codes)
+        return IkResults(joint_path, error_codes)
 
-        def plan_cartesian_path(self, waypoints, parameters)
-            """
-            Plan a joint trajectory from a cartesian path and plan parameters
+    @staticmethod
+    def _ros_duration_from_timedelta(timedelta):
+        secs = timedelta.days*24*3600+timedelta.seconds
+        nsecs = timedelta.microseconds*1000
+        return rospy.Duration(secs, nsecs)
 
-            Parameters
-            ----------
-            """
+    def plan_cartesian_path(self, path, parameters):
+        """
+        Plan a joint trajectory from a cartesian path and plan parameters
 
-            seed = self.query_joint_states(parameter.joint_set).positions
-            result = self.query_inverse_kinematics_many(waypoints,
+        Parameters
+        ----------
+        path : CartesianPath
+            Poses the planned trajectory must reach
+        parameters : PlanParameters
+            Plan parameters which defines the limits, settings
+            and move group name
+
+        Returns
+        -------
+        JointTrajectory
+            A joint trajectory which reach defined poses of path
+            under the constrains in parameters
+
+
+        Raises
+        ------
+        TypeError
+            If path is not of type CartesianPath or
+            parameters is not of type PlanParameters
+        ValueError
+            If parameters joint set is not equal or sub
+            set of the seed joint set and therefore
+            reordering was not possible
+        ServiceError
+            If query services are not available or
+            finish unsuccessfully
+        """
+
+        seed = self.query_joint_states(parameters.joint_set).positions
+        joint_path = self.query_inverse_kinematics_many(path,
                                                         parameters,
-                                                        seed).Path
-            return self.plan_collision_free_joint_path(joint_path,
-                                                       parameters)
+                                                        seed).path
+        return self.plan_collision_free_joint_path(joint_path,
+                                                   parameters)
+
+    @classmethod
+    def emergency_stop(cls, enable=True):
+        """
+        Sets and resets emergency stop
+
+        Parameters
+        ----------
+        enable : bool convertable (default True)
+            If True activate emergency stop
+            If False resets the emergency stop
+
+        Returns
+        -------
+        success : bool
+            True if the service call was successful
+        message : str
+            Response or error message
+
+        Raises
+        ------
+        TypeError
+            If enable is not convertable to bool
+        ServiceError
+            If query service is not available
+        """
+
+        query_emergency_stop = ('EmergencySTOP/'
+                                'query_emergency_stop')
+
+        enable = bool(enable)
+
+        try:
+            service = rospy.ServiceProxy(
+                query_emergency_stop,
+                SetBool)
+            response = service(enable)
+        except rospy.ServiceException as exc:
+            print ('service set emergency stop failed')
+            raise_from(ServiceException('service call for set emergency'
+                                        ' stop failed, abort'), exc)
+
+        return response.success, response.message
+
+    @classmethod
+    def get_current_joint_values(cls, joint_set):
+        """
+        Query the current joint positions of all joints in joint_set
+
+        Parameters
+        ----------
+        joint_set : JointSet
+            Defines for which joint the positions are requested
+
+        Returns
+        ------
+        positions : JointValues
+            Returns a instance of JointValues with the positions
+            of the requested joint set
+
+        Raises
+        ------
+        TypeError
+            If joint_set is not of type JointSet
+        """
+        print(rospy.get_name())
+        return cls.query_joint_states(joint_set).positions
+
+    async def move_joints(self, target, parameters):
+        """
+        Moves joints to target joint positions
+
+        Parameters
+        ----------
+        target : JointValues
+            target joint positions
+        parameters : PlanParameters
+            Plan parameters which defines the limits, settings
+            and move group name
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        TypeError
+            If target is not of type JointValues or
+            if parameters is not of type PlanParameters
+        ServiceError
+            If query services are not available or finish
+            with a fail state
+        """
+
+        if not isinstance(target, JointValues):
+            raise TypeError('target is not of expected type JointValues')
+
+        if not isinstance(parameters, PlanParameters):
+            raise TypeError('parameters is not of expected'
+                            ' type PlanParameters')
+
+        source = self.get_current_joint_values(parameters.joint_set)
+        path = JointPath.from_start_stop_point(source, target)
+        trajectory = self.plan_move_joints(path, parameters)
+        await self.execute_joint_trajectory(trajectory, parameters.collision_check)
+
+    async def move_pose(self, target, end_effector_link, parameters, seed=None):
+        """
+        Moves to target pose
+
+        Parameters
+        ----------
+        target : Pose
+            target pose
+        end_effector_link : str convertable
+            specifies for which link the pose is defined
+        seed : JointValues or None
+            numerical seed to control the robot configuration
+            if none the current joint position is used
+        parameters : PlanParameters
+            Plan parameters which defines the limits, settings
+            and move group name
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        TypeError
+            If target is not of type Pose
+            If parameters is not of type PlanParameters
+            If end_effector_link is not convertable to str
+            If seed is not of type JointValues
+        ServiceError
+            If query services are not available or finish
+            with a fail state
+        """
+
+        if not isinstance(target, Pose):
+            raise TypeError('target is not of expected type Pose')
+
+        if not seed:
+            seed = self.get_current_joint_values(parameters.joint_set)
+
+        joint_values = self.query_inverse_kinematics(target, parameters,
+                                                     seed,
+                                                     end_effector_link)
+
+        await self.move_joints(joint_values, parameters)
+
+    async def move_pose_linear(self, target, end_effector_link, parameters, seed=None):
+        """
+        Moves to target pose linear
+
+        Parameters
+        ----------
+        target : Pose
+            target pose
+        end_effector_link : str convertable
+            specifies for which link the pose is defined
+        seed : JointValues
+            numerical seed to control the robot configuration
+        parameters : TaskPlanParameters
+            Task space plan parameters which defines the limits, settings
+            and end effector name
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        TypeError
+            If target is not of type Pose
+            If parameters is not of type TaskSpacePlanParameters
+            If end_effector_link is not convertable to str
+            If seed is not of type JointValues or None
+        ServiceError
+            If query services are not available or finish
+            with a fail state
+        """
+
+        groups = self.query_available_move_groups()
+        group = next(g for g in groups
+                     if any(g.end_effector_names ==
+                            parameters.end_effector_name))
+
+        if not group:
+            raise RuntimeError('no move group is available with'
+                               ' requested end effector name: ' +
+                               parameters.end_effector_name)
+
+        if not seed:
+            seed = self.get_current_joint_values(group.joint_set)
+
+        source = self.query_pose(group.name, seed, end_effector_link)
+        path = CartesianPath.from_start_stop_point(source, target)
+        trajectory = self.plan_move_pose_linear(path, seed, parameters)
+        await self.execute_joint_trajectory(trajectory,
+                                            parameters.collision_check)

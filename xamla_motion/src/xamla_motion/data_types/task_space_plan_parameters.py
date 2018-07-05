@@ -42,7 +42,7 @@ class TaskSpacePlanParameters(object):
         from single limit arguments
     """
 
-    def __init__(self, ende_effector_name, ende_effector_limits, **kwargs):
+    def __init__(self, end_effector_name, end_effector_limits, **kwargs):
         """
         Initialization of TaskSpacePlanParameters class
 
@@ -71,8 +71,8 @@ class TaskSpacePlanParameters(object):
 
         Examples
         --------
-        >>> endeffector_limits = EndeffectorLimits(1.0, 1.0, 1.0, 1.0)
-        >>> p = TaskSpacePlanParameters('tool1', endeffector_limits, max_deviation=0.1)
+        >>> end_effector_limits = EndeffectorLimits(1.0, 1.0, 1.0, 1.0)
+        >>> p = TaskSpacePlanParameters('tool1', end_effector_limits, max_deviation=0.1)
         """
 
         # if you change defaults here please also edit documentation in
@@ -121,28 +121,28 @@ class TaskSpacePlanParameters(object):
             raise ValueError('acceleration_scaling is not in expected range'
                              'between 0.0 and 1.0')
 
-        if isinstance(ende_effector_limits, EndEffectorLimits):
-            s_x_velocity = (ende_effector_limits.max_xyz_velocity
+        if isinstance(end_effector_limits, EndEffectorLimits):
+            s_x_velocity = (end_effector_limits.max_xyz_velocity
                             * self.__velocity_scaling)
-            s_x_acceleration = (ende_effector_limits.max_xyz_acceleration
+            s_x_acceleration = (end_effector_limits.max_xyz_acceleration
                                 * self.__acceleration_scaling)
-            s_a_velocity = (ende_effector_limits.max_angular_velocity
+            s_a_velocity = (end_effector_limits.max_angular_velocity
                             * self.__velocity_scaling)
-            s_a_acceleration = (ende_effector_limits.max_angular_acceleration
+            s_a_acceleration = (end_effector_limits.max_angular_acceleration
                                 * self.__acceleration_scaling)
 
-            self.__endeffector_limits = EndEffectorLimits(s_x_velocity,
-                                                          s_x_acceleration,
-                                                          s_a_velocity,
-                                                          s_a_acceleration)
+            self.__end_effector_limits = EndEffectorLimits(s_x_velocity,
+                                                           s_x_acceleration,
+                                                           s_a_velocity,
+                                                           s_a_acceleration)
         else:
             raise TypeError('end_effector_limits is not of'
                             ' expected type EndEffectorLimits')
 
-        self.__endeffector_name = str(ende_effector_name)
+        self.__end_effector_name = str(end_effector_name)
 
     @classmethod
-    def from_arguments(cls, ende_effector_name, max_xyz_velocity,
+    def from_arguments(cls, end_effector_name, max_xyz_velocity,
                        max_xyz_acceleration, max_angular_velocity,
                        max_angular_acceleration, **kwargs):
         """
@@ -164,8 +164,8 @@ class TaskSpacePlanParameters(object):
             The argv dict is used to set parameters which have default values
             this are sample_resolution (default = 0.008),
             collision_check (default = True), max_deviation (default = 0.2),
-            ik_jump_threshold (default = 1.2), scale_velocity (default = 1.0) 
-            and scale_acceleration (default = 1.0)
+            ik_jump_threshold (default = 1.2), velocity_scaling (default = 1.0) 
+            and acceleration_scaling (default = 1.0)
 
         Returns
         -------
@@ -184,32 +184,64 @@ class TaskSpacePlanParameters(object):
         """
 
         try:
-            endeffector_limits = EndeffectorLimits(max_xyz_velocity,
-                                                   max_xyz_acceleration,
-                                                   max_angular_velocity,
-                                                   max_angular_acceleration)
+            end_effector_limits = EndeffectorLimits(max_xyz_velocity,
+                                                    max_xyz_acceleration,
+                                                    max_angular_velocity,
+                                                    max_angular_acceleration)
         except (ValueError, TypeError) as exc:
             raise_from(ArgumentError('It was not possible to create'
                                      ' an instance of Endeffectorlimits'
                                      ' due to limit type or size'), exc)
 
-        return cls(ende_effector_name, endeffector_limits, kwargs)
+        return cls(end_effector_name, end_effector_limits, kwargs)
 
     @property
-    def endeffector_name(self):
+    def end_effector_name(self):
         """
-        endeffector_name : str (read only)
+        end_effector_name : str (read only)
             Name of the move group for which plan parameters are applied
         """
-        return self.__endeffector_name
+        return self.__end_effector_name
 
     @property
-    def endeffector_limits(self):
+    def end_effector_limits(self):
         """
-        endeffector_limits: EndeffectorLimits(read only)
+        end_effector_limits: EndeffectorLimits(read only)
             define the task space constraints
         """
-        return self.__endeffector_limits
+        return self.__end_effector_limits
+
+    @property
+    def max_xyz_velocity(self):
+        """
+        max_xyz_velocity: float(read only)
+            max translational velocity
+        """
+        return self.__end_effector_limits.max_xyz_velocity
+
+    @property
+    def max_xyz_acceleration(self):
+        """
+        max_xyz_acceleration: float(read only)
+            max translational acceleration
+        """
+        return self.__end_effector_limits.max_xyz_acceleration
+
+    @property
+    def max_angular_velocity(self):
+        """
+        max_angular_velocity: float(read only)
+            max angular velocity
+        """
+        return self.__end_effector_limits.max_angular_velocity
+
+    @property
+    def max_angular_acceleration(self):
+        """
+        max_angular_acceleration: float(read only)
+            max angular acceleration
+        """
+        return self.__end_effector_limits.max_angular_acceleration
 
     @property
     def sample_resolution(self):
@@ -237,21 +269,39 @@ class TaskSpacePlanParameters(object):
         return self.__max_deviation
 
     @property
-    def jk_jump_threshold(self):
+    def ik_jump_threshold(self):
         """
         ik_jump_threshold: float
             defines the inverse kinematic jump threshold
         """
         return self.__ik_jump_threshold
 
+    @property
+    def velocity_scaling(self):
+        """
+        velocity_scaling: float (read only)
+            scaling factor which was applied to input velocity limits
+            range between 0.0 and 1.0
+        """
+        return self.__velocity_scaling
+
+    @property
+    def acceleration_scaling(self):
+        """
+        acceleration_scaling: float (read only)
+            scaling factor which was applied to input acceleration limits
+            range between 0.0 and 1.0
+        """
+        return self.__acceleration_scaling
+
     def __str__(self):
         j_str = '\n'.join(['sampling_resolution = '+str(self.__sample_resolution),
                            'collision_check = '+str(self.__collision_check),
                            'max_devitation = '+str(self.__max_deviation),
                            'ik_jump_threshold ='+str(self.__ik_jump_threshold)])
-        endeffector_limits_str = '\n' + self.__endeffector_limits.__str__()
-        endeffector_limits_str = endeffector_limits_str.replace('\n', '\n  ')
-        return 'TaskSpacePlanParameters:\n' + j_str + endeffector_limits_str
+        end_effector_limits_str = '\n' + self.__end_effector_limits.__str__()
+        end_effector_limits_str = end_effector_limits_str.replace('\n', '\n  ')
+        return 'TaskSpacePlanParameters:\n' + j_str + end_effector_limits_str
 
     def __repr__(self):
         return self.__str__()
@@ -266,7 +316,7 @@ class TaskSpacePlanParameters(object):
         if id(other) == id(self):
             return True
 
-        if other.endeffector_limits != self.__endeffector_limits:
+        if other.end_effector_limits != self.__end_effector_limits:
             return False
 
         if not np.isclose(self.__sample_resolution, other.sampling_resolution,

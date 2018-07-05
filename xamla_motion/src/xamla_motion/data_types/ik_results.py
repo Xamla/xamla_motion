@@ -38,7 +38,7 @@ class IkResults(object):
         path : JointPath
             solutions from the inverse kinematics
         """
-        return self.__index
+        return self.__path
 
     @property
     def error_codes(self):
@@ -46,12 +46,15 @@ class IkResults(object):
         error_code : List[MoveItErrorCodes]
             error codes
         """
-        return self.__error_code
+        return self.__error_codes
 
     @property
     def succeeded(self):
         if all([e == MoveItErrorCodes.SUCCESS
-                for e in self.__error_codes])
+                for e in self.__error_codes]):
+            return True
+        else:
+            return False
 
     def __str__(self):
         return str(error_codes)

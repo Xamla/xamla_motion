@@ -5,7 +5,17 @@ from future.utils import raise_from, raise_with_traceback
 
 from data_types import *
 from motion_service import MotionService
+from pyquaternion import Quaternion
+import rospy
+
+try:
+    import asyncio
+except ImportError:
+    # Trollius >= 0.3 was renamed
+    import trollius as asyncio
 import pdb
+
+rospy.init_node('test_motion_service')
 
 motion_service = MotionService()
 
@@ -118,34 +128,95 @@ print(pose)
 
 # print(collisions)
 
-# print('---------create plan parameters------------')
+print('---------create plan parameters------------')
 
-# plan_parameters0 = motion_service.create_plan_parameters()
-# print(plan_parameters0)
-# plan_parameters1 = motion_service.create_plan_parameters(groups[0].name)
-# print(plan_parameters1)
-# plan_parameters2 = motion_service.create_plan_parameters(groups[0].name,
-#                                                          groups[0].joint_set)
-# print(plan_parameters2)
+plan_parameters0 = motion_service.create_plan_parameters()
+print(plan_parameters0)
+plan_parameters1 = motion_service.create_plan_parameters(groups[0].name)
+print(plan_parameters1)
+plan_parameters2 = motion_service.create_plan_parameters(groups[0].name,
+                                                         groups[0].joint_set)
+print(plan_parameters2)
 
-# max_velocities = ['1.0']*len(groups[0].joint_set)
-# plan_parameters3 = motion_service.create_plan_parameters(groups[0].name,
-#                                                          None,
-#                                                          max_velocities,
-#                                                          velocity_scaling=0.6)
-# print(plan_parameters3)
+max_velocities = ['1.0']*len(groups[0].joint_set)
+max_velocities[3] = None
+print(max_velocities)
+plan_parameters3 = motion_service.create_plan_parameters(groups[0].name,
+                                                         None,
+                                                         max_velocities,
+                                                         velocity_scaling=0.6)
+print(plan_parameters3)
 
 
-print('---------create task space plan parameters------------')
+# print('---------create task space plan parameters------------')
 
-t_plan_parameters0 = motion_service.create_task_space_plan_parameters()
-print(t_plan_parameters0)
-t_plan_parameters1 = motion_service.create_task_space_plan_parameters(
-    list(end_effectors)[0])
-print(t_plan_parameters1)
+# t_plan_parameters0 = motion_service.create_task_space_plan_parameters()
+# print(t_plan_parameters0)
+# t_plan_parameters1 = motion_service.create_task_space_plan_parameters(
+#     list(end_effectors)[0])
+# print(t_plan_parameters1)
 
-max_xyz_velocities = 1.0
-t_plan_parameters3 = motion_service.create_task_space_plan_parameters(list(end_effectors)[0],
-                                                                      max_xyz_velocities,
-                                                                      velocity_scaling=0.6)
-print(t_plan_parameters3)
+# max_xyz_velocities = 1.0
+# t_plan_parameters3 = motion_service.create_task_space_plan_parameters(list(end_effectors)[0],
+#                                                                       max_xyz_velocities,
+#                                                                       velocity_scaling=0.6)
+# print(t_plan_parameters3)
+
+
+# print('---------plan move pose linear------------')
+
+# cartesian_path = CartesianPath.from_start_stop_point(pose, pose1)
+# trajectory = motion_service.plan_move_pose_linear(cartesian_path,
+#                                                   joint_states.positions,
+#                                                   t_plan_parameters3)
+# print(trajectory)
+
+
+# print('---------plan move joints------------')
+
+# joint_path = JointPath.from_start_stop_point(joint_states.positions,
+#                                              joint_states1.positions)
+# trajectory = motion_service.plan_move_joints(joint_path,
+#                                             plan_parameters3)
+# print(trajectory)
+
+
+# print('--------- plan cartesian path------------')
+
+# cartesian_path = CartesianPath.from_start_stop_point(pose, pose1)
+
+# path = motion_service.plan_cartesian_path(cartesian_path,
+#                                           plan_parameters3)
+
+
+# print(path)
+
+
+print('--------- get current joint values ------------')
+
+positions = motion_service.get_current_joint_values(plan_parameters3.joint_set)
+print(positions)
+
+
+print('---------- move pose ------------------')
+
+t1 = [0.502522, 0.2580, 0.3670]
+q1 = Quaternion(w=0.304389, x=0.5272, y=0.68704, z=0.39666)
+
+t2 = [0.23795, 0.46845, 0.44505]
+q2 = Quaternion(w=0.212097, x=0.470916, y=0.720915, z=0.462096)
+
+pose_l = Pose(t1, q1)
+pose_r = Pose(t2, q2)
+
+ioloop = asyncio.get_event_loop()
+
+for i in range(0, 10):
+    ioloop.run_until_complete(motion_service.move_pose(pose_l,
+                                                       '',
+                                                       plan_parameters3))
+    ioloop.run_until_complete(motion_service.move_pose(pose_r,
+                                                       '',
+                                                       plan_parameters3))
+
+ioloop.close()
