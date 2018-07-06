@@ -16,12 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#!/usr/bin/env python
-
-from __future__ import (absolute_import, division,
-                        print_function)  # , unicode_literals)
-from future.builtins import map
-from future.utils import raise_from, raise_with_traceback
+#!/usr/bin/env python3
 
 from moveit_msgs.msg import MoveItErrorCodes
 

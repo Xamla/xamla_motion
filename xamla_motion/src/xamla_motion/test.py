@@ -1,18 +1,12 @@
-from __future__ import (absolute_import, division,
-                        print_function)  # , unicode_literals)
-# from future.builtins import *
-from future.utils import raise_from, raise_with_traceback
+#!/usr/bin/env python3
 
 from data_types import *
 from motion_service import MotionService
 from pyquaternion import Quaternion
 import rospy
 
-try:
-    import asyncio
-except ImportError:
-    # Trollius >= 0.3 was renamed
-    import trollius as asyncio
+
+import asyncio
 import pdb
 
 rospy.init_node('test_motion_service')

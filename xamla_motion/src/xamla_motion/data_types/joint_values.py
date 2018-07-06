@@ -16,12 +16,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import (absolute_import, division,
-                        print_function)  # , unicode_literals)
-from future.builtins import map
-from future.utils import raise_from, raise_with_traceback
 from functools import total_ordering
 
 import numpy as np
@@ -296,7 +292,7 @@ class JointValues(object):
                 values = np.fromiter(map(transform_function, self.__values),
                                      self.__values.dtype)
         except TypeError as exc:
-            raise_from(TypeError('wrong transform function format'), exc)
+            raise TypeError('wrong transform function format') from exc
 
         return self.__class__(self.__joint_set, value)
 
@@ -337,8 +333,8 @@ class JointValues(object):
                                 ' str or list of strs')
             return self.__class__(JointSet(names), values)
         except ValueError as exc:
-            raise_from(ValueError('name ' + name +
-                                  ' not exist in joint names'), exc)
+            raise ValueError('name ' + name +
+                             ' not exist in joint names') from exc
 
     def to_joint_path_point_msg(self):
         """

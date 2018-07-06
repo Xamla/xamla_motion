@@ -16,10 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from __future__ import (absolute_import, division,
-                        print_function)
-from future.builtins import map, range
-from future.utils import raise_from, raise_with_traceback
+#!/usr/bin/env python3
 
 from motion_service import MotionService
 from move_group import MoveGroup

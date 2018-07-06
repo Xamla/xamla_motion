@@ -16,12 +16,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import (absolute_import, division,
-                        print_function)  # , unicode_literals)
-#from future.builtins import *
-from future.utils import raise_from, raise_with_traceback
 from copy import deepcopy
 
 from data_types import EndEffectorLimits
@@ -190,9 +186,9 @@ class TaskSpacePlanParameters(object):
                                                     max_angular_velocity,
                                                     max_angular_acceleration)
         except (ValueError, TypeError) as exc:
-            raise_from(ArgumentError('It was not possible to create'
-                                     ' an instance of Endeffectorlimits'
-                                     ' due to limit type or size'), exc)
+            raise ArgumentError('It was not possible to create'
+                                ' an instance of Endeffectorlimits'
+                                ' due to limit type or size') from exc
 
         return cls(end_effector_name, end_effector_limits, kwargs)
 

@@ -16,16 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#!/usr/bin/env python
-
-from __future__ import (absolute_import, division,
-                        print_function)
-from future.builtins import map, range
-from future.utils import raise_from, raise_with_traceback
+#!/usr/bin/env python3
 
 from motion_service import MotionService
 from end_effector import EndEffector
-from data_types import JointLimits, EndEffectorLimits
 from data_types import PlanParameters, TaskSpacePlanParameters
 
 import numpy as np
@@ -323,9 +317,9 @@ class MoveGroup(object):
         try:
             self.__end_effectors[end_effector_name]
         except KeyError as exc:
-            raise_from(RuntimeError('move group' + self.__name +
-                                    ' has no end effector with name: ' +
-                                    end_effector_name), exc)
+            raise RuntimeError('move group' + self.__name +
+                               ' has no end effector with name: ' +
+                               end_effector_name) from exc
 
         self.__selected_end_effector = end_effector_name
         p = self.__m_service.create_task_space_plan_parameters(

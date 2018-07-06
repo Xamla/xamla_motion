@@ -16,12 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#!/usr/bin/env python
-
-from __future__ import (absolute_import, division,
-                        print_function)  # , unicode_literals)
-from future.builtins import map
-from future.utils import raise_from, raise_with_traceback
+#!/usr/bin/env python3
 
 from data_types import JointSet
 from data_types import JointValues
@@ -284,7 +279,7 @@ class JointPath(object):
                                   [x.transform(transform_function)
                                    for x in self.__points])
         except TypeError as exc:
-            raise_from(TypeError('None valid transformation function'), exc)
+            raise TypeError('None valid transformation function') from exc
 
     def __getitem__(self, key):
         """

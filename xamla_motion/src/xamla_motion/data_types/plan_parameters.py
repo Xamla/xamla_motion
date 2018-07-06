@@ -16,12 +16,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import (absolute_import, division,
-                        print_function)  # , unicode_literals)
-# from future.builtins import *
-from future.utils import raise_from, raise_with_traceback
 from copy import deepcopy
 
 from data_types import JointLimits
@@ -176,9 +172,9 @@ class PlanParameters(object):
                                        max_s_velocity, max_s_acceleration,
                                        min_position, max_position)
         except (ValueError, TypeError) as exc:
-            raise_from(ArgumentError('It was not possible to create'
-                                     ' an instance of JointLimts due to'
-                                     ' wrong parameter type or format'), exc)
+            raise ArgumentError('It was not possible to create'
+                                ' an instance of JointLimts due to'
+                                ' wrong parameter type or format') from exc
 
         return cls(move_group_name, JointLimits, kwargs)
 

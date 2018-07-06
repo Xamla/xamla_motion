@@ -16,11 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#!/usr/bin/env python
-
-from __future__ import (absolute_import, division,
-                        print_function)  # , unicode_literals)
-#from future.builtins import *
+#!/usr/bin/env python3
 
 from copy import deepcopy
 import numpy as np
@@ -258,8 +254,8 @@ class JointLimits(object):
             return self.__class__(JointSet(names), max_velocity, max_acceleration,
                                   min_position, max_position)
         except ValueError as exc:
-            raise_from(ValueError('joint name ' + name +
-                                  ' not exist in joint names'), exc)
+            raise ValueError('joint name ' + name +
+                             ' not exist in joint names') from exc
 
     def __deepcopy__(self, memo):
         cls = self.__class__

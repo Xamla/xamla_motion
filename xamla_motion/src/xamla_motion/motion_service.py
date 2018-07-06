@@ -16,16 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#!/usr/bin/env python
-
-from __future__ import (absolute_import, division,
-                        print_function)
-from future.builtins import map, range
-from future.utils import raise_from, raise_with_traceback
+#!/usr/bin/env python3
 
 import rospy
 import actionlib
-import pdb
 import numpy as np
 from datetime import timedelta
 
@@ -38,11 +32,7 @@ from xamla_motion_exceptions import ServiceException, ArgumentError
 from data_types import *
 from collections import Iterable
 
-try:
-    import asyncio
-except ImportError:
-    # Trollius >= 0.3 was renamed
-    import trollius as asyncio
+import asyncio
 
 
 class MotionService(object):
@@ -57,9 +47,9 @@ class MotionService(object):
                 GetIKSolution)
 
         except rospy.ServiceException as exc:
-            raise_from(ServiceException('init service for query'
-                                        ' inverse kinematics failed,'
-                                        ' abort '), exc)
+            raise ServiceException('init service for query'
+                                   ' inverse kinematics failed,'
+                                   ' abort ') from exc
 
         try:
             self.__m_action = actionlib.SimpleActionClient(self.__movej_action,
@@ -100,9 +90,9 @@ class MotionService(object):
                 QueryMoveGroupInterfaces)
             response = service()
         except rospy.ServiceException as exc:
-            raise_from(ServiceException('service call for query'
-                                        ' available move groups failed,'
-                                        ' abort '), exc)
+            raise ServiceException('service call for query'
+                                   ' available move groups failed,'
+                                   ' abort ') from exc
 
         groups = list()
         for g in response.move_group_interfaces:
@@ -192,9 +182,9 @@ class MotionService(object):
         try:
             eel_param = rospy.get_param(end_effector_limits_param)
         except KeyError as exc:
-            raise_from(RuntimeError('end effector limit ros param: '
-                                    + end_effector_limits_param +
-                                    ' not exists'), exc)
+            raise RuntimeError('end effector limit ros param: '
+                               + end_effector_limits_param +
+                               ' not exists') from exc
         name = str(name)
 
         for limits in eel_param:
@@ -312,9 +302,9 @@ class MotionService(object):
         except rospy.ServiceException as exc:
             print ('service call for query current'
                    'joint states failed, abort ')
-            raise_from(ServiceException('service call for query'
-                                        ' current joint states '
-                                        'failed, abort'), exc)
+            raise ServiceException('service call for query'
+                                   ' current joint states '
+                                   'failed, abort') from exc
 
         r_joint_set = JointSet(response.name)
         positions = JointValues(r_joint_set,
@@ -420,9 +410,9 @@ class MotionService(object):
         except rospy.ServiceException as exc:
             print ('service call for query forward kinematics'
                    ' failed, abort ')
-            raise_from(ServiceException('service call for query'
-                                        ' forward kinematics'
-                                        ' failed, abort'), exc)
+            raise ServiceException('service call for query'
+                                   ' forward kinematics'
+                                   ' failed, abort') from exc
 
         if (response.error_codes == None or response.error_msgs == None
                 or len(response.error_codes) != len(response.error_msgs)):
@@ -464,9 +454,9 @@ class MotionService(object):
         except rospy.ServiceException as exc:
             print ('service call for query joint path'
                    ' failed, abort ')
-            raise_from(ServiceException('service call for query'
-                                        ' joint path'
-                                        ' failed, abort'), exc)
+            raise ServiceException('service call for query'
+                                   ' joint path'
+                                   ' failed, abort') from exc
 
         return response
 
@@ -568,9 +558,9 @@ class MotionService(object):
         except rospy.ServiceException as exc:
             print ('service call for query cartesian path'
                    ' failed, abort ')
-            raise_from(ServiceException('service call for query'
-                                        ' cartesian path'
-                                        ' failed, abort'), exc)
+            raise ServiceException('service call for query'
+                                   ' cartesian path'
+                                   ' failed, abort') from exc
 
         if response.error_code.val != MoveItErrorCodes.SUCCESS:
             raise ServiceException('service call for query cartesian'
@@ -658,9 +648,9 @@ class MotionService(object):
         except rospy.ServiceException as exc:
             print ('service call for query joint trajectory'
                    ' failed, abort ')
-            raise_from(ServiceException('service call for query'
-                                        ' joint trajectory'
-                                        ' failed, abort'), exc)
+            raise ServiceException('service call for query'
+                                   ' joint trajectory'
+                                   ' failed, abort') from exc
 
         if response.error_code.val != MoveItErrorCodes.SUCCESS:
             raise ServiceException('service call for query joint'
@@ -778,9 +768,9 @@ class MotionService(object):
         except rospy.ServiceException as exc:
             print ('service call for query cartesian trajectory'
                    ' failed, abort ')
-            raise_from(ServiceException('service call for query'
-                                        ' cartesian trajectory'
-                                        ' failed, abort'), exc)
+            raise ServiceException('service call for query'
+                                   ' cartesian trajectory'
+                                   ' failed, abort') from exc
 
         if response.error_code.val != MoveItErrorCodes.SUCCESS:
             raise ServiceException('service call for query cartesian'
@@ -842,9 +832,9 @@ class MotionService(object):
         except rospy.ServiceException as exc:
             print ('service call for query joint collisions'
                    ' failed, abort ')
-            raise_from(ServiceException('service call for query'
-                                        ' joint collisions'
-                                        ' failed, abort'), exc)
+            raise ServiceException('service call for query'
+                                   ' joint collisions'
+                                   ' failed, abort') from exc
 
         if (len(response.in_collision) != len(joint_path) or
             len(response.error_code) != len(joint_path) or
@@ -1463,9 +1453,9 @@ class MotionService(object):
         except rospy.ServiceException as exc:
             print ('service call for query inverse kinematics'
                    ' failed, abort ')
-            raise_from(ServiceException('service call for query'
-                                        ' inverse kinematics'
-                                        ' failed, abort'), exc)
+            raise ServiceException('service call for query'
+                                   ' inverse kinematics'
+                                   ' failed, abort') from exc
 
         f = JointValues.from_joint_path_point_msg
         joint_path = JointPath(parameters.joint_set,
@@ -1561,8 +1551,8 @@ class MotionService(object):
             response = service(enable)
         except rospy.ServiceException as exc:
             print ('service set emergency stop failed')
-            raise_from(ServiceException('service call for set emergency'
-                                        ' stop failed, abort'), exc)
+            raise ServiceException('service call for set emergency'
+                                   ' stop failed, abort') from exc
 
         return response.success, response.message
 
