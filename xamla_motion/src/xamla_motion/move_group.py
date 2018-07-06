@@ -23,6 +23,7 @@ from end_effector import EndEffector
 from data_types import PlanParameters, TaskSpacePlanParameters
 
 import numpy as np
+from copy import deepcopy
 
 
 class MoveGroup(object):
@@ -139,6 +140,28 @@ class MoveGroup(object):
         """
 
         return self.__details.joint_set
+
+    @property
+    def default_plan_parameters(self):
+        """
+        plan_parameters : PlanParameters (read only)
+            Instance of PlanParameters from which the
+            limits and settings are used when no specific
+            user input is given
+        """
+
+        return self.__plan_parameters
+
+    @property
+    def default_task_space_plan_parameters(self):
+        """
+        task_space_plan_parameters : TaskSpacePlanParameters (read only)
+            Instance of TaskSpacePlanParameters from which the
+            limits and settings are used when no specific
+            user input is given
+        """
+
+        return self.__task_space_plan_parameters
 
     @property
     def collision_check(self):
@@ -358,3 +381,157 @@ class MoveGroup(object):
                                    + self.__name) from exc
         else:
             return self.__end_effectors[self.__selected_end_effector]
+
+    def get_current_joint_states(self):
+        """
+        Returns the current joint states of the move group joints
+
+        Returns
+        -------
+        joint_states : JointStates
+            current joint states of the move group joints
+
+        Raises
+        ------
+        ServiceError
+            If Service is not available or finish
+            not successful
+        """
+
+        return self.__m_service.query_joint_states(self.joint_set)
+
+    def get_current_joint_positions(self):
+        """
+        Returns the current joint positions of the move group joints
+
+        Returns
+        -------
+        joint_positions : JointValues
+            current joint position of the move group joints
+
+        Raises
+        ------
+        ServiceError
+            If Service is not available or finish
+            not successful
+        """
+
+        return self.get_current_joint_states().positions
+
+    def _build_plan_parameters(self, velocity_scaling=None, collision_check=None,
+                               max_deviation=None, acceleration_scaling=None):
+        """
+        Build an instance of PlanParameters from input and default values
+
+        All attributes with value None are ignored and instead the default
+        values are used defined in default_plan_parameters are used
+
+        Parameters
+        ----------
+        velocity_scaling : None or float convertable
+            Scaling factor which is applied on the maximal
+            possible joint velocities
+        collision_check : None or bool convertable
+            If true the trajectory planing try to plan a 
+            collision free trajectory and before executing
+            a trajectory a collision check is performed
+        max_deviation : None or float convertable
+            Defines the maximal deviation from trajectory points
+            when it is a fly-by-point in joint space
+        acceleration_scaling : None or float convertable
+            Scaling factor which is applied on the maximal
+            possible joint accelerations
+        """
+
+        parameters = deepcopy(self.__plan_parameters)
+
+        if velocity_scaling:
+            parameters.velocity_scaling = velocity_scaling
+
+        if collision_check:
+            parameters.collision_check = collision_check
+
+        if max_deviation:
+            max_deviation = max_deviation
+
+        if acceleration_scaling:
+            parameters.acceleration_scaling = acceleration_scaling
+
+        return parameters
+
+    def _build_plan_parameters(self, velocity_scaling=None, collision_check=None,
+                               max_deviation=None, acceleration_scaling=None,
+                               end_effector_name=None):
+        """
+        Build an instance of TaskSpacePlanParameters from input 
+        and default values
+
+        All attributes with value None are ignored and instead the default
+        values are used defined in default_task_space_plan_parameters 
+        are used
+
+        Parameters
+        ----------
+        velocity_scaling : None or float convertable
+            Scaling factor which is applied on the maximal
+            possible joint velocities
+        collision_check : None or bool convertable
+            If true the trajectory planing try to plan a 
+            collision free trajectory and before executing
+            a trajectory a collision check is performed
+        max_deviation : None or float convertable
+            Defines the maximal deviation from trajectory points
+            when it is a fly-by-point in joint space
+        acceleration_scaling : None or float convertable
+            Scaling factor which is applied on the maximal
+            possible joint accelerations
+        end_effector_name : None or str convertable
+            Name of end effector which should be used
+        """
+
+        if not end_effector_name:
+            parameters = deepcopy(self.__task_space_plan_parameters)
+
+            if velocity_scaling:
+                parameters.velocity_scaling = velocity_scaling
+
+            if collision_check:
+                parameters.collision_check = collision_check
+
+            if max_deviation:
+                max_deviation = max_deviation
+
+            if acceleration_scaling:
+                parameters.acceleration_scaling = acceleration_scaling
+
+            return parameters
+
+        end_effector_name = str(end_effector_name)
+
+        try:
+            self.__end_effectors[end_effector_name]
+        except KeyError as exc:
+            raise RuntimeError('move group' + self.__name +
+                               ' has no end effector with name: ' +
+                               end_effector_name) from exc
+
+        if not velocity_scaling:
+            velocity_scaling = self.__task_space_plan_parameters.velocity_scaling
+
+        if not collision_check:
+            collision_check = self.__task_space_plan_parameters.collision_check
+
+        if not max_deviation:
+            max_deviation = self.__task_space_plan_parameters.max_deviation
+
+        if not acceleration_scaling:
+            acceleration_scaling = self.__task_space_plan_parameters.acceleration_scaling
+
+        sample_resolution = self.__task_space_plan_parameters.sample_resolution
+        return self.__m_service.create_task_space_plan_parameters(
+            end_effector_name,
+            sample_resolution=sample_resolution,
+            collision_check=collision_check,
+            max_deviation=max_deviation,
+            velocity_scaling=velocity_scaling,
+            acceleration_scaling=acceleration_scaling)
