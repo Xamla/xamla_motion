@@ -47,16 +47,8 @@ except ImportError:
 
 class MotionService(object):
 
-    __instance = None
     __movej_action = 'moveJ_action'
     __query_inverse_kinematics_service = "xamlaMoveGroupServices/query_ik"
-
-    def __new__(cls):
-        if cls.__instance is None:
-            cls.__instance = object.__new__(cls)
-        cls.__instance.velocity_scaling = 1.0
-        cls.__instance.acceleration_scaling = 1.0
-        return cls.__instance
 
     def __init__(self):
         try:
@@ -892,7 +884,7 @@ class MotionService(object):
                 if value is create as 1.0 the value is interpreted
                 as a value in seconds else the value is interpreted
                 as a value in Hz
-            check_collision : bool convertable (optional default True)
+            collision_check : bool convertable (optional default True)
                 check for collision if True
             max_deviation : float convertable (optional default 0.2)
                 max deviation from fly by points
@@ -988,7 +980,7 @@ class MotionService(object):
                 if value is create as 1.0 the value is interpreted
                 as a value in seconds else the value is interpreted
                 as a value in Hz
-            check_collision : bool convertable (optional default True)
+            collision_check : bool convertable (optional default True)
                 check for collision if True
             ik_jump_threshold : float convertable (optional default 1.2)
                 maximal inverse kinematic jump
@@ -1273,7 +1265,7 @@ class MotionService(object):
 
     # to do ExecuteJointTrajectory and ExecuteJointTrajectorySupervised
 
-    async def execute_joint_trajectory(self, trajectory, check_collision):
+    async def execute_joint_trajectory(self, trajectory, collision_check):
         """
         Executes a joint trajectory
 
@@ -1281,7 +1273,7 @@ class MotionService(object):
         ----------
         trajectory : JointTrajectory 
             Joint trajectory which should be executed
-        check_collision : bool convertable
+        collision_check : bool convertable
             If True check for collision while executing
 
         Returns
@@ -1293,17 +1285,17 @@ class MotionService(object):
         ------
         TypeError 
             If trajectory is not of type JointTrajectory
-            or if check_collision is not convertable to bool
+            or if collision_check is not convertable to bool
         """
 
         if not isinstance(trajectory, JointTrajectory):
             raise TypeError('trajectory is not of expected type'
                             ' joint trajectory')
 
-        check_collision = bool(check_collision)
+        collision_check = bool(collision_check)
 
         goal = moveJGoal(trajectory=trajectory.to_joint_trajectory_msg(),
-                         check_collision=check_collision)
+                         check_collision=collision_check)
 
         self.__m_action.send_goal_and_wait(goal)
         response = self.__m_action.get_result()

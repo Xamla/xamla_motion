@@ -123,6 +123,7 @@ class PlanParameters(object):
             max_s_velocity = joint_limits.max_velocity * self.__velocity_scaling
             max_s_acceleration = (joint_limits.max_acceleration
                                   * self.__acceleration_scaling)
+            self.__o_joint_limits = joint_limits
             self.__joint_limits = JointLimits(joint_limits.joint_set,
                                               max_s_velocity,
                                               max_s_acceleration,
@@ -245,40 +246,92 @@ class PlanParameters(object):
         """
         return self.__sample_resolution
 
+    @sample_resolution.setter
+    def sample_resolution(self, value):
+        value = float(value)
+
+        self.__sample_resolution = value
+
     @property
     def collision_check(self):
         """
-        collision_check: bool(read only)
+        collision_check: bool
             defines if collision check should be performed
         """
         return self.__collision_check
 
+    @collision_check.setter
+    def collision_check(self, value):
+        value = bool(value)
+
+        self.__collision_check = value
+
     @property
     def max_deviation(self):
         """
-        max_deviation: float(read only)
+        max_deviation: float
             defines the maximal deviation from trajectory points
-            when fly-by-points in joint space
+            when it is a fly-by-point in joint space
         """
         return self.__max_deviation
+
+    @max_deviation.setter
+    def max_deviation(self, value):
+        value = float(value)
+
+        self.__max_deviation = value
 
     @property
     def velocity_scaling(self):
         """
-        velocity_scaling: float (read only)
+        velocity_scaling: float
             scaling factor which was applied to input velocity limits
             range between 0.0 and 1.0
         """
         return self.__velocity_scaling
 
+    @velocity_scaling.setter
+    def velocity_scaling(self, value):
+        value = float(value)
+
+        if value > 1.0 or value < 0.0:
+            raise ValueError('velocity_scaling is not between 0.0 and 1.0')
+
+        max_s_velocity = self.__o_joint_limits.max_velocity * value
+
+        self.__joint_limits = JointLimits(self.__joint_limits.joint_set,
+                                          max_s_velocity,
+                                          self.__joint_limits.max_acceleration,
+                                          self.__joint_limits.min_position,
+                                          self.__joint_limits.max_position)
+
+        self.__velocity_scaling = value
+
     @property
     def acceleration_scaling(self):
         """
-        acceleration_scaling: float (read only)
+        acceleration_scaling: float
             scaling factor which was applied to input acceleration limits
             range between 0.0 and 1.0
         """
         return self.__acceleration_scaling
+
+    @acceleration_scaling.setter
+    def acceleration_scaling(self, value):
+        value = float(value)
+
+        if value > 1.0 or value < 0.0:
+            raise ValueError('acceleration_scaling is not between 0.0 and 1.0')
+
+        max_s_acceleration = self.__o_joint_limits.max_acceleration * value
+
+        self.__joint_limits = JointLimits(self.__joint_limits.joint_set,
+                                          self.__joint_limits.max_velocity,
+                                          max_s_acceleration,
+                                          self.__joint_limits.min_position,
+                                          self.__joint_limits.max_position)
+
+        self.__acceleration_scaling = value
 
     def __iter__(self):
         return self.__joint_limits.__iter__()

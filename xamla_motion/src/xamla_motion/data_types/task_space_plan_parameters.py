@@ -131,6 +131,7 @@ class TaskSpacePlanParameters(object):
             s_a_acceleration = (end_effector_limits.max_angular_acceleration
                                 * self.__acceleration_scaling)
 
+            self.__o_end_effector_limits = end_effector_limits
             self.__end_effector_limits = EndEffectorLimits(s_x_velocity,
                                                            s_x_acceleration,
                                                            s_a_velocity,
@@ -251,22 +252,40 @@ class TaskSpacePlanParameters(object):
         """
         return self.__sample_resolution
 
+    @sample_resolution.setter
+    def sample_resolution(self, value):
+        value = float(value)
+
+        self.__sample_resolution = value
+
     @property
     def collision_check(self):
         """
-        collision_check: bool(read only)
+        collision_check: bool
             defines if collision check should be performed
         """
         return self.__collision_check
 
+    @collision_check.setter
+    def collision_check(self, value):
+        value = bool(value)
+
+        self.__collision_check = value
+
     @property
     def max_deviation(self):
         """
-        max_deviation: float(read only)
+        max_deviation: float
             defines the maximal deviation from trajectory points
-            when fly-by-points in task space
+            when fly-by-points in joint space
         """
         return self.__max_deviation
+
+    @max_deviation.setter
+    def max_deviation(self, value):
+        value = float(value)
+
+        self.__max_deviation = value
 
     @property
     def ik_jump_threshold(self):
@@ -276,23 +295,73 @@ class TaskSpacePlanParameters(object):
         """
         return self.__ik_jump_threshold
 
+    @ik_jump_threshold.setter
+    def ik_jump_threshold(self, value):
+        value = float(value)
+
+        self.__ik_jump_threshold = value
+
     @property
     def velocity_scaling(self):
         """
-        velocity_scaling: float (read only)
+        velocity_scaling: float
             scaling factor which was applied to input velocity limits
             range between 0.0 and 1.0
         """
         return self.__velocity_scaling
 
+    @velocity_scaling.setter
+    def velocity_scaling(self, value):
+        value = float(value)
+
+        if value > 1.0 or value < 0.0:
+            raise ValueError('velocity_scaling is not between 0.0 and 1.0')
+
+        orignal_limits = self.__o_end_effector_limits
+        max_xyz_vel = (orignal_limits.max_xyz_velocity
+                       * value)
+        max_angular_vel = (orignal_limits.max_angular_velocity
+                           * value)
+
+        old_limits = self.__end_effector_limits
+        limits = EndEffectorLimits(max_xyz_vel,
+                                   old_limits.max_xyz_acceleration,
+                                   max_angular_vel,
+                                   old_limits.max_angular_acceleration)
+        self.__end_effector_limits = limits
+
+        self.__velocity_scaling = value
+
     @property
     def acceleration_scaling(self):
         """
-        acceleration_scaling: float (read only)
+        acceleration_scaling: float
             scaling factor which was applied to input acceleration limits
             range between 0.0 and 1.0
         """
         return self.__acceleration_scaling
+
+    @acceleration_scaling.setter
+    def acceleration_scaling(self, value):
+        value = float(value)
+
+        if value > 1.0 or value < 0.0:
+            raise ValueError('acceleration_scaling is not between 0.0 and 1.0')
+
+        orignal_limits = self.__o_end_effector_limits
+        max_xyz_acc = (orignal_limits.max_xyz_acceleration
+                       * value)
+        max_angular_acc = (orignal_limits.max_angular_acceleration
+                           * value)
+
+        old_limits = self.__end_effector_limits
+        limits = EndEffectorLimits(old_limits.max_xyz_velocity,
+                                   max_xyz_acc,
+                                   old_limits.max_angular_velocity,
+                                   max_angular_acc)
+        self.__end_effector_limits = limits
+
+        self.__acceleration_scaling = value
 
     def __str__(self):
         j_str = '\n'.join(['sampling_resolution = '+str(self.__sample_resolution),
