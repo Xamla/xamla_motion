@@ -1,5 +1,5 @@
 #!/usr/bin/env python
 name = "xamla_motion"
 from .motion_service import MotionService
-from .move_group import MoveGroup
-from .end_effector import EndEffector
+from .high_level_api import MoveGroup
+from .high_level_api import EndEffector

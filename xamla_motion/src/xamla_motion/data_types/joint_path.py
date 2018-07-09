@@ -22,6 +22,8 @@ from data_types import JointSet
 from data_types import JointValues
 
 from collections import Iterable, deque
+from copy import deepcopy
+import pdb
 
 
 class JointPath(object):
@@ -53,7 +55,7 @@ class JointPath(object):
         joints : JointSet
             Set of joints
         points : Iterable[JointValues]
-             Iterable of JointValues where each JointValues instance 
+             Iterable of JointValues where each JointValues instance
              describes a point of the path
 
         Returns
@@ -167,7 +169,7 @@ class JointPath(object):
 
     def prepend(self, points):
         """
-        Creates new JointPath with points added in front of path points 
+        Creates new JointPath with points added in front of path points
 
         Parameters
         ----------
@@ -182,12 +184,14 @@ class JointPath(object):
         Raises
         ------
         TypeError
-            If points is not one of expected types 
-            JointValues or Iterable of JointValues 
+            If points is not one of expected types
+            JointValues or Iterable of JointValues
         """
 
+        new_points = deepcopy(self.__points)
         if isinstance(points, JointValues):
-            return self.__class__(self.__joints, points.extendleft(points))
+            new_points.appendleft(points)
+            return self.__class__(self.__joints, new_points)
 
         if (not isinstance(points, collections.Iterable) or
                 any(not isinstance(j, JointValues)
@@ -195,8 +199,9 @@ class JointPath(object):
             raise TypeError('points is not of expected'
                             ' type JointValues or Iterable of JointValues')
 
+        new_points.extendleft(list(reversed(points)))
         return self.__class__(self.__joints,
-                              points.extendleft(reversed(points)))
+                              new_points)
 
     def append(self, points):
         """
@@ -215,12 +220,14 @@ class JointPath(object):
         Raises
         ------
         TypeError
-            If points is not one of expected types 
-            JointValues or Iterable of JointValues 
+            If points is not one of expected types
+            JointValues or Iterable of JointValues
         """
 
+        new_points = deepcopy(self.__points)
         if isinstance(points, JointValues):
-            return self.__class__(self.__joints, points.extend(points))
+            new_points.append(points)
+            return self.__class__(self.__joints, new_points)
 
         if (not isinstance(points, collections.Iterable) or
                 any(not isinstance(j, JointValues)
@@ -228,7 +235,8 @@ class JointPath(object):
             raise TypeError('points is not of expected'
                             ' type JointValues or Iterable of JointValues')
 
-        return self.__class__(self.__joints, points.extend(points))
+        new_points.extend(points)
+        return self.__class__(self.__joints, new_points)
 
     def concat(self, other):
         """
@@ -246,7 +254,9 @@ class JointPath(object):
         if not isinstance(other, JointPath):
             raise TypeError('other is not of expected type JointPath')
 
-        return self.__class__(self.__joints, points.extend(other.points))
+        new_points = deepcopy(self.__points)
+        new_points.extend(points)
+        return self.__class__(self.__joints, new_points)
 
     def transform(self, transform_function):
         """
@@ -293,7 +303,7 @@ class JointPath(object):
         Returns
         -------
         JointValues or List[JointValues]
-            Returns a instance of JointValues or list of JointValues 
+            Returns a instance of JointValues or list of JointValues
 
         Raises
         ------

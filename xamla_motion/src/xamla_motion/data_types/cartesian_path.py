@@ -175,8 +175,10 @@ class CartesianPath(object):
             Pose or Iterable of Pose
         """
 
+        new_points = deepcopy(self.__points)
         if isinstance(points, Pose):
-            return self.__class__(self.__joints, points.extendleft(points))
+            new_points.appendleft(points)
+            return self.__class__(self.__joints, new_points)
 
         if (not isinstance(points, collections.Iterable) or
                 any(not isinstance(j, Pose)
@@ -184,8 +186,8 @@ class CartesianPath(object):
             raise TypeError('points is not of expected'
                             ' type Pose or Iterable of Pose')
 
-        return self.__class__(self.__joints,
-                              points.extendleft(reversed(points)))
+        new_points.extendleft(list(reversed(points)))
+        return self.__class__(self.__joints, new_points)
 
     def append(self, points):
         """
@@ -208,8 +210,10 @@ class CartesianPath(object):
             Pose or Iterable of Pose
         """
 
+        new_points = deepcopy(self.__points)
         if isinstance(points, Pose):
-            return self.__class__(self.__joints, points.extend(points))
+            new_points.append(points)
+            return self.__class__(self.__joints, new_points)
 
         if (not isinstance(points, collections.Iterable) or
                 any(not isinstance(j, Pose)
@@ -217,7 +221,8 @@ class CartesianPath(object):
             raise TypeError('points is not of expected'
                             ' type Pose or Iterable of Pose')
 
-        return self.__class__(self.__joints, points.extend(points))
+        new_points.extend(points)
+        return self.__class__(self.__joints, new_points)
 
     def concat(self, other):
         """
@@ -235,7 +240,9 @@ class CartesianPath(object):
         if not isinstance(other, CartesianPath):
             raise TypeError('other is not of expected type CartesianPath')
 
-        return self.__class__(self.__joints, points.extend(other.points))
+        new_points = deepcopy(self.__points)
+        new_points.extend(points)
+        return self.__class__(self.__joints, new_points)
 
     def transform(self, transform_function):
         """
