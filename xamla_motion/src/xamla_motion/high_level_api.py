@@ -138,8 +138,8 @@ class MoveGroup(object):
 
         elif end_effector_name and not move_group_name:
             details = next(g for g in groups
-                           if any(g.end_effector_names ==
-                                  end_effector_name))
+                           if any([end_effector_name in
+                                   g.end_effector_names]))
             if not details:
                 raise RuntimeError('it exist no move group with'
                                    ' end effector: '
@@ -155,9 +155,8 @@ class MoveGroup(object):
             end_effector_name = details.end_effector_name[0]
         else:
             details = next(g for g in groups
-                           if (g.name == move_group_name and
-                               any(g.end_effector_names ==
-                                   end_effector_name)))
+                           if any([end_effector_name in
+                                   g.end_effector_names]))
             if not details:
                 raise RuntimeError('move group: ' + move_group_name +
                                    ' with end effector: '
@@ -912,7 +911,7 @@ class EndEffector(object):
         self.__end_effector_name = str(end_effector_name)
         self.__move_group = move_group
         self.__end_effector_link_name = str(end_effector_link_name)
-        self._m_service = move_group.motion_service
+        self.__m_service = move_group.motion_service
 
     @staticmethod
     def from_end_effector_name(end_effector_name):
@@ -977,9 +976,9 @@ class EndEffector(object):
 
         return p
 
-    async def move_poses(self, target, seed=None, velocity_scaling=None,
+    async def move_poses(self, target, velocity_scaling=None,
                          collision_check=None, max_deviation=None,
-                         acceleration_scaling=None):
+                         acceleration_scaling=None, seed=None):
 
         """
         Asynchronous plan and execute trajectory from task space input
@@ -1006,6 +1005,7 @@ class EndEffector(object):
         ------
         TypeError
             If target is not one of types Pose or CartesianPath
+            If seed is defined and not of type JointValues
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
@@ -1015,12 +1015,15 @@ class EndEffector(object):
         """
 
         if isinstance(target, Pose):
-            target = [target]
+            target = CartesianPath.from_one_point(target)
         elif isinstance(target, CartesianPath):
             pass
         else:
             raise TypeError('target is not one of expected '
                             'types Pose or CartesianPath')
+
+        if not seed:
+            seed = self.__move_group.get_current_joint_positions()
 
         parameters = self.__move_group._build_plan_parameters(velocity_scaling,
                                                               collision_check,
@@ -1043,9 +1046,9 @@ class EndEffector(object):
                                             acceleration_scaling)
 
     async def move_poses_collision_free(self, target,
-                                        seed=None, velocity_scaling=None,
+                                        velocity_scaling=None,
                                         collision_check=None, max_deviation=None,
-                                        acceleration_scaling=None):
+                                        acceleration_scaling=None, seed=None):
         """
         Asynchronous plan and execute collision free trajectory from task space input
 
@@ -1071,6 +1074,7 @@ class EndEffector(object):
         ------
         TypeError
             If target is not one of types Pose or CartesianPath
+            If seed is defined and not of type JointValues
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
@@ -1086,6 +1090,9 @@ class EndEffector(object):
         else:
             raise TypeError('target is not one of expected '
                             'types Pose or CartesianPath')
+
+        if not seed:
+            seed = self.__move_group.get_current_joint_positions()
 
         parameters = self.__move_group._build_plan_parameters(velocity_scaling,
                                                               False,

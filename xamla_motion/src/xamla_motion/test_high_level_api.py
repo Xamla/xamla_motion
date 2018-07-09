@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from data_types import *
-from high_level_api import MoveGroup
+from high_level_api import MoveGroup, EndEffector
 from pyquaternion import Quaternion
 import rospy
 import asyncio
@@ -34,18 +34,50 @@ joint_path = move_group.motion_service.query_inverse_kinematics_many(cartesian_p
 
 ioloop = asyncio.get_event_loop()
 
+print('test MoveGroup class')
 print('----------------move joints collision free -------------------')
 
 for i in range(0, 2):
+    print('trajectory loop: ' + str(i))
     ioloop.run_until_complete(
         move_group.move_joints_collision_free(joint_path))
 
 print('--------------------- move joints ----------------------------')
 
 for i in range(0, 3):
+    print('--- trajectory loop: ' + str(i) + ' -----')
+    print('point1 10 percent of max velocity')
     ioloop.run_until_complete(move_group.move_joints(joint_path[0], 0.1))
+    print('point2 50 percent of max velocity')
     ioloop.run_until_complete(move_group.move_joints(joint_path[1], 0.5))
+    print('point3 100 percent of max velocity')
     ioloop.run_until_complete(move_group.move_joints(joint_path[2], 1.0))
+
+
+print('test EndEffector class')
+print('----------------move poses collision free -------------------')
+
+end_effector = EndEffector.from_end_effector_name(
+    move_group.selected_end_effector)
+
+for i in range(0, 2):
+    print('trajectory loop: ' + str(i))
+    ioloop.run_until_complete(
+        end_effector.move_poses_collision_free(cartesian_path))
+
+print('--------------------- move poses ----------------------------')
+
+for i in range(0, 3):
+    print('--- trajectory loop: ' + str(i) + ' -----')
+    print('point1 10 percent of max velocity')
+    ioloop.run_until_complete(
+        end_effector.move_poses(cartesian_path[0], 0.1))
+    print('point2 50 percent of max velocity')
+    ioloop.run_until_complete(
+        end_effector.move_poses(cartesian_path[1], 0.5))
+    print('point3 100 percent of max velocity')
+    ioloop.run_until_complete(
+        end_effector.move_poses(cartesian_path[2], 1.0))
 
 
 ioloop.close()

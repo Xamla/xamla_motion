@@ -1697,8 +1697,8 @@ class MotionService(object):
 
         groups = self.query_available_move_groups()
         group = next(g for g in groups
-                     if any(g.end_effector_names ==
-                            parameters.end_effector_name))
+                     if any([parameters.end_effector_name in
+                             g.end_effector_names]))
 
         if not group:
             raise RuntimeError('no move group is available with'
