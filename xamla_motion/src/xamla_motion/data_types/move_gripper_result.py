@@ -21,33 +21,49 @@
 from control_msgs.msg import GripperCommandResult
 
 
-class MoveGripperResults(object):
+class MoveGripperResult(object):
 
     def __init___(self, position: float, reached_goal: float,
-                  stalled: bool, max_effort: float):
+                  stalled: bool, effort: float):
         self.__position = position
         self.__reached_goal = reached_goal
         self.__stalled = stalled
-        self.__max_effort = max_effort
+        self.__effort = effort
 
     @classmethod
     def from_gripper_command_action_result(cls, msg):
         result = msg.result
         return cls(result.position, result.reached_goal,
-                   result.stalled, result.max_effort)
+                   result.stalled, result.effort)
 
     @property
     def position(self):
+        """
+        position : float
+            The current gripper gap size (in meters)
+        """
         return self.__position
 
     @property
     def reached_goal(self):
+        """
+        reached_goal : bool
+            True iff the gripper position has reached the commanded setpoint
+        """
         return self.__reached_goal
 
     @property
     def stalled(self):
+        """
+        stalled : bool
+            True iff the gripper is exerting max effort and not moving
+        """
         return self.__stalled
 
     @property
-    def max_effort(self):
-        return self.__max_effort
+    def effort(self):
+        """
+        effort : float
+            The current effort exerted (in Newtons)
+        """
+        return self.__effort

@@ -1772,7 +1772,7 @@ class MotionService(object):
                                ' gripper command action: ' +
                                action_name)
 
-        return MoveGripperResults.from_gripper_command_action_result(response)
+        return MoveGripperResult.from_gripper_command_action_result(response)
 
     async def wsg_gripper_command(self, action_name, command, width, speed,
                                   max_effort, stop_on_block=True):
@@ -1824,12 +1824,12 @@ class MotionService(object):
                                    ' server with name: ' + action_name +
                                    ' could not be established')
 
-        g = GripperCommandGoal()
+        g = CommandGoal()
         g.command.command_id = command.value
         g.command.width = float(width)
         g.command.speed = float(speed)
         g.command.force = float(max_effort)
-        g.command.stop_one_block = bool(stop_one_block)
+        g.command.stop_on_block = bool(stop_on_block)
 
         run_action = self._generate_action_executor(action_client)
         response = await run_action(g)

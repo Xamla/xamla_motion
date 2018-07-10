@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 from data_types import *
-from high_level_api import MoveGroup, EndEffector
+from motion import MoveGroup, EndEffector
+from gripper import WeissWsgGripperProperties, WeissWsgGripper
 from pyquaternion import Quaternion
 import asyncio
 
@@ -77,5 +78,15 @@ for i in range(0, 3):
     ioloop.run_until_complete(
         end_effector.move_poses(cartesian_path[2], 1.0))
 
+print('---------- wsg gripper -------------')
+
+properties = WeissWsgGripperProperties('wsg50')
+
+wsg_gripper = WeissWsgGripper(properties, move_group.motion_service)
+
+ioloop.run_until_complete(wsg_gripper.homing())
+
+ioloop.run_until_complete(wsg_gripper.move(0.1, 0.05, 0.05, True))
+result = ioloop.run_until_complete(wsg_gripper.grasp(0.02, 0.1, 0.05))
 
 ioloop.close()

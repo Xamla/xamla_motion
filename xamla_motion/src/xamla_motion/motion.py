@@ -1,4 +1,4 @@
-# high_level_api.py
+# motion.py
 #
 # Copyright (c) 2018, Xamla and/or its affiliates. All rights reserved.
 #

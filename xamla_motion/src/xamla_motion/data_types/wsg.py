@@ -58,7 +58,7 @@ class WsgResult(object):
     def from_wsg_command_action_result(cls, msg):
         status = msg.status
 
-        return cls(status.grasping_id, status.width,
+        return cls(status.grasping_state_id, status.width,
                    status.current_force, status.grasping_state)
 
     @property
@@ -67,10 +67,18 @@ class WsgResult(object):
 
     @property
     def width(self):
+        """
+        width : float
+            The current gripper gap size (in meters) 
+        """
         return self.__width
 
     @property
     def force(self):
+        """
+        force : float
+            The current effort exerted (in Newtons)
+        """
         return self.__force
 
     @property
