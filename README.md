@@ -1,4 +1,4 @@
-<img alt="Rosvita Beta Logo" src="./rosvita-beta.svg" width="400"/>
+<img alt="Rosvita Beta Logo" src="./xamla_motion/rosvita-beta.svg" width="400"/>
 
 
 ## xamla_motion
