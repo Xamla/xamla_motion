@@ -1,4 +1,4 @@
-![rosvita-beta-logo](https://github.com/Xamla/xamlamoveit/blob/master/rosvita-beta-logo.png)
+<img alt="Rosvita Beta Logo" src="./rosvita-beta.svg" width="400"/>
 
 
 ## xamla_motion

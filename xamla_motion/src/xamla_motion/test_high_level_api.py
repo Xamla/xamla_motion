@@ -3,12 +3,10 @@
 from data_types import *
 from high_level_api import MoveGroup, EndEffector
 from pyquaternion import Quaternion
-import rospy
 import asyncio
 
 import pdb
 
-rospy.init_node('test_motion_service')
 move_group = MoveGroup()
 
 t1 = [0.502522, 0.2580, 0.3670]

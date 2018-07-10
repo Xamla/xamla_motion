@@ -25,6 +25,7 @@ from datetime import timedelta
 
 from xamlamoveit_msgs.srv import *
 from xamlamoveit_msgs.msg import *
+from control_msgs.msg import GripperCommandAction, GripperCommandGoal
 from moveit_msgs.msg import MoveItErrorCodes
 from std_srvs.srv import SetBool
 
@@ -37,6 +38,7 @@ import asyncio
 
 class MotionService(object):
 
+    __is_ros_init = False
     __movej_action = 'moveJ_action'
     __query_inverse_kinematics_service = "xamlaMoveGroupServices/query_ik"
 
@@ -51,11 +53,16 @@ class MotionService(object):
                                    ' inverse kinematics failed,'
                                    ' abort ') from exc
 
-        try:
-            self.__m_action = actionlib.SimpleActionClient(self.__movej_action,
-                                                           moveJAction)
-        except expression as identifier:
-            pass
+        if not self.__class__.__is_ros_init:
+            rospy.init_node('motion_service', anonymous=True)
+            self.__class__.__is_ros_init = True
+
+        self.__m_action = actionlib.SimpleActionClient(self.__movej_action,
+                                                       moveJAction)
+
+        if not self.__m_action.wait_for_server(rospy.Duration(5)):
+            raise ServiceException('connection to moveJ action'
+                                   ' server could not be established')
 
     @classmethod
     def query_available_move_groups(cls):
@@ -300,8 +307,8 @@ class MotionService(object):
                 GetCurrentJointState)
             response = service(joint_set.names).current_joint_position
         except rospy.ServiceException as exc:
-            print ('service call for query current'
-                   'joint states failed, abort ')
+            print('service call for query current'
+                  'joint states failed, abort ')
             raise ServiceException('service call for query'
                                    ' current joint states '
                                    'failed, abort') from exc
@@ -408,8 +415,8 @@ class MotionService(object):
                                [p.to_joint_path_point_msg()
                                 for p in joint_path])
         except rospy.ServiceException as exc:
-            print ('service call for query forward kinematics'
-                   ' failed, abort ')
+            print('service call for query forward kinematics'
+                  ' failed, abort ')
             raise ServiceException('service call for query'
                                    ' forward kinematics'
                                    ' failed, abort') from exc
@@ -452,8 +459,8 @@ class MotionService(object):
                                [p.to_joint_path_point_msg()
                                 for p in joint_path])
         except rospy.ServiceException as exc:
-            print ('service call for query joint path'
-                   ' failed, abort ')
+            print('service call for query joint path'
+                  ' failed, abort ')
             raise ServiceException('service call for query'
                                    ' joint path'
                                    ' failed, abort') from exc
@@ -556,8 +563,8 @@ class MotionService(object):
                                 for p in cartesian_path],
                                number_of_steps)
         except rospy.ServiceException as exc:
-            print ('service call for query cartesian path'
-                   ' failed, abort ')
+            print('service call for query cartesian path'
+                  ' failed, abort ')
             raise ServiceException('service call for query'
                                    ' cartesian path'
                                    ' failed, abort') from exc
@@ -646,8 +653,8 @@ class MotionService(object):
                                max_deviation,
                                delta_t)
         except rospy.ServiceException as exc:
-            print ('service call for query joint trajectory'
-                   ' failed, abort ')
+            print('service call for query joint trajectory'
+                  ' failed, abort ')
             raise ServiceException('service call for query'
                                    ' joint trajectory'
                                    ' failed, abort') from exc
@@ -766,8 +773,8 @@ class MotionService(object):
                                seed.to_joint_path_point_msg(),
                                collision_check)
         except rospy.ServiceException as exc:
-            print ('service call for query cartesian trajectory'
-                   ' failed, abort ')
+            print('service call for query cartesian trajectory'
+                  ' failed, abort ')
             raise ServiceException('service call for query'
                                    ' cartesian trajectory'
                                    ' failed, abort') from exc
@@ -830,8 +837,8 @@ class MotionService(object):
                                [p.to_joint_path_point_msg()
                                 for p in joint_path])
         except rospy.ServiceException as exc:
-            print ('service call for query joint collisions'
-                   ' failed, abort ')
+            print('service call for query joint collisions'
+                  ' failed, abort ')
             raise ServiceException('service call for query'
                                    ' joint collisions'
                                    ' failed, abort') from exc
@@ -1287,14 +1294,15 @@ class MotionService(object):
         goal = moveJGoal(trajectory=trajectory.to_joint_trajectory_msg(),
                          check_collision=collision_check)
 
-        self.__m_action.send_goal_and_wait(goal)
-        response = self.__m_action.get_result()
+        run_action = self._generate_action_executor(self.__m_action)
+
+        response = await run_action(goal)
 
         if not response:
             raise RuntimeError('Unexpected result received by'
                                ' SimpleActionClient for moveJ action')
 
-        response.result
+        return response.result
 
     def query_inverse_kinematics(self, pose, parameters,
                                  seed=[],
@@ -1451,8 +1459,8 @@ class MotionService(object):
                                          attempts,
                                          duration)
         except rospy.ServiceException as exc:
-            print ('service call for query inverse kinematics'
-                   ' failed, abort ')
+            print('service call for query inverse kinematics'
+                  ' failed, abort ')
             raise ServiceException('service call for query'
                                    ' inverse kinematics'
                                    ' failed, abort') from exc
@@ -1550,7 +1558,7 @@ class MotionService(object):
                 SetBool)
             response = service(enable)
         except rospy.ServiceException as exc:
-            print ('service set emergency stop failed')
+            print('service set emergency stop failed')
             raise ServiceException('service call for set emergency'
                                    ' stop failed, abort') from exc
 
@@ -1713,3 +1721,140 @@ class MotionService(object):
         trajectory = self.plan_move_pose_linear(path, seed, parameters)
         await self.execute_joint_trajectory(trajectory,
                                             parameters.collision_check)
+
+    async def move_gripper(self, action_name, position, max_effort):
+        """
+        Moves a gripper via the general ros interface GripperCommandAction
+
+        Parameters
+        ----------
+        action_name : str convertable
+            Name of the action to control a specific gripper
+        position : float convertable
+            Requested position of the gripper in meter
+        max_effort : float convertable
+            Force which should be applied
+
+        Results
+        -------
+        action_response : MoveGripperResult
+            Result of the action execution
+
+        Raises
+        ------
+        TypeError
+            If inputs are not convertable to specified types
+        ServiceError
+            If action server is not available
+        RuntimeError
+            If action returns unexpected result
+        """
+
+        action_name = str(action_name)
+
+        action_client = actionlib.SimpleActionClient(action_name,
+                                                     GripperCommandAction)
+
+        g = GripperCommandGoal()
+        g.command.position = float(position)
+        g.command.max_effort = float(max_effort)
+
+        if not action_client.wait_for_server(rospy.Duration(5)):
+            raise ServiceException('connection to grippercommand action'
+                                   ' server with name: ' + action_name +
+                                   ' could not be established')
+
+        run_action = self._generate_action_executor(action_client)
+        response = await run_action(g)
+
+        if not response:
+            raise RuntimeError('Unexpected result received by'
+                               ' gripper command action: ' +
+                               action_name)
+
+        return MoveGripperResults.from_gripper_command_action_result(response)
+
+    async def wsg_gripper_command(self, action_name, command, width, speed,
+                                  max_effort, stop_on_block=True):
+
+        """
+        Controls a WeissWsg gripper via the the specific action WsgCommandAction
+
+        Parameters
+        ----------
+        action_name : str convertable
+            Name of the action to control a specific gripper
+        command : WsgCommand
+            Specifies which kind of action should be performed
+        width : float convertable
+            Requested position of the gripper in meter
+        speed : float convetable
+            Requested speed in m/s
+        max_effort : float convertable
+            Force which should be applied
+
+        Results
+        -------
+        action_response : MoveGripperResult
+            Result of the action execution
+
+        Raises
+        ------
+        TypeError
+            If inputs are not convertable to specified types
+            or if command is no of type WsgCommand
+        ServiceError
+            If action server is not available
+        RuntimeError
+            If action returns unexpected result
+        """
+
+        from wsg_50_common.msg import CommandAction, CommandGoal
+
+        action_name = str(action_name)
+
+        if not isinstance(command, WsgCommand):
+            raise TypeError('command is not of expected type WsgCommand')
+
+        action_client = actionlib.SimpleActionClient(action_name,
+                                                     CommandAction)
+
+        if not action_client.wait_for_server(rospy.Duration(5)):
+            raise ServiceException('connection to wsg gripper action'
+                                   ' server with name: ' + action_name +
+                                   ' could not be established')
+
+        g = GripperCommandGoal()
+        g.command.command_id = command.value
+        g.command.width = float(width)
+        g.command.speed = float(speed)
+        g.command.force = float(max_effort)
+        g.command.stop_one_block = bool(stop_one_block)
+
+        run_action = self._generate_action_executor(action_client)
+        response = await run_action(g)
+
+        if not response:
+            raise RuntimeError('Unexpected result received by'
+                               ' wsg gripper command action: ' +
+                               action_name)
+
+        return WsgResult.from_wsg_command_action_result(response)
+
+    def _generate_action_executor(self, action):
+
+        async def run_action(goal):
+            async def wait_for_result(action):
+                action.wait_for_result()
+
+            action.send_goal(goal)
+            try:
+                await wait_for_result(action)
+            except asyncio.CancelledError as exc:
+                action.cancel()
+                raise exc
+
+            t = action.get_result()
+            return t
+
+        return run_action

@@ -908,9 +908,9 @@ class EndEffector(object):
             raise TypeError('move_group is not of expected'
                             ' type MoveGroup')
 
-        self.__end_effector_name = str(end_effector_name)
+        self.__name = str(end_effector_name)
         self.__move_group = move_group
-        self.__end_effector_link_name = str(end_effector_link_name)
+        self.__link_name = str(end_effector_link_name)
         self.__m_service = move_group.motion_service
 
     @staticmethod
@@ -952,6 +952,41 @@ class EndEffector(object):
 
         return move_group.get_end_effector()
 
+    @property
+    def name(self):
+        """
+        name : str (read only)
+            end effector name 
+        """
+        return self.__name
+
+    @property
+    def move_group(self):
+        """
+        move_group : MoveGroup
+            Instance of MoveGroup which manages the 
+            move group where the end effector belongs to
+        """
+        return self.__move_group
+
+    @property
+    def motion_service(self):
+        """
+        motion_service : MotionService
+            Instance of MotionService which the move group
+            and all end effectors use to communicate with
+            the motion server
+        """
+        return self.__m_service
+
+    @property
+    def link_name(self):
+        """
+        link_name : str
+            end effector link name
+        """
+        return self.__link_name
+
     def get_current_pose(self):
         """
         Returns the current pose of the end effector
@@ -972,7 +1007,7 @@ class EndEffector(object):
 
         p = self.__m_service.query_pose(self.__move_group.name,
                                         positions,
-                                        self.__end_effector_link_name)
+                                        self.__link_name)
 
         return p
 
@@ -1033,7 +1068,7 @@ class EndEffector(object):
         ik = self.__m_service.query_inverse_kinematics_many(target,
                                                             parameters,
                                                             seed,
-                                                            self.__end_effector_link_name)
+                                                            self.__link_name)
 
         if not ik.succeeded:
             raise ServiceException('inverse kinematics returns'
@@ -1102,7 +1137,7 @@ class EndEffector(object):
         ik = self.__m_service.query_inverse_kinematics_many(target,
                                                             parameters,
                                                             seed,
-                                                            self.__end_effector_link_name)
+                                                            self.__link_name)
 
         if not ik.succeeded:
             raise ServiceException('inverse kinematics returns'
@@ -1164,7 +1199,7 @@ class EndEffector(object):
                                                                          collision_check,
                                                                          max_deviation,
                                                                          acceleration_scaling,
-                                                                         self.__end_effector_name)
+                                                                         self.__name)
 
         trajectory = self.__m_serice.plan_move_pose_linear(cartesian_path,
                                                            seed,
