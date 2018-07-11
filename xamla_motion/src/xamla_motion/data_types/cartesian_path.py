@@ -18,10 +18,11 @@
 
 #!/usr/bin/env python3
 
-from data_types import JointSet
-from data_types import Pose
+from .joint_set import JointSet
+from .pose import Pose
 
 from collections import Iterable, deque
+from copy import deepcopy
 
 
 class CartesianPath(object):
@@ -178,16 +179,16 @@ class CartesianPath(object):
         new_points = deepcopy(self.__points)
         if isinstance(points, Pose):
             new_points.appendleft(points)
-            return self.__class__(self.__joints, new_points)
+            return self.__class__(new_points)
 
-        if (not isinstance(points, collections.Iterable) or
+        if (not isinstance(points, Iterable) or
                 any(not isinstance(j, Pose)
                     for j in points)):
             raise TypeError('points is not of expected'
                             ' type Pose or Iterable of Pose')
 
         new_points.extendleft(list(reversed(points)))
-        return self.__class__(self.__joints, new_points)
+        return self.__class__(new_points)
 
     def append(self, points):
         """
@@ -213,16 +214,16 @@ class CartesianPath(object):
         new_points = deepcopy(self.__points)
         if isinstance(points, Pose):
             new_points.append(points)
-            return self.__class__(self.__joints, new_points)
+            return self.__class__(new_points)
 
-        if (not isinstance(points, collections.Iterable) or
+        if (not isinstance(points, Iterable) or
                 any(not isinstance(j, Pose)
                     for j in points)):
             raise TypeError('points is not of expected'
                             ' type Pose or Iterable of Pose')
 
         new_points.extend(points)
-        return self.__class__(self.__joints, new_points)
+        return self.__class__(new_points)
 
     def concat(self, other):
         """
@@ -241,8 +242,8 @@ class CartesianPath(object):
             raise TypeError('other is not of expected type CartesianPath')
 
         new_points = deepcopy(self.__points)
-        new_points.extend(points)
-        return self.__class__(self.__joints, new_points)
+        new_points.extend(other.points)
+        return self.__class__(new_points)
 
     def transform(self, transform_function):
         """
@@ -271,8 +272,7 @@ class CartesianPath(object):
         """
 
         try:
-            return self.__class__(self.__joints,
-                                  [transform_function(x)
+            return self.__class__([transform_function(x)
                                    for x in self.__points])
         except TypeError as exc:
             raise TypeError('None valid transformation function') from exc
@@ -312,10 +312,10 @@ class CartesianPath(object):
         return len(self.__points)
 
     def __iter__(self):
-        return self.__points.__iter__()
+        return iter(self.__points)
 
     def __str__(self):
-        return self.__points.__str__()
+        return str(self.__points)
 
     def __repr__(self):
         return self.__str__()

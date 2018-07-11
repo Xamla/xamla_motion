@@ -22,7 +22,7 @@ from functools import total_ordering
 
 import numpy as np
 
-from data_types import JointSet
+from .joint_set import JointSet
 from xamlamoveit_msgs.msg import JointPathPoint
 
 
@@ -208,7 +208,7 @@ class JointValues(object):
         value : float
             Joint value if joint name existes else None
         """
-        if not isinstance(prefix, str):
+        if not isinstance(joint_name, str):
             raise TypeError('joint_name expected type is str')
 
         is_found, index = self.__joint_set.try_get_index_of(joint_name)
@@ -216,7 +216,7 @@ class JointValues(object):
         if not is_found:
             return False, None
         else:
-            return True, self.__value[index]
+            return True, self.__values[index]
 
     def reorder(self, new_order):
         """
@@ -248,7 +248,7 @@ class JointValues(object):
         try:
             values = [self.__getitem__(joint_name) for joint_name in new_order]
         except ValueError as exc:
-            raise ValueError('joint name ' + joint_name + ' from new_oder'
+            raise ValueError('A joint name from new_oder'
                              ' not exist in this instance of JointValues')
         return self.__class__(new_order, values)
 
@@ -277,7 +277,7 @@ class JointValues(object):
             a numpy.ufunc and if the function dont has the
             signature input : floating , output : floating
         """
-        if not (callable(tranform_function) or
+        if not (callable(transform_function) or
                 isinstance(transform_function, np.ufunc)):
             raise TypeError('transform_function is not callable'
                             ' or no numpy ufunc')
@@ -294,7 +294,7 @@ class JointValues(object):
         except TypeError as exc:
             raise TypeError('wrong transform function format') from exc
 
-        return self.__class__(self.__joint_set, value)
+        return self.__class__(self.__joint_set, values)
 
     def select(self, names):
         """

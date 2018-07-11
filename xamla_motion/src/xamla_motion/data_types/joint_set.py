@@ -96,7 +96,7 @@ class JointSet(object):
         """
         return self.__names
 
-    def add_prefix(prefix):
+    def add_prefix(self, prefix):
         """
         Creates new JointSet where prefix is added to every joint name
 
@@ -253,7 +253,7 @@ class JointSet(object):
         TypeError : type mismatch
             If parameter name is not type of str
         """
-        if not isinstance(index, str):
+        if not isinstance(name, str):
             raise TypeError('name expected type is str')
 
         is_found, _ = self.try_get_index_of(name)

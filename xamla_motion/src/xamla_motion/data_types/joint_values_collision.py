@@ -55,7 +55,7 @@ class JointValuesCollisions(object):
         return self.__error_message
 
     def __str__(self):
-        return ('index_ ' + str(index) +
+        return ('index_ ' + str(self.__index) +
                 ' error: '+self.__error_message)
 
     def __repr__(self):

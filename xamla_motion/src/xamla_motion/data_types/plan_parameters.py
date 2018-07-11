@@ -20,8 +20,8 @@
 
 from copy import deepcopy
 
-from data_types import JointLimits
-from xamla_motion_exceptions import ArgumentError
+from .joint_limits import JointLimits
+from ..xamla_motion_exceptions import ArgumentError
 
 import numpy as np
 
@@ -169,14 +169,14 @@ class PlanParameters(object):
 
         try:
             joint_limits = JointLimits(joint_set,
-                                       max_s_velocity, max_s_acceleration,
+                                       max_velocity, max_acceleration,
                                        min_position, max_position)
         except (ValueError, TypeError) as exc:
             raise ArgumentError('It was not possible to create'
                                 ' an instance of JointLimts due to'
                                 ' wrong parameter type or format') from exc
 
-        return cls(move_group_name, JointLimits, kwargs)
+        return cls(move_group_name, JointLimits, **kwargs)
 
     @property
     def move_group_name(self):

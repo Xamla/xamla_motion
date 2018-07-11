@@ -23,8 +23,8 @@ from control_msgs.msg import GripperCommandResult
 
 class MoveGripperResult(object):
 
-    def __init___(self, position: float, reached_goal: float,
-                  stalled: bool, effort: float):
+    def __init__(self, position: float, reached_goal: float,
+                 stalled: bool, effort: float):
         self.__position = position
         self.__reached_goal = reached_goal
         self.__stalled = stalled
@@ -32,9 +32,8 @@ class MoveGripperResult(object):
 
     @classmethod
     def from_gripper_command_action_result(cls, msg):
-        result = msg.result
-        return cls(result.position, result.reached_goal,
-                   result.stalled, result.effort)
+        return cls(msg.position, msg.reached_goal,
+                   msg.stalled, msg.effort)
 
     @property
     def position(self):

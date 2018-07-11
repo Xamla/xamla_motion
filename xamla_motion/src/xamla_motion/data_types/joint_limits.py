@@ -21,7 +21,7 @@
 from copy import deepcopy
 import numpy as np
 
-from data_types import JointSet
+from .joint_set import JointSet
 
 
 class JointLimits(object):
@@ -272,10 +272,11 @@ class JointLimits(object):
         return len(self.__max_position)
 
     def __iter__(self):
-        return (self.__max_velocity.__iter__(),
-                self.__max_acceleration.__iter__(),
-                self.__min_position.__iter__(),
-                self.__max_position.__iter__())
+        for i in range(0, self.__len__()):
+            yield np.ndarray([self.__max_velocity[i],
+                              self.__max_acceleration[i],
+                              self.__min_position[i],
+                              self.__max_position[i]])
 
     def __str__(self):
         j_str = '\n'.join([name + ' :  max velocity=' +

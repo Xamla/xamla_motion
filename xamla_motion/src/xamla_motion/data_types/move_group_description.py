@@ -18,7 +18,7 @@
 
 #!/usr/bin/env python3
 
-from data_types import JointSet
+from .joint_set import JointSet
 
 
 class MoveGroupDescription(object):

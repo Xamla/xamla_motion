@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from data_types import *
+from .data_types import *
 
 import pdb
 import numpy as np

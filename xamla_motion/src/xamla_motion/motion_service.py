@@ -29,8 +29,8 @@ from control_msgs.msg import GripperCommandAction, GripperCommandGoal
 from moveit_msgs.msg import MoveItErrorCodes
 from std_srvs.srv import SetBool
 
-from xamla_motion_exceptions import ServiceException, ArgumentError
-from data_types import *
+from .xamla_motion_exceptions import ServiceException, ArgumentError
+from .data_types import *
 from collections import Iterable
 
 import asyncio
@@ -845,7 +845,7 @@ class MotionService(object):
 
         if (len(response.in_collision) != len(joint_path) or
             len(response.error_code) != len(joint_path) or
-                len(resonse.message) != len(joint_path)):
+                len(response.message) != len(joint_path)):
             raise ServiceException('service call for query joint'
                                    ' collisions was not successful. '
                                    'service name:' +

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-from data_types import *
-from motion import MoveGroup, EndEffector
-from gripper import WeissWsgGripperProperties, WeissWsgGripper
+from .data_types import *
+from .motion_client import MoveGroup, EndEffector
+from .gripper_client import *
 from pyquaternion import Quaternion
 import asyncio
 
@@ -84,9 +84,22 @@ properties = WeissWsgGripperProperties('wsg50')
 
 wsg_gripper = WeissWsgGripper(properties, move_group.motion_service)
 
+print('homeing')
 ioloop.run_until_complete(wsg_gripper.homing())
 
+print('move gripper')
 ioloop.run_until_complete(wsg_gripper.move(0.1, 0.05, 0.05, True))
+
+print('perform grasp')
 result = ioloop.run_until_complete(wsg_gripper.grasp(0.02, 0.1, 0.05))
+
+
+print('---------- common gripper -------------')
+properties1 = CommonGripperProperties('wsg50', 'xamla/wsg_driver')
+
+gripper = CommonGripper(properties1, move_group.motion_service)
+
+print('move')
+result1 = ioloop.run_until_complete(gripper.move(0.1, 0.005))
 
 ioloop.close()

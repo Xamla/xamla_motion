@@ -18,8 +18,8 @@
 
 #!/usr/bin/env python3
 
-from data_types import JointSet
-from data_types import JointValues
+from .joint_set import JointSet
+from .joint_values import JointValues
 
 from collections import Iterable, deque
 from copy import deepcopy
@@ -193,7 +193,7 @@ class JointPath(object):
             new_points.appendleft(points)
             return self.__class__(self.__joints, new_points)
 
-        if (not isinstance(points, collections.Iterable) or
+        if (not isinstance(points, Iterable) or
                 any(not isinstance(j, JointValues)
                     for j in points)):
             raise TypeError('points is not of expected'
@@ -229,7 +229,7 @@ class JointPath(object):
             new_points.append(points)
             return self.__class__(self.__joints, new_points)
 
-        if (not isinstance(points, collections.Iterable) or
+        if (not isinstance(points, Iterable) or
                 any(not isinstance(j, JointValues)
                     for j in points)):
             raise TypeError('points is not of expected'
@@ -255,7 +255,7 @@ class JointPath(object):
             raise TypeError('other is not of expected type JointPath')
 
         new_points = deepcopy(self.__points)
-        new_points.extend(points)
+        new_points.extend(other.points)
         return self.__class__(self.__joints, new_points)
 
     def transform(self, transform_function):
@@ -326,7 +326,7 @@ class JointPath(object):
         return len(self.__points)
 
     def __iter__(self):
-        return self.__points.__iter__()
+        return iter(self.__points)
 
     def __str__(self):
         return self.__points.__str__()

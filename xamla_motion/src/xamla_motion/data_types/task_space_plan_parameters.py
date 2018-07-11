@@ -20,11 +20,11 @@
 
 from copy import deepcopy
 
-from data_types import EndEffectorLimits
+from .end_effector_limits import EndEffectorLimits
 
 import numpy as np
 
-from xamla_motion_exceptions import ArgumentError
+from ..xamla_motion_exceptions import ArgumentError
 
 
 class TaskSpacePlanParameters(object):
@@ -181,7 +181,7 @@ class TaskSpacePlanParameters(object):
         """
 
         try:
-            end_effector_limits = EndeffectorLimits(max_xyz_velocity,
+            end_effector_limits = EndEffectorLimits(max_xyz_velocity,
                                                     max_xyz_acceleration,
                                                     max_angular_velocity,
                                                     max_angular_acceleration)
@@ -190,7 +190,7 @@ class TaskSpacePlanParameters(object):
                                 ' an instance of Endeffectorlimits'
                                 ' due to limit type or size') from exc
 
-        return cls(end_effector_name, end_effector_limits, kwargs)
+        return cls(end_effector_name, end_effector_limits, **kwargs)
 
     @property
     def end_effector_name(self):

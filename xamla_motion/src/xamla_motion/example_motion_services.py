@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from data_types import *
-from motion_service import MotionService
+from .data_types import *
+from .motion_service import MotionService
 from pyquaternion import Quaternion
 import rospy
 

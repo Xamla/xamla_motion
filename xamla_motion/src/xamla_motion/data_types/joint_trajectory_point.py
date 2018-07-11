@@ -22,7 +22,8 @@ from datetime import timedelta
 import numpy as np
 import rospy
 
-from data_types import JointSet, JointValues
+from .joint_set import JointSet
+from .joint_values import JointValues
 import trajectory_msgs.msg
 
 
@@ -236,11 +237,11 @@ class JointTrajectoryPoint(object):
 
         time_from_start = self.__time_from_start + offset
 
-        return self.__clas__(time_from_start,
-                             self.__positions,
-                             self.__velocities,
-                             self.__accelerations,
-                             self.__efforts)
+        return self.__class__(time_from_start,
+                              self.__positions,
+                              self.__velocities,
+                              self.__accelerations,
+                              self.__efforts)
 
     def to_joint_trajectory_point_msg(self):
         """

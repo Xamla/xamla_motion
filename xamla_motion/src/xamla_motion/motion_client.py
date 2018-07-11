@@ -1,4 +1,4 @@
-# motion.py
+# motion_client.py
 #
 # Copyright (c) 2018, Xamla and/or its affiliates. All rights reserved.
 #
@@ -18,9 +18,9 @@
 
 #!/usr/bin/env python3
 
-from motion_service import MotionService
-from xamla_motion_exceptions import *
-from data_types import *
+from .motion_service import MotionService
+from .xamla_motion_exceptions import *
+from .data_types import *
 
 import numpy as np
 from copy import deepcopy
@@ -459,7 +459,7 @@ class MoveGroup(object):
         if name:
             try:
                 return self.__end_effectors[name]
-            except key as exc:
+            except KeyError as exc:
                 raise RuntimeError('end effector with name' + name +
                                    'is not available for move group: '
                                    + self.__name) from exc
@@ -1201,9 +1201,9 @@ class EndEffector(object):
                                                                          acceleration_scaling,
                                                                          self.__name)
 
-        trajectory = self.__m_serice.plan_move_pose_linear(cartesian_path,
-                                                           seed,
-                                                           parameters)
+        trajectory = self.__m_service.plan_move_pose_linear(cartesian_path,
+                                                            seed,
+                                                            parameters)
 
         return trajectory, parameters
 
@@ -1254,5 +1254,5 @@ class EndEffector(object):
                                                         max_deviation,
                                                         acceleration_scaling)
 
-        await self._m_service.execute_joint_trajectory(trajectory,
-                                                       parameters.collision_check)
+        await self.__m_service.execute_joint_trajectory(trajectory,
+                                                        parameters.collision_check)

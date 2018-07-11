@@ -18,7 +18,10 @@
 
 #!/usr/bin/env python3
 
-from data_types import JointValues
+from .joint_set import JointSet
+from .joint_values import JointValues
+
+import numpy as np
 
 
 class JointStates(object):
@@ -192,7 +195,7 @@ class JointStates(object):
             else:
                 raise TypeError('names is not one of the expected types'
                                 ' str or list of strs or JointSet')
-            return self.__class__(JointSet(names), positions, velocities,
+            return self.__class__(positions, velocities,
                                   efforts)
         except ValueError as exc:
             raise ValueError('name ' + name +
@@ -207,6 +210,12 @@ class JointStates(object):
         ss = ss.replace('\n', '\n  ')
         return 'JointStates\n'+ss
 
+    def __iter__(self):
+        for i in range(0, self.__len__()):
+            yield np.array([self.__positions[i],
+                            self.__velocities[i] if self.__velocities else np.nan,
+                            self.__efforts[i] if self.__efforts else np.nan])
+
     def __repr__(self):
         return self.__str__()
 
@@ -216,9 +225,6 @@ class JointStates(object):
 
         if id(other) == id(self):
             return True
-
-        if other.time_from_start != self.__time_from_start:
-            return False
 
         if other.positions != self.__positions:
             return False

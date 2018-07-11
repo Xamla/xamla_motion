@@ -24,8 +24,8 @@ import rospy
 from std_msgs.msg import Header
 import trajectory_msgs
 
-from data_types import JointSet
-from data_types import JointTrajectoryPoint
+from .joint_set import JointSet
+from .joint_trajectory_point import JointTrajectoryPoint
 from collections import Iterable
 
 
