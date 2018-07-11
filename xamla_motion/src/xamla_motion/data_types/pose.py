@@ -140,9 +140,9 @@ class Pose(object):
         ----------
         matrix : numpy.ndarray((4,4),np.dtype=floating)
             A transformation matrix in homogenous coordinates
-        frame_id : str (optinal defaul = '')
+        frame_id : str (optional defaul = '')
             name of the coordinate system the pose is defined
-        normalize_roation : bool (optinal default = False)
+        normalize_roation : bool (optional default = False)
             If true quaternion normalization is performed in the
             initialization process
 

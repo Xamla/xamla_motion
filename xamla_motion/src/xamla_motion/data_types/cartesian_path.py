@@ -21,6 +21,7 @@
 from .joint_set import JointSet
 from .pose import Pose
 
+import xamlamoveit_msgs.msg as xamla_msg
 from collections import Iterable, deque
 from copy import deepcopy
 
@@ -130,6 +131,25 @@ class CartesianPath(object):
                             'expected type Pose')
 
         return cls([start, stop])
+
+    @classmethod
+    def from_cartesian_path_msg(cls, msg):
+        """
+        Create instance from cartesian path message
+
+        Parameters
+        ----------
+        msg : xamlamoveit_msgs.msg CartesianPath.msg
+            ROS cartesian path message
+
+        Returns
+        -------
+        CartesianPath
+            New instance of CartesianPath
+        """
+
+        if msg.points:
+            return cls([Pose.from_posestamped_msg(p) for p in msg.points])
 
     @property
     def points(self):
@@ -276,6 +296,15 @@ class CartesianPath(object):
                                    for x in self.__points])
         except TypeError as exc:
             raise TypeError('None valid transformation function') from exc
+
+    def to_cartesian_path_msg(self):
+        """
+        Generates a xamlamoveit_msgs.msg CartesianPath.msg from this CartesianPath instance
+        """
+        path = xamla_msg.CartesianPath
+        path.points = [p.to_posestamped_msg() for p in self.__points]
+
+        return path
 
     def __getitem__(self, key):
         """

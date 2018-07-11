@@ -23,7 +23,7 @@ from functools import total_ordering
 import numpy as np
 
 from .joint_set import JointSet
-from xamlamoveit_msgs.msg import JointPathPoint
+from xamlamoveit_msgs.msg import JointPathPoint, JointValuesPoint
 
 
 class JointValues(object):
@@ -121,6 +121,7 @@ class JointValues(object):
             Message which should be transformed to JointValues
 
         Returns
+        -------
         JointValues
             New instance of JointValues
 
@@ -134,6 +135,29 @@ class JointValues(object):
             raise TypeError('joint_set is not of expected type JointSet')
 
         return cls(joint_set, msg.positions)
+
+    @classmethod
+    def from_joint_values_point_msg(cls, msg):
+        """
+        Creates an instance of JointValues from JointValuesPoint message
+
+        Parameters
+        ----------
+        msg : xamlamoveit_msgs JointValuesPoint message
+            Message which should be transformed to JointValues
+
+        Returns
+        -------
+        JointValues
+            New instance of JointValues
+
+        Raises
+        ------
+        AttributeError
+            If msg not provide needed properties and methods
+        """
+
+        return cls(msg.joint_names, msg.positions)
 
     @staticmethod
     def empty():
@@ -338,11 +362,20 @@ class JointValues(object):
 
     def to_joint_path_point_msg(self):
         """
-        Transform to xamlamoveit_msgs JointPathMessage
+        Transform to xamlamoveit_msgs JointPathPoint message
         """
         joint_path_point = JointPathPoint()
         joint_path_point.positions = list(self.__values)
         return joint_path_point
+
+    def to_joint_values_point_msg(self):
+        """
+        Transform to xamlamoveit_msgs JointValuesPoint message
+        """
+        joint_values_point = JointValuesPoint()
+        joint_values_point.joint_names = self.__joint_set.names
+        joint_values_point.positions = list(self.__values)
+        return joint_values_point
 
     def __getitem__(self, key):
         """
