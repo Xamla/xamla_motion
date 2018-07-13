@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 name = "xamla_motion"
 from .motion_service import MotionService
 from .motion_client import MoveGroup

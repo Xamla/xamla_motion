@@ -53,6 +53,49 @@ add_folder_srv_name = '/rosvita/world_view/add_folder'
 
 class WorldViewClient(object):
 
+    """
+    Client to interact and manipulate the Rosvita WorldView
+
+    With help of this client class it is possible to add, get,
+    query and remove different kinds of elements to or from
+    the Rosvita world view. 
+
+    Methods
+    -------
+    add_joint_values
+        Add / store joint values element in world view tree
+    get_joint_values
+        Get joint values element from world view tree
+    query_joint_values
+        Query all joint values under folder_path which start with prefix
+    update_joint_values
+        Update an already existing joint values element in world view tree
+    add_pose
+        Add / store pose element in world view tree
+    get_pose
+        Get pose element from world view tree
+    query_poses
+        Query all existing poses under folder_path which start with prefix
+    update_pose
+        Update an already existing pose element in world view tree
+    add_cartesian_path
+        Add / store cartesian path element in world view tree
+    get_cartesian_path
+        Get cartesian path element from world view tree
+    query_cartesian_pahts
+        Query all existing castesian paths under folder_path which start with prefix
+    update_cartesian_path
+        Update an already existing collision object element in world view tree
+    add_collision_object
+        Add / store collision object element in world view tree
+    get_collision_object
+        Get collision object element from world view tree
+    query_cartesian_pahts
+        Query all existing castesian paths under folder_path which start with prefix
+    update_collision_object
+        Update an already existing collision object element in world view tree
+    """
+
     def __init__(self):
         """
         Initialize WorldViewClient
@@ -251,6 +294,8 @@ class WorldViewClient(object):
         joint_values : JointValues
             Instance of joint values which is added / stored
         transient : bool
+            If True the added joint values are only valid for this session
+            and will not be saved in a rosvita project context
 
         Raises
         ------
@@ -353,7 +398,7 @@ class WorldViewClient(object):
     def query_joint_values(self, folder_path: str, prefix: str ='',
                            recursive: bool = False) -> List[JointValues]:
         """
-        Query all existing elements under folder_path which start with prefix
+        Query all existing joint values elements under folder_path which start with prefix
 
         Parameters
         ----------
@@ -424,7 +469,8 @@ class WorldViewClient(object):
         joint_values : JointValues
             Instance of joint values which contains the new values
         transient : bool
-
+            If True the updated joint values are only valid for this session
+            and will not be saved in a rosvita project context
         Raises
         ------
         ServiceError
@@ -482,6 +528,8 @@ class WorldViewClient(object):
         pose : Pose
             Instance of pose which is added / stored
         transient : bool
+            If True the added pose is only valid for this session
+            and will not be saved in a rosvita project context
 
         Raises
         ------
@@ -584,7 +632,7 @@ class WorldViewClient(object):
     def query_poses(self, folder_path: str, prefix: str ='',
                     recursive: bool = False) -> List[Pose]:
         """
-        Query all existing elements under folder_path which start with prefix
+        Query all existing pose elements under folder_path which start with prefix
 
         Parameters
         ----------
@@ -655,6 +703,8 @@ class WorldViewClient(object):
         pose : Pose
             Instance of pose which contains the new values
         transient : bool
+            If True the updated pose is only valid for this session
+            and will not be saved in a rosvita project context
 
         Raises
         ------
@@ -713,6 +763,8 @@ class WorldViewClient(object):
         cartesian_path : CartesianPath
             Instance of cartesian path which is added / stored
         transient : bool
+            If True the added cartesian path is only valid for this session
+            and will not be saved in a rosvita project context
 
         Raises
         ------
@@ -816,7 +868,7 @@ class WorldViewClient(object):
     def query_cartesian_paths(self, folder_path: str, prefix: str ='',
                               recursive: bool = False) -> List[CartesianPath]:
         """
-        Query all existing elements under folder_path which start with prefix
+        Query all existing cartesian path elements under folder_path which start with prefix
 
         Parameters
         ----------
@@ -887,6 +939,8 @@ class WorldViewClient(object):
         cartesian_path : CartesianPath
             Instance of cartesian path which contains the new values
         transient : bool
+            If True the updated cartesian path is only valid for this session
+            and will not be saved in a rosvita project context
 
         Raises
         ------
@@ -946,6 +1000,8 @@ class WorldViewClient(object):
         collision_object : CollisionObject
             Instance of collision object which is added / stored
         transient : bool
+            If True the added collision object is only valid for this session
+            and will not be saved in a rosvita project context
 
         Raises
         ------
@@ -1050,7 +1106,7 @@ class WorldViewClient(object):
     def query_collision_objects(self, folder_path: str, prefix: str ='',
                                 recursive: bool = False) -> List[CollisionObject]:
         """
-        Query all existing elements under folder_path which start with prefix
+        Query all existing collision objet elements under folder_path which start with prefix
 
         Parameters
         ----------
@@ -1121,6 +1177,8 @@ class WorldViewClient(object):
         collision_object : CollisionObject
             Instance of collision object which contains the new values
         transient : bool
+            If True the updated collision object is only valid for this session
+            and will not be saved in a rosvita project context
 
         Raises
         ------
