@@ -427,7 +427,6 @@ class MotionService(object):
                                    'kinematics returns with '
                                    'invalid response')
 
-        errors = None
         for i, error in enumerate(response.error_codes):
             if error.val != MoveItErrorCodes.SUCCESS:
                 raise ServiceException('service call for query forward'
@@ -518,67 +517,6 @@ class MotionService(object):
         return JointPath(joint_path.joint_set,
                          [JointValues(joint_path.joint_set, p.positions)
                           for p in response.path])
-
-    @classmethod
-    def query_cartesian_path(cls, cartesian_path, number_of_steps=50):
-        """
-        Query a complete cartesian path
-
-        from a cartesian path with
-        key points e.g. only start stop point
-
-        Parameters
-        ----------
-        cartesian_path : CartesianPath
-            Sparce cartesian key poses
-        number_of_steps : int convertable
-            Number of dense poses
-
-        Returns
-        -------
-        CartesianPath
-            New planned cartesian path with dense poses
-
-        Raises
-        ------
-        TypeError
-            If cartesian path is not of expected type cartesian path
-            or if number_of_steps is not convertable to int
-        """
-
-        query_cartesian_path_service = ('xamlaPlanningServices/'
-                                        'query_cartesian_path')
-
-        if not isinstance(cartesian_path, CartesianPath):
-            raise TypeError('cartesian_path is not of expected type'
-                            ' CartesianPath')
-
-        number_of_steps = int(number_of_steps)
-
-        try:
-            service = rospy.ServiceProxy(
-                query_cartesian_path_service,
-                GetLinearCartesianPath)
-            response = service([p.to_posestamped_msg()
-                                for p in cartesian_path],
-                               number_of_steps)
-        except rospy.ServiceException as exc:
-            print('service call for query cartesian path'
-                  ' failed, abort ')
-            raise ServiceException('service call for query'
-                                   ' cartesian path'
-                                   ' failed, abort') from exc
-
-        if response.error_code.val != MoveItErrorCodes.SUCCESS:
-            raise ServiceException('service call for query cartesian'
-                                   ' path was not successful. '
-                                   'service name:' +
-                                   query_cartesian_path_service +
-                                   ' error code: ' +
-                                   str(response.error_code.val))
-
-        return CartesianPath([Pose.from_posestamped_msg(p)
-                              for p in response.path])
 
     @classmethod
     def query_joint_trajectory(cls, joint_path, max_velocity, max_acceleration,
@@ -858,6 +796,8 @@ class MotionService(object):
                   for i in range(0, len(joint_path))
                   if response.in_collision[i]]
 
+        return result
+
     @classmethod
     def create_plan_parameters(cls, move_group_name=None, joint_set=None,
                                max_velocity=None, max_acceleration=None,
@@ -1091,49 +1031,6 @@ class MotionService(object):
 
         return cls.query_collision_free_joint_path(parameters.move_group_name,
                                                    path)
-
-    @classmethod
-    def plan_move_cartesian(cls, path, num_steps, parameters):
-        """
-        Plans cartesian path from sparse cartesian path
-
-        Parameters
-        ----------
-        path : JointPath
-            joint path which should be replanned to be
-            collision free
-        num_steps : int convertable
-            number of finial poses in path
-        parameters : PlanParameters
-            plan parameters which defines the limits and
-            move group
-
-        Returns
-        -------
-        JointPath
-            the replanned collision free joint path
-
-        Raises
-        ------
-        TypeError
-            If path is not of type CartesianPath or
-            if parameters is not of type PlanParameters
-        ServiceError
-            If query service is not available or finish
-            unsuccessfully
-        """
-
-        if not isinstance(path, CartesianPath):
-            raise TypeError('path is not of expected'
-                            ' type CartesianPath')
-
-        if not isinstance(parameters, PlanParameters):
-            raise TypeError('parameters is not of expected'
-                            ' type PlanParameters')
-
-        num_steps = int(num_steps)
-
-        return cls.query_cartesian_path(path, num_steps)
 
     @classmethod
     def plan_move_pose_linear(cls, path, seed, parameters):

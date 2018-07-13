@@ -7,3 +7,4 @@ from .gripper_client import WeissWsgGripperProperties
 from .gripper_client import WeissWsgGripper
 from .gripper_client import CommonGripperProperties
 from .gripper_client import CommonGripper
+from .world_view_client import WorldViewClient

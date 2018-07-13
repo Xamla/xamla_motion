@@ -19,7 +19,7 @@
 #!/usr/bin/env python3
 
 from pyquaternion import Quaternion
-from geometry_msgs.msg import PoseStamped
+import geometry_msgs.msg as geometry_msgs
 import numpy as np
 
 
@@ -207,7 +207,7 @@ class Pose(object):
         TypeError
             If msg is not of type PoseStamped
         """
-        if not isinstance(msg, PoseStamped):
+        if not isinstance(msg, geometry_msgs.PoseStamped):
             raise TypeError('msg is not of expected type PoseStamped')
 
         translation = np.fromiter([msg.pose.position.x,
@@ -221,6 +221,42 @@ class Pose(object):
                                  msg.pose.orientation.z])
 
         return cls(translation, quaternion, msg.header.frame_id)
+
+    @classmethod
+    def from_pose_msg(cls, msg, frame_id=''):
+        """
+        Initialize Pose from ros geometry_msgs/Pose
+
+        Parameters
+        ----------
+        msg : Pose from geometry_msgs
+            pose message
+
+        Returns
+        -------
+        Pose
+            Instance of Pose from pose message
+
+        Raises
+        ------
+        TypeError
+            If msg is not of type Pose
+        """
+
+        if not isinstance(msg, geometry_msgs.Pose):
+            raise TypeError('msg is not of type ros geometry_msgs/Pose')
+
+        translation = np.fromiter([msg.position.x,
+                                   msg.position.y,
+                                   msg.position.z],
+                                  float)
+
+        quaternion = Quaternion([msg.orientation.w,
+                                 msg.orientation.x,
+                                 msg.orientation.y,
+                                 msg.orientation.z])
+
+        return cls(translation, quaternion, frame_id)
 
     @property
     def frame_id(self):
@@ -291,7 +327,6 @@ class Pose(object):
         """
 
         return self.__quaternion.transformation_matrix
-        return
 
     def transformation_matrix(self):
         """
@@ -317,7 +352,7 @@ class Pose(object):
 
         """
 
-        pose_stamped = PoseStamped()
+        pose_stamped = geometry_msgs.PoseStamped()
         pose_stamped.header.frame_id = self.__frame_id
 
         pose_stamped.pose.position.x = self.__translation[0]

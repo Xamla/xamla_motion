@@ -157,7 +157,7 @@ class JointValues(object):
             If msg not provide needed properties and methods
         """
 
-        return cls(msg.joint_names, msg.positions)
+        return cls(JointSet(msg.joint_names), msg.positions)
 
     @staticmethod
     def empty():
@@ -271,7 +271,7 @@ class JointValues(object):
 
         try:
             values = [self.__getitem__(joint_name) for joint_name in new_order]
-        except ValueError as exc:
+        except ValueError:
             raise ValueError('A joint name from new_oder'
                              ' not exist in this instance of JointValues')
         return self.__class__(new_order, values)
@@ -404,13 +404,13 @@ class JointValues(object):
         if isinstance(key, str):
             try:
                 return self.__values[self.__joint_set.get_index_of(key)]
-            except ValueError as exc:
+            except ValueError:
                 raise ValueError('joint name not exists')
 
         elif isinstance(key, (int, slice)):
             try:
                 return self.__values[key]
-            except IndexError as exc:
+            except IndexError:
                 raise IndexError('index out of range')
         else:
             raise TypeError(

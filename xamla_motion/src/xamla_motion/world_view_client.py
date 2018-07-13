@@ -22,7 +22,8 @@
 import rospy
 from .xamla_motion_exceptions import *
 from xamlamoveit_msgs.srv import *
-from .data_types import JointValues, Pose, CartesianPath
+import moveit_msgs.msg as moveit_msgs
+from .data_types import JointValues, Pose, CartesianPath, CollisionObject
 
 from typing import List
 
@@ -38,12 +39,12 @@ update_pose_srv_name = '/rosvita/world_view/update_pose'
 
 add_cartesian_path_srv_name = '/rosvita/world_view/set_cartesianpath'
 get_cartesian_path_srv_name = '/rosvita/world_view/get_cartesianpath'
-query_cartesian_path_srv_name = '/rosvita/world_view/query_cartesianpath'
+query_cartesian_paths_srv_name = '/rosvita/world_view/query_cartesianpath'
 update_cartesian_path_srv_name = '/rosvita/world_view/update_cartesianpath'
 
 add_collision_object_srv_name = '/rosvita/world_view/set_collisionobject'
 get_collision_object_srv_name = '/rosvita/world_view/get_collisionobject'
-query_collison_object_srv_name = '/rosvita/world_view/query_collisionobject'
+query_collision_objects_srv_name = '/rosvita/world_view/query_collisionobject'
 update_collision_object_srv_name = '/rosvita/world_view/update_collisionobject'
 
 remove_element_srv_name = '/rosvita/world_view/remove_element'
@@ -162,11 +163,11 @@ class WorldViewClient(object):
 
         try:
             self.__query_cartesian_paths_srv = rospy.ServiceProxy(
-                query_cartesian_path_srv_name,
+                query_cartesian_paths_srv_name,
                 QueryCartesianPathWorldView)
         except rospy.ServiceException as exc:
             raise ServiceException('connection for service: ' +
-                                   query_cartesian_path_srv_name +
+                                   query_cartesian_paths_srv_name +
                                    ' could not be established') from exc
 
         try:
@@ -199,11 +200,11 @@ class WorldViewClient(object):
 
         try:
             self.__query_collision_objects_srv = rospy.ServiceProxy(
-                query_collison_object_srv_name,
+                query_collision_objects_srv_name,
                 QueryCollisionObjectWorldView)
         except rospy.ServiceException as exc:
             raise ServiceException('connection for service: ' +
-                                   query_collison_object_srv_name +
+                                   query_collision_objects_srv_name +
                                    ' could not be established') from exc
 
         try:
@@ -215,8 +216,28 @@ class WorldViewClient(object):
                                    update_collision_object_srv_name +
                                    ' could not be established') from exc
 
+        # add folder service
+        try:
+            self.__add_folder_srv = rospy.ServiceProxy(
+                add_folder_srv_name,
+                CreateFolderWorldView)
+        except rospy.ServiceException as exc:
+            raise ServiceException('connection for service: ' +
+                                   add_cartesian_path_srv_name +
+                                   ' could not be established') from exc
+
+        # remove element service
+        try:
+            self.__remove_element_srv = rospy.ServiceProxy(
+                remove_element_srv_name,
+                RemoveElementWorldView)
+        except rospy.ServiceException as exc:
+            raise ServiceException('connection for service: ' +
+                                   remove_element_srv_name +
+                                   ' could not be established') from exc
+
     def add_joint_values(self, element_name: str, folder_path: str,
-                         joint_values: JointValues, transient: bool =False):
+                         joint_values: JointValues, transient: bool = False):
         """
         Add / store joint values element in world view tree
 
@@ -245,7 +266,7 @@ class WorldViewClient(object):
             raise TypeError('element_name is not of expected'
                             ' type str or is empty')
 
-        if not isinstance(folder_path, str) or not folder_path:
+        if not isinstance(folder_path, str):
             raise TypeError('folder_path is not of expected'
                             ' type str or is empty')
 
@@ -307,7 +328,7 @@ class WorldViewClient(object):
             raise TypeError('element_name is not of '
                             'expected type str or is empty')
 
-        if not isinstance(folder_path, str) or not folder_path:
+        if not isinstance(folder_path, str):
             raise TypeError('folder_path is not of expected'
                             ' type str or is empty')
 
@@ -417,7 +438,7 @@ class WorldViewClient(object):
             raise TypeError('element_name is not of expected'
                             ' type str or is empty')
 
-        if not isinstance(folder_path, str) or not folder_path:
+        if not isinstance(folder_path, str):
             raise TypeError('folder_path is not of expected'
                             ' type str or is empty')
 
@@ -476,7 +497,7 @@ class WorldViewClient(object):
             raise TypeError('element_name is not of expected'
                             ' type str or is empty')
 
-        if not isinstance(folder_path, str) or not folder_path:
+        if not isinstance(folder_path, str):
             raise TypeError('folder_path is not of expected'
                             ' type str or is empty')
 
@@ -538,7 +559,7 @@ class WorldViewClient(object):
             raise TypeError('element_name is not of '
                             'expected type str or is empty')
 
-        if not isinstance(folder_path, str) or not folder_path:
+        if not isinstance(folder_path, str):
             raise TypeError('folder_path is not of expected'
                             ' type str or is empty')
 
@@ -648,7 +669,7 @@ class WorldViewClient(object):
             raise TypeError('element_name is not of expected'
                             ' type str or is empty')
 
-        if not isinstance(folder_path, str) or not folder_path:
+        if not isinstance(folder_path, str):
             raise TypeError('folder_path is not of expected'
                             ' type str or is empty')
 
@@ -678,7 +699,7 @@ class WorldViewClient(object):
                                 + response.error)
 
     def add_cartesian_path(self, element_name: str, folder_path: str,
-                           cartesian_path: CartesianPath, transient: bool =False):
+                           cartesian_path: CartesianPath, transient: bool = False):
         """
         Add / store cartesian path element in world view tree
 
@@ -707,7 +728,7 @@ class WorldViewClient(object):
             raise TypeError('element_name is not of expected'
                             ' type str or is empty')
 
-        if not isinstance(folder_path, str) or not folder_path:
+        if not isinstance(folder_path, str):
             raise TypeError('folder_path is not of expected'
                             ' type str or is empty')
 
@@ -770,12 +791,13 @@ class WorldViewClient(object):
             raise TypeError('element_name is not of '
                             'expected type str or is empty')
 
-        if not isinstance(folder_path, str) or not folder_path:
+        if not isinstance(folder_path, str):
             raise TypeError('folder_path is not of expected'
                             ' type str or is empty')
 
-        request = GetCartesianPathWorldView()
-        request.element_path = folder_path + '/' + element_name
+        request = GetCartesianPathWorldViewRequest()
+        request.element_path = folder_path
+        request.display_name = element_name
 
         try:
             response = self.__get_cartesian_path_srv(request)
@@ -828,7 +850,7 @@ class WorldViewClient(object):
         if not isinstance(recursive, bool):
             raise TypeError('recursive is not of expected type bool')
 
-        request = QueryCartesianPathsWorldViewRequest()
+        request = QueryCartesianPathWorldViewRequest()
         request.prefix = prefix
         request.folder_path = folder_path
         request.recursive = recursive
@@ -846,7 +868,7 @@ class WorldViewClient(object):
                                 ' was not successful,response with error:'
                                 + response.error)
 
-        if response.points:
+        if response.paths:
             return [CartesianPath.from_cartesian_path_msg(p) for p in response.paths]
         else:
             return []
@@ -880,7 +902,7 @@ class WorldViewClient(object):
             raise TypeError('element_name is not of expected'
                             ' type str or is empty')
 
-        if not isinstance(folder_path, str) or not folder_path:
+        if not isinstance(folder_path, str):
             raise TypeError('folder_path is not of expected'
                             ' type str or is empty')
 
@@ -894,7 +916,7 @@ class WorldViewClient(object):
         request = SetCartesianPathWorldViewRequest()
         request.display_name = element_name
         request.element_path = folder_path
-        request.point = cartesian_path.to_cartesian_path_msg()
+        request.path = cartesian_path.to_cartesian_path_msg()
         request.transient = transient
 
         try:
@@ -907,5 +929,331 @@ class WorldViewClient(object):
         if not response.success:
             raise ArgumentError('service call of service: '
                                 + update_cartesian_path_srv_name +
+                                ' was not successful,response with error:'
+                                + response.error)
+
+    def add_collision_object(self, element_name: str, folder_path: str,
+                             collision_object: CollisionObject, transient: bool =False):
+        """
+        Add / store collision object element in world view tree
+
+        Parameters
+        ----------
+        element_name : str
+            Name of the new added collision object element
+        folder_path : str
+            Path in world view tree where the new collision object element 
+            should be added / stored
+        collision_object : CollisionObject
+            Instance of collision object which is added / stored
+        transient : bool
+
+        Raises
+        ------
+        ServiceError
+            If necessary service is not available
+        ArgumentError
+            If it was not possible to add collision object 
+            due to wrong path or element already exists
+
+        """
+
+        if not isinstance(element_name, str) or not element_name:
+            raise TypeError('element_name is not of expected'
+                            ' type str or is empty')
+
+        if not isinstance(folder_path, str):
+            raise TypeError('folder_path is not of expected'
+                            ' type str or is empty')
+
+        if not isinstance(collision_object, CollisionObject):
+            raise TypeError(
+                'collision object is not of expected type CollisionObject')
+
+        if not isinstance(transient, bool):
+            raise TypeError('transient is not of expected type bool')
+
+        request = SetCollisionObjectWorldViewRequest()
+        request.collision_object = collision_object.to_collision_object_msg(
+            moveit_msgs.CollisionObject.ADD)
+        request.display_name = element_name
+        request.element_path = folder_path
+        request.transient = transient
+
+        try:
+            response = self.__add_collision_object_srv(request)
+        except rospy.ServiceException as exc:
+            raise ServiceException('service: ' +
+                                   add_collision_object_srv_name +
+                                   ' is not available') from exc
+
+        if not response.success:
+            raise ArgumentError('service call of service: '
+                                + add_collision_object_srv_name +
+                                ' was not successful,response with error:'
+                                + response.error)
+
+    def get_collision_object(self, element_name: str,
+                             folder_path: str) -> CollisionObject:
+        """
+        Get collision object element from world view tree
+
+        Parameters
+        ----------
+        element_name : str
+            Name of the requested element
+        folder_path : str
+            Full path to folder where the requested element is located 
+            from world view tree root
+
+        Returns
+        -------
+        collision_object : CollisionObject
+            Instance of CollisionObject with
+            the values which are defined in the 
+            requested collision object element
+
+        Raises
+        ------
+        ServiceError
+            If necessary service is not available
+        ArgumentError
+            If it was not possible to get collision object 
+            due to wrong path or element not exists
+        """
+
+        if not isinstance(element_name, str) or not element_name:
+            raise TypeError('element_name is not of '
+                            'expected type str or is empty')
+
+        if not isinstance(folder_path, str):
+            raise TypeError('folder_path is not of expected'
+                            ' type str or is empty')
+
+        request = GetCollisionObjectWorldViewRequest()
+        request.element_path = folder_path
+        request.display_name = element_name
+
+        try:
+            response = self.__get_collision_object_srv(request)
+        except rospy.ServiceException as exc:
+            raise ServiceException('service: ' +
+                                   get_collision_object_srv_name +
+                                   ' is not available') from exc
+
+        if not response.success:
+            raise ArgumentError('service call of service: '
+                                + get_collision_object_srv_name +
+                                ' was not successful,response with error:'
+                                + response.error)
+
+        return CollisionObject.from_collision_object_msg(response.collision_object)
+
+    def query_collision_objects(self, folder_path: str, prefix: str ='',
+                                recursive: bool = False) -> List[CollisionObject]:
+        """
+        Query all existing elements under folder_path which start with prefix
+
+        Parameters
+        ----------
+        folder_path : str 
+            Path to folder in which the search should be performed
+        prefix : str (default empty string)
+            Query elements which start with this prefix
+        recursive : bool (default False)
+            If True query from folder path recursively
+
+        Returns
+        -------
+        result : List[CollisionObject]
+            List of CollisionObject in alphanumeric order see world view
+
+        Raises
+        ------
+        ServiceError
+            If necessary service is not available
+        ArgumentError
+            If it was not possible to query collision object 
+            due to not existing path
+        """
+
+        if not isinstance(folder_path, str):
+            raise TypeError(
+                'folder_path is not of expected type str or is empty')
+        if not isinstance(prefix, str):
+            raise TypeError('path is not of expected type str')
+        if not isinstance(recursive, bool):
+            raise TypeError('recursive is not of expected type bool')
+
+        request = QueryCollisionObjectWorldViewRequest()
+        request.prefix = prefix
+        request.folder_path = folder_path
+        request.recursive = recursive
+
+        try:
+            response = self.__query_collision_objects_srv(request)
+        except rospy.ServiceException as exc:
+            raise ServiceException('service: ' +
+                                   query_collision_objects_srv_name +
+                                   ' is not available') from exc
+
+        if not response.success:
+            raise ArgumentError('service call of service: '
+                                + query_collision_objects_srv_name +
+                                ' was not successful,response with error:'
+                                + response.error)
+
+        if response.collision_objects:
+            return [CollisionObject.from_collision_object_msg(p) for p in response.collision_objects]
+        else:
+            return []
+
+    def update_collision_object(self, element_name: str, folder_path: str,
+                                collision_object: CollisionObject, transient: bool = False):
+        """
+        Update already existing collision object element in world view tree
+
+        Parameters
+        ----------
+        element_name : str
+            Name of the element which should be updated
+        folder_path : str
+            Path in world view tree where the collision object element 
+            is located
+        collision_object : CollisionObject
+            Instance of collision object which contains the new values
+        transient : bool
+
+        Raises
+        ------
+        ServiceError
+            If necessary service is not available
+        ArgumentError
+            If it was not possible to update collision object 
+            due to element not exists
+        """
+
+        if not isinstance(element_name, str) or not element_name:
+            raise TypeError('element_name is not of expected'
+                            ' type str or is empty')
+
+        if not isinstance(folder_path, str):
+            raise TypeError('folder_path is not of expected'
+                            ' type str or is empty')
+
+        if not isinstance(collision_object, CollisionObject):
+            raise TypeError(
+                'collision object is not of expected type CollisionObject')
+
+        if not isinstance(transient, bool):
+            raise TypeError('transient is not of expected type bool')
+
+        request = SetCollisionObjectWorldViewRequest()
+        request.display_name = element_name
+        request.element_path = folder_path
+        request.collision_object = collision_object.to_collision_object_msg(
+            moveit_msgs.CollisionObject.ADD)
+        request.transient = transient
+
+        try:
+            response = self.__update_collision_objects_srv(request)
+        except rospy.ServiceException as exc:
+            raise ServiceException('service: ' +
+                                   update_collision_object_srv_name +
+                                   ' is not available') from exc
+
+        if not response.success:
+            raise ArgumentError('service call of service: '
+                                + update_collision_object_srv_name +
+                                ' was not successful,response with error:'
+                                + response.error)
+
+    def add_folder(self, folder_name, folder_path):
+        """
+        Add a folder to world view tree
+
+        Parameters
+        ----------
+        folder_name : str
+            Name of the folder which should be added
+        folder_path : str
+            Path in world view tree where the folder should be added
+
+        Raises
+        ------
+        ServiceError
+            If necessary service is not available
+        ArgumentError
+            If it was not possible to add folder 
+            input path not exists
+        """
+
+        if not isinstance(folder_name, str) or not folder_name:
+            raise TypeError('folder_name is not of expected'
+                            ' type str or is empty')
+
+        if not isinstance(folder_path, str):
+            raise TypeError('folder_path is not of expected'
+                            ' type str or is empty')
+
+        request = CreateFolderWorldViewRequest()
+        request.folder_name = folder_name
+        request.folder_path = folder_path
+
+        try:
+            response = self.__add_folder_srv(request)
+        except rospy.ServiceException as exc:
+            raise ServiceException('service: ' +
+                                   add_folder_srv_name +
+                                   ' is not available') from exc
+
+        if not response.success:
+            raise ArgumentError('service call of service: '
+                                + add_folder_srv_name +
+                                ' was not successful,response with error:'
+                                + response.error)
+
+    def remove_element(self, element_name, folder_path):
+        """
+        Remove existing elements from world view tree
+
+        Parameters
+        ----------
+        element_name : str
+            Name of the element which should be removed
+        folder_path : str
+            Path in world view tree where the element 
+            is located
+
+        Raises
+        ------
+        ServiceError
+            If necessary service is not available
+        ArgumentError
+            If it was not possible to update collision object 
+            due to element not exists
+        """
+
+        if not isinstance(element_name, str) or not element_name:
+            raise TypeError('element_name is not of expected'
+                            ' type str or is empty')
+
+        if not isinstance(folder_path, str):
+            raise TypeError('folder_path is not of expected'
+                            ' type str or is empty')
+
+        request = RemoveElementWorldViewRequest()
+        request.element_path = folder_path + '/' + element_name
+
+        try:
+            response = self.__remove_element_srv(request)
+        except rospy.ServiceException as exc:
+            raise ServiceException('service: ' +
+                                   remove_element_srv_name +
+                                   ' is not available') from exc
+
+        if not response.success:
+            raise ArgumentError('service call of service: '
+                                + remove_element_srv_name +
                                 ' was not successful,response with error:'
                                 + response.error)

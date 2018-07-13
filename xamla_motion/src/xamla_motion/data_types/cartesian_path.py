@@ -73,6 +73,11 @@ class CartesianPath(object):
             raise TypeError('points is not of expected'
                             ' type Iterable of Pose')
 
+        if points:
+            frame_id = points[0].frame_id
+            if any(p.frame_id != frame_id for p in points):
+                raise ValueError('poses have not the same frame_id')
+
         self.__points = deque(points)
 
     @classmethod
@@ -161,14 +166,14 @@ class CartesianPath(object):
         return self.__points
 
     @property
-    def Positions(self):
+    def positions(self):
         """
         positions : List[np.array((3,),dtype=floating)
             positions in x,y,z coordinates
         """
         return [p.translation for p in self.__points]
 
-    def Orientations(self):
+    def orientations(self):
         """
         orientations : List[pyquaternion.Quaternion]
             orientations as Quaternion from pyquaternion
@@ -301,7 +306,7 @@ class CartesianPath(object):
         """
         Generates a xamlamoveit_msgs.msg CartesianPath.msg from this CartesianPath instance
         """
-        path = xamla_msg.CartesianPath
+        path = xamla_msg.CartesianPath()
         path.points = [p.to_posestamped_msg() for p in self.__points]
 
         return path
@@ -331,7 +336,7 @@ class CartesianPath(object):
         if isinstance(key, (int, slice)):
             try:
                 return self.__points[key]
-            except IndexError as exc:
+            except IndexError:
                 raise IndexError('index out of range')
         else:
             raise TypeError(
