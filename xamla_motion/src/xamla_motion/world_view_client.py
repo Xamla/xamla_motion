@@ -333,20 +333,20 @@ class WorldViewClient(object):
                             ' type str or is empty')
 
         request = GetJointPostureWorldViewRequest()
-        request.element_path = folder_path + '/' + element_name
+        request.element_path = '/'.join([folder_path, element_name])
 
         try:
             response = self.__get_joint_values_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   get_joint_values_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(get_joint_values_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + get_joint_values_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(get_joint_values_srv_name,
+                                                    response.error))
 
         return JointValues.from_joint_values_point_msg(response.point)
 
@@ -564,7 +564,7 @@ class WorldViewClient(object):
                             ' type str or is empty')
 
         request = GetPoseWorldViewRequest()
-        request.element_path = folder_path + '/' + element_name
+        request.element_path = '/'.join([folder_path, element_name])
 
         try:
             response = self.__get_pose_srv(request)
@@ -796,8 +796,7 @@ class WorldViewClient(object):
                             ' type str or is empty')
 
         request = GetCartesianPathWorldViewRequest()
-        request.element_path = folder_path
-        request.display_name = element_name
+        request.element_path = '/'.join([folder_path, element_name])
 
         try:
             response = self.__get_cartesian_path_srv(request)
@@ -1031,8 +1030,7 @@ class WorldViewClient(object):
                             ' type str or is empty')
 
         request = GetCollisionObjectWorldViewRequest()
-        request.element_path = folder_path
-        request.display_name = element_name
+        request.element_path = '/'.join([folder_path, element_name])
 
         try:
             response = self.__get_collision_object_srv(request)
@@ -1243,7 +1241,7 @@ class WorldViewClient(object):
                             ' type str or is empty')
 
         request = RemoveElementWorldViewRequest()
-        request.element_path = folder_path + '/' + element_name
+        request.element_path = '/'.join([folder_path, element_name])
 
         try:
             response = self.__remove_element_srv(request)

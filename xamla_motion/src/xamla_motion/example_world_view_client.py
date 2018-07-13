@@ -126,9 +126,9 @@ world_view_client.update_cartesian_path(
 
 print('---------------- get cartesian path --------------')
 
-# get_value = world_view_client.get_cartesian_path('cartesian_path1',
-#                                                  'test/cartesian_paths')
-# print('cartesian_path1 is: ' + str(get_value))
+get_value = world_view_client.get_cartesian_path('cartesian_path1',
+                                                 'test/cartesian_paths')
+print('cartesian_path1 is: ' + str(get_value))
 
 
 print('---------------- query cartesian paths --------------')
@@ -142,7 +142,7 @@ for v in queried_values:
 
 print('---------------- add collision object --------------')
 world_view_client.add_collision_object(
-    'collision_object1', 'test/collision_objects', collision_object3)
+    'collision_object1', 'test/collision_objects', collision_object1)
 world_view_client.add_collision_object(
     'collision_object2', 'test/collision_objects', collision_object2)
 world_view_client.add_collision_object(
@@ -151,14 +151,15 @@ world_view_client.add_collision_object(
     'test1', 'test/collision_objects', collision_object1)
 
 print('---------------- update collision object --------------')
-world_view_client.update_collision_object(
-    'collision_object1', 'test/collision_objects', collision_object1)
+world_view_client.update_collision_object('collision_object1',
+                                          'test/collision_objects',
+                                          collision_object1)
 
-# print('---------------- get collision object --------------')
+print('---------------- get collision object --------------')
 
-# get_value = world_view_client.get_collision_object('collision_object1',
-#                                                    'test/collision_objects')
-# print('collision_object1 is: ' + str(get_value))
+get_value = world_view_client.get_collision_object('collision_object1',
+                                                   'test/collision_objects')
+print('collision_object1 is: ' + str(get_value))
 
 
 print('---------------- query collision object --------------')

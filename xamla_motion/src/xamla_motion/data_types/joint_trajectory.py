@@ -346,20 +346,20 @@ class JointTrajectory(object):
         if isinstance(key, (int, slice)):
             try:
                 return self.__points[key]
-            except IndexError as exc:
+            except IndexError:
                 raise IndexError('index out of range')
         else:
             raise TypeError(
                 'key is not one of expected types int or slice ')
 
     def __len__(self):
-        return self.__points.__len__()
+        return len(self.__points)
 
     def __iter__(self):
-        return self.__points.__iter__()
+        return iter(self.__points)
 
     def __str__(self):
-        return self.__points.__str__()
+        return str(self.__points)
 
     def __repr__(self):
         return self.__str__()

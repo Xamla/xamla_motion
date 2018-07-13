@@ -397,6 +397,33 @@ class CollisionPrimitive(object):
 
         return msg
 
+    def __str__(self):
+        s = '\n'.join(['  '+k+' = ' + str(v)
+                       for k, v in self.__dict__.items()])
+        s = s.replace('_'+self.__class__.__name__+'__', '')
+        return self.__class__.__name__+'\n'+s
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        if id(other) == id(self):
+            return True
+
+        if other.kind != self.__kind:
+            return False
+
+        if not np.allclose(other.parameters, self.__parameters):
+            return False
+
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 class CollisionObject(object):
     """
@@ -407,7 +434,7 @@ class CollisionObject(object):
     many primitives
     """
 
-    def __init__(self, primitives: Iterable[CollisionPrimitive], frame_id: str ='world'):
+    def __init__(self, primitives: Iterable[CollisionPrimitive], frame_id: str='world'):
         """
         Initialization of CollisionObject class
 
@@ -480,7 +507,7 @@ class CollisionObject(object):
                                                  Pose.from_pose_msg(msg.primitive_poses[i],
                                                                     msg.header.frame_id)))
 
-        cls(primitives, msg.header.frame_id)
+        return cls(primitives, msg.header.frame_id)
 
     @property
     def frame_id(self):
@@ -511,10 +538,10 @@ class CollisionObject(object):
 
         for p in self.__primitives:
             if p.kind is CollisionPrimitiveKind.plane:
-                plane_poses.append(p.pose.to_posestamped_msg().pose)
+                plane_poses.append(p.pose.to_pose_msg())
                 planes.append(p.to_shape_msg())
             else:
-                primitive_poses.append(p.pose.to_posestamped_msg().pose)
+                primitive_poses.append(p.pose.to_pose_msg())
                 primitives.append(p.to_shape_msg())
 
         msg.planes = planes
@@ -525,3 +552,34 @@ class CollisionObject(object):
         msg.mesh_poses = []
 
         return msg
+
+    def __len__(self):
+        return len(self.__primitives)
+
+    def __iter__(self):
+        return iter(self.__primitives)
+
+    def __str__(self):
+        return str(self.__primitives)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        if id(other) == id(self):
+            return True
+
+        if other.frame_id != self.__frame_id:
+            return False
+
+        for i, p in enumerate(other):
+            if p != self.__primitives[i]:
+                return False
+
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

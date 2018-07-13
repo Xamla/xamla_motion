@@ -366,6 +366,30 @@ class Pose(object):
 
         return pose_stamped
 
+    def to_pose_msg(self):
+        """
+        Creates an instance of the ROS message Pose
+
+        Returns
+        ------
+            Instance of ROS message Pose
+            geometry_msgs/Pose
+
+        """
+
+        pose = geometry_msgs.Pose()
+
+        pose.position.x = self.__translation[0]
+        pose.position.y = self.__translation[1]
+        pose.position.z = self.__translation[2]
+
+        pose.orientation.w = self.__quaternion[0]
+        pose.orientation.x = self.__quaternion[1]
+        pose.orientation.y = self.__quaternion[2]
+        pose.orientation.z = self.__quaternion[3]
+
+        return pose
+
     def __str__(self):
         axes = tuple(['w', 'x', 'y', 'z'])
 

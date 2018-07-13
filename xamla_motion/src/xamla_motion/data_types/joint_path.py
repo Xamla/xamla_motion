@@ -316,7 +316,7 @@ class JointPath(object):
         if isinstance(key, (int, slice)):
             try:
                 return self.__points[key]
-            except IndexError as exc:
+            except IndexError:
                 raise IndexError('index out of range')
         else:
             raise TypeError(
@@ -329,7 +329,7 @@ class JointPath(object):
         return iter(self.__points)
 
     def __str__(self):
-        return self.__points.__str__()
+        return str(self.__points)
 
     def __repr__(self):
         return self.__str__()
