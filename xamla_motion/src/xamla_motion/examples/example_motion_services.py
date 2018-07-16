@@ -223,12 +223,13 @@ pose_r = Pose(t2, q2)
 
 ioloop = asyncio.get_event_loop()
 
-for i in range(0, 10):
-    ioloop.run_until_complete(motion_service.move_pose(pose_l,
-                                                       '',
-                                                       plan_parameters3))
-    ioloop.run_until_complete(motion_service.move_pose(pose_r,
-                                                       '',
-                                                       plan_parameters3))
-
-ioloop.close()
+try:
+    for i in range(0, 10):
+        ioloop.run_until_complete(motion_service.move_pose(pose_l,
+                                                           '',
+                                                           plan_parameters3))
+        ioloop.run_until_complete(motion_service.move_pose(pose_r,
+                                                           '',
+                                                           plan_parameters3))
+finally:
+    ioloop.close()

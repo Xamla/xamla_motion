@@ -51,73 +51,78 @@ joint_path = move_group.motion_service.query_inverse_kinematics_many(cartesian_p
 
 ioloop = asyncio.get_event_loop()
 
-print('test MoveGroup class')
-print('----------------move joints collision free -------------------')
 
-for i in range(0, 2):
-    print('trajectory loop: ' + str(i))
-    ioloop.run_until_complete(
-        move_group.move_joints_collision_free(joint_path))
+async def print_Hallo():
+    print('Hallo')
 
-print('--------------------- move joints ----------------------------')
+try:
+    print('test MoveGroup class')
+    print('----------------move joints collision free -------------------')
 
-for i in range(0, 3):
-    print('--- trajectory loop: ' + str(i) + ' -----')
-    print('point1 10 percent of max velocity')
-    ioloop.run_until_complete(move_group.move_joints(joint_path[0], 0.1))
-    print('point2 50 percent of max velocity')
-    ioloop.run_until_complete(move_group.move_joints(joint_path[1], 0.5))
-    print('point3 100 percent of max velocity')
-    ioloop.run_until_complete(move_group.move_joints(joint_path[2], 1.0))
+    for i in range(0, 2):
+        print('trajectory loop: ' + str(i))
+        ioloop.run_until_complete(
+            asyncio.wait([move_group.move_joints_collision_free(joint_path),
+                          print_Hallo()]))
 
+    print('--------------------- move joints ----------------------------')
 
-print('test EndEffector class')
-print('----------------move poses collision free -------------------')
+    for i in range(0, 3):
+        print('--- trajectory loop: ' + str(i) + ' -----')
+        print('point1 10 percent of max velocity')
+        ioloop.run_until_complete(move_group.move_joints(joint_path[0], 0.1))
+        print('point2 50 percent of max velocity')
+        ioloop.run_until_complete(move_group.move_joints(joint_path[1], 0.5))
+        print('point3 100 percent of max velocity')
+        ioloop.run_until_complete(move_group.move_joints(joint_path[2], 1.0))
 
-end_effector = EndEffector.from_end_effector_name(
-    move_group.selected_end_effector)
+    print('test EndEffector class')
+    print('----------------move poses collision free -------------------')
 
-for i in range(0, 2):
-    print('trajectory loop: ' + str(i))
-    ioloop.run_until_complete(
-        end_effector.move_poses_collision_free(cartesian_path))
+    end_effector = EndEffector.from_end_effector_name(
+        move_group.selected_end_effector)
 
-print('--------------------- move poses ----------------------------')
+    for i in range(0, 2):
+        print('trajectory loop: ' + str(i))
+        ioloop.run_until_complete(
+            end_effector.move_poses_collision_free(cartesian_path))
 
-for i in range(0, 3):
-    print('--- trajectory loop: ' + str(i) + ' -----')
-    print('point1 10 percent of max velocity')
-    ioloop.run_until_complete(
-        end_effector.move_poses(cartesian_path[0], 0.1))
-    print('point2 50 percent of max velocity')
-    ioloop.run_until_complete(
-        end_effector.move_poses(cartesian_path[1], 0.5))
-    print('point3 100 percent of max velocity')
-    ioloop.run_until_complete(
-        end_effector.move_poses(cartesian_path[2], 1.0))
+    print('--------------------- move poses ----------------------------')
 
-print('---------- wsg gripper -------------')
+    for i in range(0, 3):
+        print('--- trajectory loop: ' + str(i) + ' -----')
+        print('point1 10 percent of max velocity')
+        ioloop.run_until_complete(
+            end_effector.move_poses(cartesian_path[0], 0.1))
+        print('point2 50 percent of max velocity')
+        ioloop.run_until_complete(
+            end_effector.move_poses(cartesian_path[1], 0.5))
+        print('point3 100 percent of max velocity')
+        ioloop.run_until_complete(
+            end_effector.move_poses(cartesian_path[2], 1.0))
 
-properties = WeissWsgGripperProperties('wsg50')
+    print('---------- wsg gripper -------------')
 
-wsg_gripper = WeissWsgGripper(properties, move_group.motion_service)
+    properties = WeissWsgGripperProperties('wsg50')
 
-print('homeing')
-ioloop.run_until_complete(wsg_gripper.homing())
+    wsg_gripper = WeissWsgGripper(properties, move_group.motion_service)
 
-print('move gripper')
-ioloop.run_until_complete(wsg_gripper.move(0.1, 0.05, 0.05, True))
+    print('homeing')
+    ioloop.run_until_complete(wsg_gripper.homing())
 
-print('perform grasp')
-result = ioloop.run_until_complete(wsg_gripper.grasp(0.02, 0.1, 0.05))
+    print('move gripper')
+    ioloop.run_until_complete(wsg_gripper.move(0.1, 0.05, 0.05, True))
 
+    print('perform grasp')
+    result = ioloop.run_until_complete(wsg_gripper.grasp(0.02, 0.1, 0.05))
 
-print('---------- common gripper -------------')
-properties1 = CommonGripperProperties('wsg50', 'xamla/wsg_driver')
+    print('---------- common gripper -------------')
+    properties1 = CommonGripperProperties('wsg50', 'xamla/wsg_driver')
 
-gripper = CommonGripper(properties1, move_group.motion_service)
+    gripper = CommonGripper(properties1, move_group.motion_service)
 
-print('move')
-result1 = ioloop.run_until_complete(gripper.move(0.1, 0.005))
+    print('move')
+    result1 = ioloop.run_until_complete(gripper.move(0.1, 0.005))
 
-ioloop.close()
+finally:
+    ioloop.close()

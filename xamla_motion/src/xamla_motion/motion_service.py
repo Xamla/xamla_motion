@@ -22,6 +22,7 @@ import rospy
 import actionlib
 import numpy as np
 from datetime import timedelta
+import enum
 
 from xamlamoveit_msgs.srv import *
 from xamlamoveit_msgs.msg import *
@@ -33,7 +34,22 @@ from .xamla_motion_exceptions import ServiceException, ArgumentError
 from .data_types import *
 from collections import Iterable
 
+from functools import partial
 import asyncio
+
+
+@enum.unique
+class ActionLibGoalStatus(enum.Enum):
+    PENDING = 0
+    ACTIVE = 1
+    PREEMPTED = 2
+    SUCCEEDED = 3
+    ABORTED = 4
+    REJECTED = 5
+    PREEMPTING = 6
+    RECALLING = 7
+    RECALLED = 8
+    LOST = 9
 
 
 class MotionService(object):
@@ -1741,17 +1757,24 @@ class MotionService(object):
     def _generate_action_executor(self, action):
 
         async def run_action(goal):
-            async def wait_for_result(action):
-                action.wait_for_result()
 
-            action.send_goal(goal)
+            loop = asyncio.get_event_loop()
+            action_done = loop.create_future()
+
+            def done_callback(goal_status, result, future, loop):
+                status = ActionLibGoalStatus(goal_status)
+                #print('Action Done: {}'.format(status))
+                loop.call_soon_threadsafe(future.set_result(result))
+
+            action.send_goal(goal, partial(done_callback,
+                                           future=action_done,
+                                           loop=loop))
             try:
-                await wait_for_result(action)
+                await action_done
             except asyncio.CancelledError as exc:
                 action.cancel()
                 raise exc
 
-            t = action.get_result()
-            return t
+            return action_done.result()
 
         return run_action
