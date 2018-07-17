@@ -112,172 +112,82 @@ class WorldViewClient(object):
         """
 
         # initialize all service to handle joint values in world view
-        try:
-            self.__add_joint_values_srv = rospy.ServiceProxy(
-                add_joint_values_srv_name,
-                SetJointPostureWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   add_joint_values_srv_name +
-                                   ' could not be established') from exc
+        self.__add_joint_values_srv = rospy.ServiceProxy(
+            add_joint_values_srv_name,
+            SetJointPostureWorldView)
 
-        try:
-            self.__get_joint_values_srv = rospy.ServiceProxy(
-                get_joint_values_srv_name,
-                GetJointPostureWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   get_joint_values_srv_name +
-                                   ' could not be established') from exc
+        self.__get_joint_values_srv = rospy.ServiceProxy(
+            get_joint_values_srv_name,
+            GetJointPostureWorldView)
 
-        try:
-            self.__query_joint_values_srv = rospy.ServiceProxy(
-                query_joint_values_srv_name,
-                QueryJointValuesWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   query_joint_values_srv_name +
-                                   ' could not be established') from exc
+        self.__query_joint_values_srv = rospy.ServiceProxy(
+            query_joint_values_srv_name,
+            QueryJointValuesWorldView)
 
-        try:
-            self.__update_joint_values_srv = rospy.ServiceProxy(
-                update_joint_values_srv_name,
-                UpdateJointPostureWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   update_joint_values_srv_name +
-                                   ' could not be established') from exc
+        self.__update_joint_values_srv = rospy.ServiceProxy(
+            update_joint_values_srv_name,
+            UpdateJointPostureWorldView)
 
         # initialize all service to handle poses in world view
-        try:
-            self.__add_pose_srv = rospy.ServiceProxy(
-                add_pose_srv_name,
-                SetPoseWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   add_pose_srv_name +
-                                   ' could not be established') from exc
+        self.__add_pose_srv = rospy.ServiceProxy(
+            add_pose_srv_name,
+            SetPoseWorldView)
 
-        try:
-            self.__get_pose_srv = rospy.ServiceProxy(
-                get_pose_srv_name,
-                GetPoseWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   get_pose_srv_name +
-                                   ' could not be established') from exc
+        self.__get_pose_srv = rospy.ServiceProxy(
+            get_pose_srv_name,
+            GetPoseWorldView)
 
-        try:
-            self.__query_poses_srv = rospy.ServiceProxy(
-                query_poses_srv_name,
-                QueryPosesWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   query_poses_srv_name +
-                                   ' could not be established') from exc
+        self.__query_poses_srv = rospy.ServiceProxy(
+            query_poses_srv_name,
+            QueryPosesWorldView)
 
-        try:
-            self.__update_pose_srv = rospy.ServiceProxy(
-                update_pose_srv_name,
-                UpdatePoseWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   update_pose_srv_name +
-                                   ' could not be established') from exc
+        self.__update_pose_srv = rospy.ServiceProxy(
+            update_pose_srv_name,
+            UpdatePoseWorldView)
 
         # initialize all service to handle cartesian path in world view
-        try:
-            self.__add_cartesian_path_srv = rospy.ServiceProxy(
-                add_cartesian_path_srv_name,
-                SetCartesianPathWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   add_cartesian_path_srv_name +
-                                   ' could not be established') from exc
+        self.__add_cartesian_path_srv = rospy.ServiceProxy(
+            add_cartesian_path_srv_name,
+            SetCartesianPathWorldView)
 
-        try:
-            self.__get_cartesian_path_srv = rospy.ServiceProxy(
-                get_cartesian_path_srv_name,
-                GetCartesianPathWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   get_cartesian_path_srv_name +
-                                   ' could not be established') from exc
+        self.__get_cartesian_path_srv = rospy.ServiceProxy(
+            get_cartesian_path_srv_name,
+            GetCartesianPathWorldView)
 
-        try:
-            self.__query_cartesian_paths_srv = rospy.ServiceProxy(
-                query_cartesian_paths_srv_name,
-                QueryCartesianPathWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   query_cartesian_paths_srv_name +
-                                   ' could not be established') from exc
+        self.__query_cartesian_paths_srv = rospy.ServiceProxy(
+            query_cartesian_paths_srv_name,
+            QueryCartesianPathWorldView)
 
-        try:
-            self.__update_cartesian_path_srv = rospy.ServiceProxy(
-                update_cartesian_path_srv_name,
-                SetCartesianPathWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   update_cartesian_path_srv_name +
-                                   ' could not be established') from exc
+        self.__update_cartesian_path_srv = rospy.ServiceProxy(
+            update_cartesian_path_srv_name,
+            SetCartesianPathWorldView)
 
         # initialize all service to handle collision objects in world view
-        try:
-            self.__add_collision_object_srv = rospy.ServiceProxy(
-                add_collision_object_srv_name,
-                SetCollisionObjectWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   add_collision_object_srv_name +
-                                   ' could not be established') from exc
+        self.__add_collision_object_srv = rospy.ServiceProxy(
+            add_collision_object_srv_name,
+            SetCollisionObjectWorldView)
 
-        try:
-            self.__get_collision_object_srv = rospy.ServiceProxy(
-                get_collision_object_srv_name,
-                GetCollisionObjectWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   get_collision_object_srv_name +
-                                   ' could not be established') from exc
+        self.__get_collision_object_srv = rospy.ServiceProxy(
+            get_collision_object_srv_name,
+            GetCollisionObjectWorldView)
 
-        try:
-            self.__query_collision_objects_srv = rospy.ServiceProxy(
-                query_collision_objects_srv_name,
-                QueryCollisionObjectWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   query_collision_objects_srv_name +
-                                   ' could not be established') from exc
+        self.__query_collision_objects_srv = rospy.ServiceProxy(
+            query_collision_objects_srv_name,
+            QueryCollisionObjectWorldView)
 
-        try:
-            self.__update_collision_objects_srv = rospy.ServiceProxy(
-                update_collision_object_srv_name,
-                SetCollisionObjectWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   update_collision_object_srv_name +
-                                   ' could not be established') from exc
+        self.__update_collision_objects_srv = rospy.ServiceProxy(
+            update_collision_object_srv_name,
+            SetCollisionObjectWorldView)
 
         # add folder service
-        try:
-            self.__add_folder_srv = rospy.ServiceProxy(
-                add_folder_srv_name,
-                CreateFolderWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   add_cartesian_path_srv_name +
-                                   ' could not be established') from exc
+        self.__add_folder_srv = rospy.ServiceProxy(
+            add_folder_srv_name,
+            CreateFolderWorldView)
 
         # remove element service
-        try:
-            self.__remove_element_srv = rospy.ServiceProxy(
-                remove_element_srv_name,
-                RemoveElementWorldView)
-        except rospy.ServiceException as exc:
-            raise ServiceException('connection for service: ' +
-                                   remove_element_srv_name +
-                                   ' could not be established') from exc
+        self.__remove_element_srv = rospy.ServiceProxy(
+            remove_element_srv_name,
+            RemoveElementWorldView)
 
     def add_joint_values(self, element_name: str, folder_path: str,
                          joint_values: JointValues, transient: bool = False):
@@ -330,15 +240,15 @@ class WorldViewClient(object):
         try:
             response = self.__add_joint_values_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   add_joint_values_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(add_joint_values_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + add_joint_values_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(add_joint_values_srv_name,
+                                                    response.error))
 
     def get_joint_values(self, element_name: str,
                          folder_path: str) -> JointValues:
@@ -439,15 +349,15 @@ class WorldViewClient(object):
         try:
             response = self.__query_joint_values_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   query_joint_values_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(query_joint_values_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + query_joint_values_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(query_joint_values_srv_name,
+                                                    response.error))
 
         if response.points:
             return [JointValues.from_joint_values_point_msg(p) for p in response.points]
@@ -503,15 +413,15 @@ class WorldViewClient(object):
         try:
             response = self.__update_joint_values_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   update_joint_values_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(update_joint_values_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + update_joint_values_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(update_joint_values_srv_name,
+                                                    response.error))
 
     def add_pose(self, element_name: str, folder_path: str,
                  pose: Pose, transient: bool =False):
@@ -564,15 +474,15 @@ class WorldViewClient(object):
         try:
             response = self.__add_pose_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   add_pose_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(add_pose_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + add_pose_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(add_pose_srv_name,
+                                                    response.error))
 
     def get_pose(self, element_name: str,
                  folder_path: str) -> Pose:
@@ -617,15 +527,15 @@ class WorldViewClient(object):
         try:
             response = self.__get_pose_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   get_pose_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(get_pose_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + get_pose_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(get_pose_srv_name,
+                                                    response.error))
 
         return Pose.from_posestamped_msg(response.point)
 
@@ -673,15 +583,15 @@ class WorldViewClient(object):
         try:
             response = self.__query_poses_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   query_poses_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(query_poses_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + query_poses_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(query_poses_srv_name,
+                                                    response.error))
 
         if response.points:
             return [Pose.from_posestamped_msg(p) for p in response.points]
@@ -738,15 +648,15 @@ class WorldViewClient(object):
         try:
             response = self.__update_pose_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   update_pose_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(update_pose_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + update_pose_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(update_pose_srv_name,
+                                                    response.error))
 
     def add_cartesian_path(self, element_name: str, folder_path: str,
                            cartesian_path: CartesianPath, transient: bool = False):
@@ -800,15 +710,15 @@ class WorldViewClient(object):
         try:
             response = self.__add_cartesian_path_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   add_cartesian_path_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(add_cartesian_path_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + add_cartesian_path_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(add_cartesian_path_srv_name,
+                                                    response.error))
 
     def get_cartesian_path(self, element_name: str,
                            folder_path: str) -> CartesianPath:
@@ -853,15 +763,15 @@ class WorldViewClient(object):
         try:
             response = self.__get_cartesian_path_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   get_cartesian_path_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(get_cartesian_path_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + get_cartesian_path_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(get_cartesian_path_srv_name,
+                                                    response.error))
 
         return CartesianPath.from_cartesian_path_msg(response.path)
 
@@ -909,15 +819,15 @@ class WorldViewClient(object):
         try:
             response = self.__query_cartesian_paths_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   query_cartesian_paths_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(query_cartesian_paths_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + query_cartesian_paths_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(query_cartesian_paths_srv_name,
+                                                    response.error))
 
         if response.paths:
             return [CartesianPath.from_cartesian_path_msg(p) for p in response.paths]
@@ -975,15 +885,15 @@ class WorldViewClient(object):
         try:
             response = self.__update_cartesian_path_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   update_cartesian_path_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(update_cartesian_path_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + update_cartesian_path_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(update_cartesian_path_srv_name,
+                                                    response.error))
 
     def add_collision_object(self, element_name: str, folder_path: str,
                              collision_object: CollisionObject, transient: bool =False):
@@ -1038,15 +948,15 @@ class WorldViewClient(object):
         try:
             response = self.__add_collision_object_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   add_collision_object_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(add_collision_object_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + add_collision_object_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(add_collision_object_srv_name,
+                                                    response.error))
 
     def get_collision_object(self, element_name: str,
                              folder_path: str) -> CollisionObject:
@@ -1091,15 +1001,15 @@ class WorldViewClient(object):
         try:
             response = self.__get_collision_object_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   get_collision_object_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(get_collision_object_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + get_collision_object_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(get_collision_object_srv_name,
+                                                    response.error))
 
         return CollisionObject.from_collision_object_msg(response.collision_object)
 
@@ -1147,15 +1057,15 @@ class WorldViewClient(object):
         try:
             response = self.__query_collision_objects_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   query_collision_objects_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(query_collision_objects_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + query_collision_objects_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(query_collision_objects_srv_name,
+                                                    response.error))
 
         if response.collision_objects:
             return [CollisionObject.from_collision_object_msg(p) for p in response.collision_objects]
@@ -1214,15 +1124,15 @@ class WorldViewClient(object):
         try:
             response = self.__update_collision_objects_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   update_collision_object_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(update_collision_object_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + update_collision_object_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(update_collision_object_srv_name,
+                                                    response.error))
 
     def add_folder(self, folder_name, folder_path):
         """
@@ -1259,15 +1169,15 @@ class WorldViewClient(object):
         try:
             response = self.__add_folder_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   add_folder_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(add_folder_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + add_folder_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(add_folder_srv_name,
+                                                    response.error))
 
     def remove_element(self, element_name, folder_path):
         """
@@ -1304,12 +1214,12 @@ class WorldViewClient(object):
         try:
             response = self.__remove_element_srv(request)
         except rospy.ServiceException as exc:
-            raise ServiceException('service: ' +
-                                   remove_element_srv_name +
-                                   ' is not available') from exc
+            raise ServiceException('service: {} is not available'
+                                   ''.format(remove_element_srv_name)
+                                   ) from exc
 
         if not response.success:
-            raise ArgumentError('service call of service: '
-                                + remove_element_srv_name +
-                                ' was not successful,response with error:'
-                                + response.error)
+            raise ArgumentError('service call of service: {}'
+                                ' was not successful,response with'
+                                ' error: {}'.format(remove_element_srv_name,
+                                                    response.error))

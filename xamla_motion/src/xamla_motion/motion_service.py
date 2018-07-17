@@ -1761,20 +1761,16 @@ class MotionService(object):
             loop = asyncio.get_event_loop()
             action_done = loop.create_future()
 
-            def done_callback(goal_status, result, future, loop):
+            def done_callback(goal_status, result):
                 status = ActionLibGoalStatus(goal_status)
                 #print('Action Done: {}'.format(status))
-                loop.call_soon_threadsafe(future.set_result(result))
+                loop.call_soon_threadsafe(action_done.set_result, result)
 
-            action.send_goal(goal, partial(done_callback,
-                                           future=action_done,
-                                           loop=loop))
+            action.send_goal(goal, done_callback)
             try:
-                await action_done
+                return await action_done
             except asyncio.CancelledError as exc:
                 action.cancel()
                 raise exc
-
-            return action_done.result()
 
         return run_action
