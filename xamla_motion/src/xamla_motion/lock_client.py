@@ -25,14 +25,58 @@ import rospy
 resource_lock_srv_name = '/xamlaResourceLockService/query_resource_lock'
 
 
+class ResourceLock(object):
+
+    def __init__(self, success: bool, lock_id: str,
+                 creation_date: str, expiration_date: str):
+
+        self.__success = success
+        self.__lock_id = lock_id
+        self.__creation_date = creation_date
+        self.__expiration_date = expiration_date
+
+    @property
+    def success(self):
+        """
+        success : bool
+            If true locking was successful
+        """
+        return self.__success
+
+    @property
+    def lock_id(self):
+        """
+        lock_id : str
+        ID of lock resources necessary to release them later
+        """
+        return self.__lock_id
+
+    @property
+    def creation_date(self):
+        """
+        creation_date : str
+            Date of lock creation
+        """
+        return self.__creation_date
+
+    @property
+    def expiration_date(self):
+        """
+        expiration_date : str
+            Date of lock expiration
+        """
+        return self.expiration_date
+
+
 class LeaseBaseLockClient(object):
 
     def __init__(self):
-        timeout = rospy.Duration(secs=1)
-        try:
-            self.__resource_lock_service = rospy.ServiceProxy(resource_lock_srv_name,
-                                                              QueryLock)
-            self.__resource_lock_service.wait_for_service(timeout)
-        except rospy.ServiceException as exc:
-            raise ServiceException('Service {} is not available'
-                                   ''.format(resource_lock_srv_name)) from exc
+
+        self.__resource_lock_service = rospy.ServiceProxy(resource_lock_srv_name,
+                                                          QueryLock)
+
+    def _call_lock_service(self):
+        pass
+
+    def lock_resources(self):
+        pass

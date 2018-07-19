@@ -2,7 +2,7 @@
 <package format="2">
   <name>xamla_motion</name>
   <version>0.0.1</version>
-  <description>client library to interact with xamla motion</description>
+  <description>client library to interact with xamla motion / rosvita</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -51,10 +51,20 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>rospy</build_depend>
   <build_depend>xamlamoveit_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>moveit_msgs</build_depend>
+  <build_depend>trajectory_msgs</build_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>xamlamoveit_msgs</build_export_depend>
+  <build_export_depend>geometry_msgs</build_export_depend>
+  <build_export_depend>moveit_msgs</build_export_depend>
+  <build_export_depend>trajectory_msgs</build_export_depend>
   <exec_depend>rospy</exec_depend>
+  <exec_depend>xamlamoveit_server</exec_depend>
   <exec_depend>xamlamoveit_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>moveit_msgs</exec_depend>
+  <exec_depend>trajectory_msgs</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
