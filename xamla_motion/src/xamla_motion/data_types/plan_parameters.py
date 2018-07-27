@@ -176,7 +176,7 @@ class PlanParameters(object):
                                 ' an instance of JointLimts due to'
                                 ' wrong parameter type or format') from exc
 
-        return cls(move_group_name, JointLimits, **kwargs)
+        return cls(move_group_name, joint_limits, **kwargs)
 
     @property
     def move_group_name(self):
