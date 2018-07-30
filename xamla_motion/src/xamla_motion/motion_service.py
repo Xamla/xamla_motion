@@ -54,7 +54,7 @@ class ActionLibGoalStatus(enum.Enum):
 
 class MotionService(object):
 
-    __is_ros_init = False
+    __is_ros_init = 0
     __movej_action = 'moveJ_action'
     __query_inverse_kinematics_service = "xamlaMoveGroupServices/query_ik"
 
@@ -70,8 +70,10 @@ class MotionService(object):
                                    ' abort ') from exc
 
         if not self.__class__.__is_ros_init:
-            rospy.init_node('motion_service', anonymous=True)
-            self.__class__.__is_ros_init = True
+            rospy.init_node('motion_service', anonymous=True,
+                            disable_signals=True)
+
+        self.__class__.__is_ros_init += 1
 
         self.__m_action = actionlib.SimpleActionClient(self.__movej_action,
                                                        moveJAction)
@@ -79,6 +81,12 @@ class MotionService(object):
         if not self.__m_action.wait_for_server(rospy.Duration(5)):
             raise ServiceException('connection to moveJ action'
                                    ' server could not be established')
+
+    def __del__(self):
+        self.__class__.__is_ros_init -= 1
+        if not self.__class__.__is_ros_init:
+            rospy.signal_shutdown('no instance of motion'
+                                  ' service exits anymore')
 
     @classmethod
     def query_available_move_groups(cls):
