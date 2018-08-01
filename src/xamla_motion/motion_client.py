@@ -34,26 +34,21 @@ class MoveGroup(object):
 
     Methods
     -------
-    set_default_end_effector(self, end_effector_name)
+    set_default_end_effector
         set one of the end effector from the list of available ones as default
-    get_end_effector(self, name=None)
-        Get the end effector specified by name or
-        the default end effector if name is not provided
-    get_current_joint_states(self)
+    get_end_effector
+        Get the end effector specified by name or the default end effector
+    get_current_joint_states
         Returns the current joint states of the move group joints
-    get_current_joint_positions(self)
+    get_current_joint_positions
         Returns the current joint positions of the move group joints
-    plan_move_joints(self, target, velocity_scaling, collision_check,
-                     max_deviation, acceleration_scaling)
+    plan_move_joints
         Plans a trajectory from current state to target joint positions
-    plan_move_joints_collision_free(target, velocity_scaling,
-                                    max_deviation, acceleration_scaling)
+    plan_move_joints_collision_free
         Plans a collision free trajectory from current to target joint positions
-    move_joints_collision_free(target, velocity_scaling,
-                               max_deviation, acceleration_scaling)
+    move_joints_collision_free
         Asynchronous plan and execute collision free joint trajectory
-    move_joints(target, velocity_scaling, collision_check,
-                max_deviation, acceleration_scaling)
+    move_joints
         Asynchronous plan and execute joint trajectory
     """
 
@@ -872,6 +867,22 @@ class MoveGroup(object):
 
 
 class EndEffector(object):
+    """
+    Class with encapsulate move functionality for a specific end effector
+
+    Methods
+    -------
+    get_current_pose
+        Returns the current pose of the end effector
+    move_poses
+        Asynchronous plan and execute trajectory from task space input
+    move_poses_collision_free
+        Asynchronous plan and execute collision free trajectory from task space input
+    plan_poses_linear
+        Plans a trajectory with linear movements from task space input
+    move_poses_linear
+        Plans and executes a trajectory with linear movements from task space input
+    """
 
     def __init__(self, move_group, end_effector_name,
                  end_effector_link_name):

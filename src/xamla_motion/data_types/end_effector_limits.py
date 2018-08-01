@@ -45,10 +45,11 @@ class EndEffectorLimits(object):
 
         Returns
         ------
+        EndEffectorLimits
             Instance of class EndeffectorLimits
 
-        Raise
-        -----
+        Raises
+        ------
             TypeError : type mismatch
                 If one of the parameters is not convertable to float
         """

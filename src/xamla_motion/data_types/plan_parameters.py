@@ -52,7 +52,7 @@ class PlanParameters(object):
             this are sample_resolution (default = 0.008 / 125 hz),
             collision_check (default = True), max_deviation (default = 0.2),
             velocity_scaling (default = 1.0) and acceleration_scaling (
-                default = 1.0)
+            default = 1.0)
 
         Returns
         ------
@@ -164,7 +164,7 @@ class PlanParameters(object):
             this are sample_resolution (default = 0.008),
             collision_check (default = True), max_deviation (default = 0.2),
             velocity_scaling (default = 1.0) and acceleration_scaling (
-                default = 1.0)
+            default = 1.0)
         """
 
         try:

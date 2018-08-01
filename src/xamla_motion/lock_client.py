@@ -18,7 +18,7 @@
 
 #!/usr/bin/env python3
 
-from ..xamla_motion.xamla_motion_exceptions import ServiceException
+from .xamla_motion_exceptions import ServiceException
 from xamlamoveit_msgs.srv import QueryLock, QueryLockRequest
 import rospy
 

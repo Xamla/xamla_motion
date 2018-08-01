@@ -54,7 +54,7 @@ class JointSet(object):
             The Joint set class is initializable in different ways.
             -by a string which only contains one joint name
             -by a string which contains multiple joints names
-             separated by a comma as delimiter
+            separated by a comma as delimiter
             -Iterable container where each time is convertable to str
 
         Returns
@@ -184,7 +184,7 @@ class JointSet(object):
         name : str
             joint name for which it tries to find the list index
 
-        Results
+        Returns
         -------
         is_found : bool
             If the index is found it resturns True else False

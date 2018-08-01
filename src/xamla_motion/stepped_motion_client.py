@@ -21,8 +21,8 @@
 import rospy
 import actionlib
 
-from data_types import JointTrajectory
-from xamla_motion_exceptions import *
+from .data_types import JointTrajectory
+from .xamla_motion_exceptions import *
 from xamlamoveit_msgs.msg import *
 
 

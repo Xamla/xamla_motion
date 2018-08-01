@@ -44,9 +44,9 @@ class JointValues(object):
         Creates a transformed version of JointValues
     select(names)
         Creates a JointValue instance which only contains selected joints
-    from_joint_path_point_msg
+    from_joint_path_point_msg(joint_set, msg)
         Creates an instance of JointValues from a JointPathPoint ros message
-    to_joint_path_point_msg
+    to_joint_path_point_msg()
         Transform to xamlamoveit_msgs JointPathMessage
     """
 
@@ -61,10 +61,10 @@ class JointValues(object):
         values : iterable[float castable]
             The JointValue class can be initialized in different ways
             -JointSet + only on float convertable value then all
-             joint values are set to the same float value
+            joint values are set to the same float value
             -JointSet + an iterable type with the same number of
-             items as number of joints in joint set. (mapping one
-             to one)
+            items as number of joints in joint set. (mapping one
+            to one)
 
         Returns
         ------
