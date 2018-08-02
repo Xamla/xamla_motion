@@ -1774,7 +1774,7 @@ class MotionService(object):
                 #print('Action Done: {}'.format(status))
                 loop.call_soon_threadsafe(action_done.set_result, result)
 
-            action.send_goal(goal, done_callback)
+            action.send_goal(goal, done_cb=done_callback)
             try:
                 return await action_done
             except asyncio.CancelledError as exc:

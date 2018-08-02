@@ -19,3 +19,4 @@ from .ik_results import IkResults
 from .move_gripper_result import MoveGripperResult
 from .wsg import WsgCommand, WsgState, WsgResult
 from .collision_object import CollisionPrimitiveKind, CollisionPrimitive, CollisionObject
+from .stepped_motion_state import SteppedMotionState
