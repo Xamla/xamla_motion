@@ -83,7 +83,7 @@ class ResourceLock(object):
 
 class LeaseBaseLock(object):
     """
-    Class to lock resource 
+    Class to lock resource
 
     Parameters
     ----------
@@ -104,16 +104,16 @@ class LeaseBaseLock(object):
 
     Examples
     --------
-    The lock and release can be implemented comfortably with 
+    The lock and release can be implemented comfortably with
     python's with statement
-    >>> with LeaseBaseLock(resource_ids) as lock:
+    >>> with LeaseBaseLock(resource_ids) as lock_handle:
     >>>     do something with resources
     """
 
     def __init__(self, resource_ids: List[str], lock_id: str=''):
 
         self.__request = QueryLockRequest()
-        self.__request.id_resources = list(resources_ids)
+        self.__request.id_resources = list(resource_ids)
         self.__request.id_lock = str(lock_id)
 
         self.__lock_service = rospy.ServiceProxy(resource_lock_srv_name,
@@ -123,8 +123,9 @@ class LeaseBaseLock(object):
 
     def __enter__(self):
         self._call_lock_service(release=False)
+        return self.__resource_lock
 
-    def __exit__(self):
+    def __exit__(self, *exc):
         self._call_lock_service(release=True)
 
     @property
@@ -137,6 +138,8 @@ class LeaseBaseLock(object):
 
     def _call_lock_service(self, release=False):
         self.__request.release = release
+        if release:
+            self.__request.id_lock = self.__resource_lock.lock_id
 
         try:
             response = self.__lock_service.call(self.__request)
@@ -144,19 +147,24 @@ class LeaseBaseLock(object):
             raise ServiceException('lock service is not available') from exc
 
         if not response.success:
-            raise ServiceException('lock service finish not succuessfully'
-                                   ', reason: {}'.format(response.error_msg))
+            print('lock service finish not succuessfully'
+                  ', reason: {}'.format(response.error_msg))
 
-        self.__resource_lock = ResourceLock(resonse.success, response.id_resources,
-                                            response.id_lock, response.creation_date,
-                                            response.expiration_date)
+        if release:
+            print('release: {}'.format(self.__resource_lock.lock_id))
+            self.__resource_lock = None
+        else:
+            self.__resource_lock = ResourceLock(response.success, response.id_resources,
+                                                response.id_lock, response.creation_date,
+                                                response.expiration_date)
+            print('locked: {}'.format(self.__resource_lock.lock_id))
 
 
 class ROSNodeSteward(object):
     """
     Maintain ros node
 
-    If no rosnode exist create a new rosnode 
+    If no rosnode exist create a new rosnode
     and handle shutdown else keep the existing one
     """
     __is_ros_init = 0

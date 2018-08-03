@@ -24,7 +24,6 @@ from .data_types import *
 
 import numpy as np
 from copy import deepcopy
-import pdb
 
 
 class MoveGroup(object):
