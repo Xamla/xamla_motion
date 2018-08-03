@@ -147,17 +147,15 @@ class LeaseBaseLock(object):
             raise ServiceException('lock service is not available') from exc
 
         if not response.success:
-            print('lock service finish not succuessfully'
-                  ', reason: {}'.format(response.error_msg))
+            raise ServiceException('lock service finish not succuessfully'
+                                   ', reason: {}'.format(response.error_msg))
 
         if release:
-            print('release: {}'.format(self.__resource_lock.lock_id))
             self.__resource_lock = None
         else:
             self.__resource_lock = ResourceLock(response.success, response.id_resources,
                                                 response.id_lock, response.creation_date,
                                                 response.expiration_date)
-            print('locked: {}'.format(self.__resource_lock.lock_id))
 
 
 class ROSNodeSteward(object):

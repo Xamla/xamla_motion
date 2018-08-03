@@ -83,4 +83,4 @@ class SteppedMotionState(object):
             Progess of the stepped motion operation 
             in percent range [0.0-1.0]
         """
-        return self.progress
+        return self.__progress

@@ -38,6 +38,8 @@ from collections import Iterable
 from actionlib_msgs.msg import GoalID
 
 from functools import partial
+from threading import Lock
+from copy import deepcopy
 import asyncio
 
 
@@ -1802,6 +1804,7 @@ class SteppedMotionClient(object):
     __movej_action_name = 'moveJ_step_action'
 
     def __init__(self):
+        self.__mutex = Lock()
 
         self.__ros_node_steward = ROSNodeSteward()
 
@@ -1821,10 +1824,11 @@ class SteppedMotionClient(object):
 
         self.__feedback_sub = rospy.Subscriber(self.__feedback_topic,
                                                TrajectoryProgress,
-                                               callable=self._feedback_callback,
+                                               callback=self._feedback_callback,
                                                queue_size=10)
 
         self.__goal_id = None
+        self.__progress = None
         self.__state = None
 
     @property
@@ -1833,7 +1837,8 @@ class SteppedMotionClient(object):
         state : SteppedMotionState or None
             Current state of the supervised trajectory execution
         """
-        return self.__state
+        with self.__mutex:
+            return deepcopy(self.__state)
 
     @property
     def goal_id(self):
@@ -1872,17 +1877,13 @@ class SteppedMotionClient(object):
             raise TypeError('trajectory is not of expected type'
                             ' JointTrajectory')
 
-        g = StepwiseMoveJActionGoal()
+        goal = StepwiseMoveJGoal()
         velocity_scaling = float(velocity_scaling)
         if velocity_scaling > 1.0 or velocity_scaling < 0.0:
             raise ValueError('velocity scaling is not between 0.0 and 1.0')
-        g.veloctiy_scaling = velocity_scaling
-        g.check_collision = bool(check_collision)
-        g.trajectory = trajectory.to_joint_trajectory_msg()
-
-        self.__m_action.send_goal(g)
-
-        self.__goal_id = self.__m_action.gh.comm_state_machine.action_goal.goal_id
+        goal.veloctiy_scaling = velocity_scaling
+        goal.check_collision = bool(check_collision)
+        goal.trajectory = trajectory.to_joint_trajectory_msg()
 
         loop = asyncio.get_event_loop()
         action_done = loop.create_future()
@@ -1894,9 +1895,11 @@ class SteppedMotionClient(object):
 
         # motion server performs lock
         # with LeaseBaseLock(trajectory.joint_set.names):
-        action.send_goal(goal, done_cb=done_callback)
+        self.__m_action.send_goal(goal, done_cb=done_callback)
 
-        if not self.__m_action.gh:
+        self.__goal_id = self.__m_action.gh.comm_state_machine.action_goal.goal_id
+
+        if not self.__goal_id:
             self.__m_action.cancel_goal()
             raise ServiceException('action goal handle is not available')
 
@@ -1924,7 +1927,10 @@ class SteppedMotionClient(object):
             self.__previous_pub.publish(self.__goal_id)
 
     def _feedback_callback(self, trajectory_progress):
-        self.__state = SteppedMotionState(self.__goal_id.id,
-                                          trajectory_progress.error_msg,
-                                          trajectory_progress.error_code,
-                                          trajectory_progress.progress)
+        if self.__progress != trajectory_progress.progress:
+            with self.__mutex:
+                self.__progress = trajectory_progress.progress
+                self.__state = SteppedMotionState(self.__goal_id.id,
+                                                  trajectory_progress.error_msg,
+                                                  trajectory_progress.error_code,
+                                                  trajectory_progress.progress)

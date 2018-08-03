@@ -21,10 +21,14 @@
 from ..data_types import *
 from ..motion_client import MoveGroup, EndEffector
 from ..gripper_client import *
+from ..motion_service import SteppedMotionClient
+from threading import Thread
 from pyquaternion import Quaternion
+import time
 import asyncio
 
 import pdb
+
 
 def main():
     move_group = MoveGroup()
@@ -50,8 +54,12 @@ def main():
                                                                          move_group.default_plan_parameters,
                                                                          seed).path
 
-    ioloop = asyncio.get_event_loop()
+    joint_path_cf = move_group.motion_service.plan_collision_free_joint_path(joint_path,
+                                                                             move_group.default_plan_parameters)
+    joint_trajectory = move_group.motion_service.plan_move_joints(joint_path_cf,
+                                                                  move_group.default_plan_parameters)
 
+    ioloop = asyncio.get_event_loop()
 
     async def print_Hallo():
         print('Hallo')
@@ -71,11 +79,14 @@ def main():
         for i in range(0, 3):
             print('--- trajectory loop: ' + str(i) + ' -----')
             print('point1 10 percent of max velocity')
-            ioloop.run_until_complete(move_group.move_joints(joint_path[0], 0.1))
+            ioloop.run_until_complete(
+                move_group.move_joints(joint_path[0], 0.1))
             print('point2 50 percent of max velocity')
-            ioloop.run_until_complete(move_group.move_joints(joint_path[1], 0.5))
+            ioloop.run_until_complete(
+                move_group.move_joints(joint_path[1], 0.5))
             print('point3 100 percent of max velocity')
-            ioloop.run_until_complete(move_group.move_joints(joint_path[2], 1.0))
+            ioloop.run_until_complete(
+                move_group.move_joints(joint_path[2], 1.0))
 
         print('test EndEffector class')
         print('----------------move poses collision free -------------------')
@@ -127,6 +138,35 @@ def main():
 
     finally:
         ioloop.close()
+
+    print('-----stepped motion client------')
+
+    def run_motion(motion_client):
+        ioloop = asyncio.new_event_loop()
+        asyncio.set_event_loop(ioloop)
+        ioloop.run_until_complete(motion_client.moveJ_supervised(joint_trajectory,
+                                                                 0.1))
+        ioloop.close()
+
+    stepped_motion_client = SteppedMotionClient()
+
+    thread = Thread(target=run_motion, args=(stepped_motion_client,))
+    thread.start()
+
+    time.sleep(2)
+    import pdb
+    count = 0
+    while stepped_motion_client.state != None:
+        time.sleep(0.05)
+        stepped_motion_client.next()
+
+        if not (count % 100):
+            print('progress {:5.2f} percent'.format(
+                stepped_motion_client.state.progress))
+        count += 1
+
+    thread.join()
+
 
 if __name__ == '__main__':
     main()
