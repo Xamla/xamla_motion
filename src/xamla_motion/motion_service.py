@@ -32,7 +32,10 @@ from std_srvs.srv import SetBool
 
 from .xamla_motion_exceptions import ServiceException, ArgumentError
 from .data_types import *
+from .utility import ROSNodeSteward, LeaseBaseLock
 from collections import Iterable
+
+from actionlib_msgs.msg import GoalID
 
 from functools import partial
 import asyncio
@@ -54,11 +57,13 @@ class ActionLibGoalStatus(enum.Enum):
 
 class MotionService(object):
 
-    __is_ros_init = 0
     __movej_action = 'moveJ_action'
     __query_inverse_kinematics_service = "xamlaMoveGroupServices/query_ik"
 
     def __init__(self):
+
+        self.__ros_node_steward = ROSNodeSteward()
+
         try:
             self.__ik_service = rospy.ServiceProxy(
                 self.__query_inverse_kinematics_service,
@@ -69,24 +74,12 @@ class MotionService(object):
                                    ' inverse kinematics failed,'
                                    ' abort ') from exc
 
-        if not self.__class__.__is_ros_init:
-            rospy.init_node('motion_service', anonymous=True,
-                            disable_signals=True)
-
-        self.__class__.__is_ros_init += 1
-
         self.__m_action = actionlib.SimpleActionClient(self.__movej_action,
                                                        moveJAction)
 
         if not self.__m_action.wait_for_server(rospy.Duration(5)):
             raise ServiceException('connection to moveJ action'
                                    ' server could not be established')
-
-    def __del__(self):
-        self.__class__.__is_ros_init -= 1
-        if not self.__class__.__is_ros_init:
-            rospy.signal_shutdown('no instance of motion'
-                                  ' service exits anymore')
 
     @classmethod
     def query_available_move_groups(cls):
@@ -1217,7 +1210,8 @@ class MotionService(object):
 
         run_action = self._generate_action_executor(self.__m_action)
 
-        response = await run_action(goal)
+        with LeaseBaseLock(trajectory.joint_set.names) as lock:
+            response = await run_action(goal)
 
         if not response:
             raise RuntimeError('Unexpected result received by'
@@ -1686,7 +1680,9 @@ class MotionService(object):
                                    ' could not be established')
 
         run_action = self._generate_action_executor(action_client)
-        response = await run_action(g)
+
+        with LeaseBaseLock([action_name]) as lock:
+            response = await run_action(g)
 
         if not response:
             raise RuntimeError('Unexpected result received by'
@@ -1753,7 +1749,9 @@ class MotionService(object):
         g.command.stop_on_block = bool(stop_on_block)
 
         run_action = self._generate_action_executor(action_client)
-        response = await run_action(g)
+
+        with LeaseBaseLock([action_name]) as lock:
+            response = await run_action(g)
 
         if not response:
             raise RuntimeError('Unexpected result received by'
@@ -1782,3 +1780,147 @@ class MotionService(object):
                 raise exc
 
         return run_action
+
+
+class SteppedMotionClient(object):
+
+    """
+    Client to perform supervised trajectory execution
+
+    Methods
+    -------
+    moveJ_supervised
+        Run supervised trajectory execution
+    """
+
+    __next_topic = '/xamlaMoveActions/next'
+    __previous_topic = '/xamlaMoveActions/prev'
+    __feedback_topic = '/xamlaMoveActions/feedback'
+    __movej_action_name = 'moveJ_step_action'
+
+    def __init__(self):
+
+        self.__ros_node_steward = ROSNodeSteward()
+
+        self.__m_action = actionlib.SimpleActionClient(__movej_action_name,
+                                                       StepwiseMoveJAction)
+
+        if not self.__m_action.wait_for_server(rospy.Duration(5)):
+            raise ServiceException('connection to stepped motion action'
+                                   ' server could not be established')
+
+        self.__next_pub = rospy.Publisher(__next_topic,
+                                          GoalID,
+                                          queue_size=1)
+        self.__previous_pub = rospy.Publisher(__previous_topic,
+                                              GoalID,
+                                              queue_size=1)
+
+        self.__feedback_sub = rospy.Subscriber(__feedback_topic,
+                                               TrajectoryProgress,
+                                               callable=self._feedback_callback,
+                                               queue_size=10)
+
+        self.__goal_id = None
+        self.__state = None
+
+    @property
+    def state(self):
+        """
+        state : SteppedMotionState or None
+            Current state of the supervised trajectory execution
+        """
+        return self.__state
+
+    @property
+    def goal_id(self)
+        """
+        goal_id : GoalId or None
+            Current ros action goal id
+        """
+        return self.__goal_id
+
+    async def moveJ_supervised(self, trajectory: JointTrajectory,
+                               velocity_scaling: float, check_collision: bool=True):
+        """
+        Run supervised trajectory execution
+
+        Parameters
+        ----------
+        trajectory : JointTrajectory
+            Trajectory which should be executed supervised
+        velocity_scaling : float
+            Scaling factor to reduce or increase the trajectory 
+            velocities range [0.0-1.0]
+        check_collision : bool (default True)
+            If True collision check is performed 
+
+        Raises
+        ------
+        TypeError
+            If trajectory is not of expected type JointTrajectory
+        ValueError
+            If velocity_scaling is not in range between 0.0 an 1.0
+        ServiceException 
+            If action goal handle is not available
+        """
+
+        if not isinstance(trajectory, JointTrajectory)
+            raise TypeError('trajectory is not of expected type'
+                            ' JointTrajectory')
+
+        g = StepwiseMoveJActionGoal()
+        velocity_scaling = float(velocity_scaling)
+        if velocity_scaling > 1.0 or velocity_scaling < 0.0:
+            raise ValueError('velocity scaling is not between 0.0 and 1.0')
+        g.veloctiy_scaling = velocity_scaling
+        g.check_collision = bool(check_collision)
+        g.trajectory = trajectory.to_joint_trajectory_msg()
+
+        self.__m_action.send_goal(g)
+
+        self.__goal_id = self.__m_action.gh.comm_state_machine.action_goal.goal_id
+
+        loop = asyncio.get_event_loop()
+        action_done = loop.create_future()
+
+        def done_callback(goal_status, result):
+            status = ActionLibGoalStatus(goal_status)
+            #print('Action Done: {}'.format(status))
+            loop.call_soon_threadsafe(action_done.set_result, result)
+
+        with LeaseBaseLock(trajectory.joint_set.names) as lock:
+            action.send_goal(goal, done_cb=done_callback)
+
+            if not self.__m_action.gh:
+                self.__m_action.cancel_goal()
+                raise ServiceException('action goal handle is not available')
+
+            try:
+                return await action_done
+            except asyncio.CancelledError as exc:
+                action.cancel()
+                raise exc
+            finally:
+                self.__goal_id = None
+                self.__state = None
+
+    def next(self):
+        """
+        Request at supervised executor to perform next step 
+        """
+        if self.__goal_id:
+            self.__next_pub.publish(self.__goal_id)
+
+    def previous(self):
+        """
+        Request at supervised executor to perform previous step
+        """
+        if self.__goal_id:
+            self.__previous_pub.publish(self.__goal_id)
+
+    def _feedback_callback(self, trajectory_progress)
+        self.__state = SteppedMotionState(self.__goal_id.id,
+                                          trajectory_progress.error_msg,
+                                          trajectory_progress.error_code,
+                                          trajectory_progress.progress)
