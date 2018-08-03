@@ -1833,7 +1833,7 @@ class SteppedMotionClient(object):
         return self.__state
 
     @property
-    def goal_id(self)
+    def goal_id(self):
         """
         goal_id : GoalId or None
             Current ros action goal id
@@ -1865,7 +1865,7 @@ class SteppedMotionClient(object):
             If action goal handle is not available
         """
 
-        if not isinstance(trajectory, JointTrajectory)
+        if not isinstance(trajectory, JointTrajectory):
             raise TypeError('trajectory is not of expected type'
                             ' JointTrajectory')
 
@@ -1919,7 +1919,7 @@ class SteppedMotionClient(object):
         if self.__goal_id:
             self.__previous_pub.publish(self.__goal_id)
 
-    def _feedback_callback(self, trajectory_progress)
+    def _feedback_callback(self, trajectory_progress):
         self.__state = SteppedMotionState(self.__goal_id.id,
                                           trajectory_progress.error_msg,
                                           trajectory_progress.error_code,

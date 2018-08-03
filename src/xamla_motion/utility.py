@@ -18,6 +18,7 @@
 
 #!/usr/bin/env python3
 
+from typing import List
 from collections import Iterable
 
 from .xamla_motion_exceptions import ServiceException
@@ -109,7 +110,7 @@ class LeaseBaseLock(object):
     >>>     do something with resources
     """
 
-    def __init__(self, resource_ids: Iterable[str], lock_id: str=''):
+    def __init__(self, resource_ids: List[str], lock_id: str=''):
 
         self.__request = QueryLockRequest()
         self.__request.id_resources = list(resources_ids)

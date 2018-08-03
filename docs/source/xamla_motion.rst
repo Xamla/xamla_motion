@@ -21,14 +21,6 @@ xamla\_motion.gripper\_client module
     :undoc-members:
     :show-inheritance:
 
-xamla\_motion.lock\_client module
----------------------------------
-
-.. automodule:: xamla_motion.lock_client
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 xamla\_motion.motion\_client module
 -----------------------------------
 
@@ -45,10 +37,10 @@ xamla\_motion.motion\_service module
     :undoc-members:
     :show-inheritance:
 
-xamla\_motion.stepped\_motion\_client module
---------------------------------------------
+xamla\_motion.utility module
+----------------------------
 
-.. automodule:: xamla_motion.stepped_motion_client
+.. automodule:: xamla_motion.utility
     :members:
     :undoc-members:
     :show-inheritance:

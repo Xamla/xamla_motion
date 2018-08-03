@@ -140,6 +140,14 @@ xamla\_motion.data\_types.pose module
     :undoc-members:
     :show-inheritance:
 
+xamla\_motion.data\_types.stepped\_motion\_state module
+-------------------------------------------------------
+
+.. automodule:: xamla_motion.data_types.stepped_motion_state
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xamla\_motion.data\_types.task\_space\_plan\_parameters module
 --------------------------------------------------------------
 
