@@ -163,16 +163,17 @@ class ROSNodeSteward(object):
     __self_created = False
 
     def __init__(self):
-        if (not __is_ros_init and
+        if (not self.__class__.__is_ros_init and
                 re.sub('[^A-Za-z0-9]+', '', rospy.get_name()) == 'unnamed'):
             rospy.init_node('xamla_motion',
                             anonymous=True,
                             disable_signals=True)
-            __self_created = True
+            self.__class__.__self_created = True
 
-        __is_ros_init += 1
+        self.__class__.__is_ros_init += 1
 
     def __del__(self):
-        __is_ros_init -= 1
-        if not __is_ros_init and __self_created:
+        self.__class__.__is_ros_init -= 1
+        if (not self.__class__.__is_ros_init and
+                self.__class__.__self_created):
             rospy.signal_shutdown('xamla_motion shutdown')

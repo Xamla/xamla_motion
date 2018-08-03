@@ -1802,21 +1802,21 @@ class SteppedMotionClient(object):
 
         self.__ros_node_steward = ROSNodeSteward()
 
-        self.__m_action = actionlib.SimpleActionClient(__movej_action_name,
+        self.__m_action = actionlib.SimpleActionClient(self.__movej_action_name,
                                                        StepwiseMoveJAction)
 
         if not self.__m_action.wait_for_server(rospy.Duration(5)):
             raise ServiceException('connection to stepped motion action'
                                    ' server could not be established')
 
-        self.__next_pub = rospy.Publisher(__next_topic,
+        self.__next_pub = rospy.Publisher(self.__next_topic,
                                           GoalID,
                                           queue_size=1)
-        self.__previous_pub = rospy.Publisher(__previous_topic,
+        self.__previous_pub = rospy.Publisher(self.__previous_topic,
                                               GoalID,
                                               queue_size=1)
 
-        self.__feedback_sub = rospy.Subscriber(__feedback_topic,
+        self.__feedback_sub = rospy.Subscriber(self.__feedback_topic,
                                                TrajectoryProgress,
                                                callable=self._feedback_callback,
                                                queue_size=10)
