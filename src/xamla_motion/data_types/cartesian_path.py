@@ -173,6 +173,7 @@ class CartesianPath(object):
         """
         return [p.translation for p in self.__points]
 
+    @property
     def orientations(self):
         """
         orientations : List[pyquaternion.Quaternion]
