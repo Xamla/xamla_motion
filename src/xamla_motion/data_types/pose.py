@@ -169,7 +169,7 @@ class Pose(object):
                     matrix.shape[0] != 4 or
                     matrix.shape[1] != 4):
                 raise ValueError('matrix is not a 4x4 numpy array')
-            if not issubclass(matrix.dtype.type, np.dtype.floating):
+            if not issubclass(matrix.dtype.type, np.floating):
                 raise TypeError('matrix is not a'
                                 'dtype is no floating type')
 
@@ -435,7 +435,7 @@ class Pose(object):
             product = np.matmul(matrix_self, matrix_other)
             return self.from_transformation_matrix(product, self.__frame_id)
         elif (isinstance(other, np.ndarray) and
-                issubclass(other.dtype.type, np.dtype.floating)):
+                issubclass(other.dtype.type, np.floating)):
             if other.shape in [(3,), (3, 1)]:
                 vector = np.append(other, [[1.0]], axis=0)
                 return np.matmul(matrix_self, vector)
