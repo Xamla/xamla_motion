@@ -1092,7 +1092,7 @@ class EndEffector(object):
 
     async def move_poses_collision_free(self, target,
                                         velocity_scaling=None,
-                                        collision_check=None, max_deviation=None,
+                                        max_deviation=None,
                                         acceleration_scaling=None, seed=None):
         """
         Asynchronous plan and execute collision free trajectory from task space input
@@ -1104,10 +1104,6 @@ class EndEffector(object):
         velocity_scaling : None or float convertable
             Scaling factor which is applied on the maximal
             possible joint velocities
-        collision_check : None or bool convertable
-            If true the trajectory planing try to plan a
-            collision free trajectory and before executing
-            a trajectory a collision check is performed
         max_deviation : None or float convertable
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
@@ -1129,7 +1125,7 @@ class EndEffector(object):
         """
 
         if isinstance(target, Pose):
-            target = [target]
+            target = CartesianPath.from_one_point(target)
         elif isinstance(target, CartesianPath):
             pass
         else:
