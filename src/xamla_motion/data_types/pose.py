@@ -220,7 +220,12 @@ class Pose(object):
                                  msg.pose.orientation.y,
                                  msg.pose.orientation.z])
 
-        return cls(translation, quaternion, msg.header.frame_id)
+        frame_id = msg.header.frame_id
+
+        if not frame_id:
+            frame_id = 'world'
+
+        return cls(translation, quaternion, frame_id)
 
     @classmethod
     def from_pose_msg(cls, msg, frame_id=''):
@@ -400,7 +405,8 @@ class Pose(object):
                                     for i, value
                                     in enumerate(self.__quaternion)])
 
-        return 'Pose:\n' + translation_str + '\n' + quaternion_str
+        return ('Pose:\n' + translation_str + '\n' + quaternion_str +
+                '\nframe_id\n' + self.__frame_id)
 
     def __repr__(self):
         return self.__str__()
