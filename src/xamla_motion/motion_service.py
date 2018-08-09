@@ -1780,7 +1780,7 @@ class MotionService(object):
             action.send_goal(goal, done_cb=done_callback)
             try:
                 return await action_done
-            except asyncio.CancelledError as exc:
+            except (asyncio.CancelledError, ServiceException) as exc:
                 action.cancel()
                 raise exc
 
@@ -1890,7 +1890,9 @@ class SteppedMotionClient(object):
 
         def done_callback(goal_status, result):
             status = ActionLibGoalStatus(goal_status)
-            #print('Action Done: {}'.format(status))
+            if status != ActionLibGoalStatus.SUCCEEDED:
+                raise ServiceException('action end unsuccessfully with'
+                                       ' state: {}'.format(status))
             loop.call_soon_threadsafe(action_done.set_result, result)
 
         # motion server performs lock
@@ -1905,11 +1907,12 @@ class SteppedMotionClient(object):
 
         try:
             return await action_done
-        except asyncio.CancelledError as exc:
+        except (asyncio.CancelledError, ServiceException) as exc:
             action.cancel()
             raise exc
         finally:
             self.__goal_id = None
+            self.__progress = None
             self.__state = None
 
     def next(self):
