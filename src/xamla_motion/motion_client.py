@@ -163,7 +163,7 @@ class MoveGroup(object):
         p = self.__m_service.create_plan_parameters(move_group_name,
                                                     self.__joint_set,
                                                     sample_resolution=0.05,
-                                                    collision_check=False)
+                                                    collision_check=True)
         self.__plan_parameters = p
 
         names = self.__details.end_effector_names
@@ -812,7 +812,7 @@ class MoveGroup(object):
                                                                       acceleration_scaling)
 
         await self.__m_service.execute_joint_trajectory(trajectory,
-                                                        parameters.collision_check)
+                                                        False)
 
     async def move_joints(self, target, velocity_scaling=None,
                           collision_check=None,
