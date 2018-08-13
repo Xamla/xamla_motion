@@ -1429,14 +1429,20 @@ class MotionService(object):
             reordering was not possible
         ServiceError
             If query services are not available or
-            finish unsuccessfully
+            finish unsuccessfully or inverse kinematics
+            ends with error
         """
 
         seed = self.query_joint_states(parameters.joint_set).positions
-        joint_path = self.query_inverse_kinematics_many(path,
-                                                        parameters,
-                                                        seed).path
-        return self.plan_collision_free_joint_path(joint_path,
+        result = self.query_inverse_kinematics_many(path,
+                                                    parameters,
+                                                    seed)
+
+        if not result.succeeded:
+            raise ServiceException('service call for query inverse'
+                                   ' kinematics was not successful')
+
+        return self.plan_collision_free_joint_path(result.path,
                                                    parameters)
 
     @classmethod
