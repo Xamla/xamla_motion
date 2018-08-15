@@ -46,6 +46,9 @@ class WsgState(Enum):
 
 
 class WsgResult(object):
+    """
+    Class which respresents the result of a WSG gripper action
+    """
 
     def __init__(self, state: WsgState, width: float,
                  force: float, status: str):

@@ -100,6 +100,25 @@ class WeissWsgGripper(object):
     WeissWsgGripper class
 
     Represent a Weiss Wsg gripper and his abilities / properties
+
+    Methods
+    -------
+    get_status()
+        Get current status of the gripper
+    acknowledge_error()
+        Asynchronous acknowledge an error
+    grasp(position, speed, force)
+        Asynchronous action to perform a grasp
+    async def homing()
+        Asynchronous action to home the gripper
+    move(position, speed, force, stop_on_block)
+        Asynchronous action to perform a movement
+    release(self, position, speed)
+        Asynchronous action to release the gripper from a grasp
+    stop()
+        Asynchronous action to perform stop the gripper
+    set_accelertation(acceleration)
+        Set gripper acceleration
     """
 
     def __init__(self, gripper_properties, motion_service):
@@ -167,9 +186,9 @@ class WeissWsgGripper(object):
         """
         return self.__properties
 
-    async def get_status(self):
+    def get_status(self):
         """
-        Asynchronous get current status of the gripper
+        Get current status of the gripper
 
         Returns
         -------
@@ -378,9 +397,9 @@ class WeissWsgGripper(object):
 
         return r
 
-    async def set_accelertation(self, acceleration):
+    def set_accelertation(self, acceleration):
         """
-        Asynchronous set gripper acceleration
+        Set gripper acceleration
 
         Parameters
         ----------
@@ -459,6 +478,14 @@ class CommonGripperProperties(object):
 
 
 class CommonGripper(object):
+    """
+    Class which represents a gripper controlled by the moveit gripper interface
+
+    Methods
+    -------
+     move(position, max_effort)
+        Asynchronous action to perform a movement
+    """
 
     def __init__(self, gripper_properties, motion_service):
         """

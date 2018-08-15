@@ -32,17 +32,17 @@ class CartesianPath(object):
 
     Methods
     -------
-    from_one_point
+    from_one_point(point)
         Initialization of CartesianPath class with only one Point
-    from_start_stop_point
+    from_start_stop_point(start, stop)
         Initialization of CartesianPath class with start, stop point
-    prepend
+    prepend(points)
         Creates new CartesianPath with points added in front of path points
-    append
+    append(points)
         Creates new CartesianPath with points added behind the path points
-    concat
+    concat(other)
         Creates new CartesianPath with concatenated path points
-    transform
+    transform(transform_function)
         Creates a transformed version of CartesianPath
     """
 

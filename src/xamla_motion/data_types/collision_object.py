@@ -44,6 +44,28 @@ class CollisionPrimitive(object):
 
     At the moment following simple primitives are supported:
     plane, box, sphere, cylinder, cone
+
+    Methods
+    -------
+    from_shape_msg(msg, pose)
+        Creates an Instance of CollisionPrimitive from moveit shape msg
+    create_plane(a, b, c, d, pose)
+        Creates an instance of CollisionPrimitive which represents a plane
+    create_box(cls, x, y, z, pose)
+        Creates an instance of CollisionPrimitive which represents a box
+    create_unit_box(pose)
+        Creates an instance of CollisionPrimitive which represents unit box
+    create_sphere(radius, pose)
+        Creates an instance of CollisionPrimitive which represents a sphere
+    create_unit_sphere(pose)
+        Creates an instance of CollisionPrimitive which represents unit sphere
+    create_cylinder(height, radius, pose)
+        Creates an instance of CollisionPrimitive which represents a cylinder
+    create_cone(height, radius, pose)
+        Creates an instance of CollisionPrimitive which represents a cone
+    to_shape_msg()
+        Creates an instance of moveit/shape_msgs.Plane for a plane primitive
+        or an instance of moveit/shape_msgs.SolidPrimitive for all other primitive
     """
 
     expected_parameter_count = {CollisionPrimitiveKind.plane: 4,
@@ -432,6 +454,13 @@ class CollisionObject(object):
     An Instance of this class represent a collision object.
     A collision object can be a simple primitive or a assembly of
     many primitives
+
+    Methods
+    -------
+    from_collision_object_msg(msg)
+        Create a Pose from an instance of moveit_msgs/CollisionObject
+    to_collision_object_msg(self, action):
+        Creates a ROS collision object message from this instance
     """
 
     def __init__(self, primitives: Iterable[CollisionPrimitive], frame_id: str='world'):
@@ -527,6 +556,19 @@ class CollisionObject(object):
         return self.__primitives
 
     def to_collision_object_msg(self, action):
+        """
+        Creates a ROS collision object message from this instance
+
+        Parameters
+        ----------
+        action : moveit_msg/CollisionObject operation
+            Defines which action/opertation should be performed
+            (add, remove, append, move)
+
+        Returns
+        -------
+        moveit_msgs/CollisionObject 
+        """
 
         msg = moveit_msgs.CollisionObject()
         msg.header.frame_id = self.__frame_id
@@ -550,6 +592,7 @@ class CollisionObject(object):
         msg.primitive_poses = primitive_poses
         msg.meshes = []
         msg.mesh_poses = []
+        msg.operation = action
 
         return msg
 

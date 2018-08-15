@@ -34,19 +34,21 @@ class Pose(object):
 
     Methods
     -------
-    from_transformation_matrix
+    from_transformation_matrix(matrix, frame_id='',normalize_rotation=False)
         Creates an instance of Pose from a transformation matrix
-    from_posestamped_msg
+    from_posestamped_msg(msg)
         Initialize Pose from ROS posestamped message
-    normalize_rotation
+    from_pose_msg(cls, msg, frame_id='')
+        Initialize Pose from ROS pose message
+    normalize_rotation()
         Creates an instance of Pose with normalized quaternion
-    is_rotation_normalized
+    is_rotation_normalized()
         Return True if quaternion is normalized
-    rotation_matrix
+    rotation_matrix()
         Returns the roation matrix in homogenous coordinates (4x4 numpy array)
-    transformation_matrix
+    transformation_matrix()
         Returns the transformation matrix in homogenous coordinates (4x4 numpy array)
-    to_posestamped_msg
+    to_posestamped_msg()
         Creates an instance of the ROS message PoseStamped from Pose
     """
 
@@ -122,9 +124,7 @@ class Pose(object):
         if not isinstance(normalize_rotation, bool):
             raise TypeError('normalize_rotation is not of expected type bool')
 
-        self.__normalize_rotation = normalize_rotation
-
-        if self.__normalize_rotation is True:
+        if normalize_rotation is True:
             self._normalize_rotation()
 
         self.__translation.flags.writeable = False
@@ -295,7 +295,7 @@ class Pose(object):
         ------
             Instance of Pose with normalized quaternion / rotation
         """
-        if self.__normalize_rotation:
+        if np.isclose(np.linalg.norm(self.__quaternion.elements), 1.0):
             return self
         else:
             return Pose(self.__translation, self.__quaternion,
@@ -316,7 +316,7 @@ class Pose(object):
             True is roation is normalized else False
         """
 
-        if self.__normalize_rotation:
+        if np.isclose(np.linalg.norm(self.__quaternion.elements), 1.0):
             return True
         else:
             return False

@@ -117,6 +117,13 @@ class JointTrajectory(object):
     """
     Class JointTrajectory
 
+
+    Methods
+    -------
+    empty()
+        Creates a empty JointTrajectory instance
+    to_joint_trajectory_msg(self, seq=0, frame_id='')
+        Converts JointTrajectory to JointTrajectory ros message
     """
 
     def __init__(self, joint_set, points, valid=True):
@@ -195,6 +202,9 @@ class JointTrajectory(object):
 
     @staticmethod
     def empty():
+        """
+        Creates a empty JointTrajectory instance
+        """
         return JointTrajectory(JointSet.empty(), None)
 
     @property

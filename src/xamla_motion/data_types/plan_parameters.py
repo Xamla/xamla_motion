@@ -32,7 +32,8 @@ class PlanParameters(object):
 
     Methods
     -------
-    from_arguments
+    from_arguments(move_group_name, joint_set, max_velocity,
+                   max_acceleration, min_position, max_position, **kwargs)
         Creates instance of PlanParameters from
         limit numpy arrays
     """

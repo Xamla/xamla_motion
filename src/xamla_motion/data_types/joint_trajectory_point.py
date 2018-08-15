@@ -33,12 +33,12 @@ class JointTrajectoryPoint(object):
 
     Methods
     -------
-    from_joint_trajectory_point_msg
+    from_joint_trajectory_point_msg(joint_set, msg)
         Creates an instance of JointTrajectoryPoint from ros message
-    add_time_offset
+    add_time_offset(offset)
         Creates a new instance of this JointTrajectoryPoint with same
         position, vel, acc, eff but with a modified time_from_start
-    to_joint_trajectory_point_msg(self):
+    to_joint_trajectory_point_msg()
         Converts JointTrajectoryPoint to JointTrajectoryPoint ros message
     """
 

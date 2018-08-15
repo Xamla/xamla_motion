@@ -22,6 +22,9 @@ from control_msgs.msg import GripperCommandResult
 
 
 class MoveGripperResult(object):
+    """
+    Class which represents the result of a gripper action
+    """
 
     def __init__(self, position: float, reached_goal: float,
                  stalled: bool, effort: float):

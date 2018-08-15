@@ -33,6 +33,13 @@ class JointStates(object):
     the state of joints of a robot. For this purpose it holds an 
     instance of JointValues for positions, velocities, and efforts
     (velocities and efforts are optional)
+
+    Methods
+    -------
+    reorder(new_order)
+        Creates reordered instance of JointValue by the order of new_order
+    select(names)
+        Creates a JointStates instance which only contains selected joints
     """
 
     def __init__(self, positions, velocities=None, efforts=None):

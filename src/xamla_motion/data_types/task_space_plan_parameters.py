@@ -33,7 +33,9 @@ class TaskSpacePlanParameters(object):
 
     Methods
     -------
-    from_arguments
+    from_arguments(end_effector_name, max_xyz_velocity,
+                   max_xyz_acceleration, max_angular_velocity,
+                   max_angular_acceleration, **kwargs)
         Creates a instance or TaskSpacePlanParameters
         from single limit arguments
     """

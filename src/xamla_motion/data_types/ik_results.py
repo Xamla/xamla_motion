@@ -22,6 +22,9 @@ from moveit_msgs.msg import MoveItErrorCodes
 
 
 class IkResults(object):
+    """
+    Class with hold result of a inverse kinematics query
+    """
 
     def __init__(self, path, error_codes):
         self.__path = path

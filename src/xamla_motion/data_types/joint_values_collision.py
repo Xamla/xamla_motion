@@ -20,6 +20,9 @@
 
 
 class JointValuesCollisions(object):
+    """
+    Class which represents a robot collision
+    """
 
     def __init__(self, index, error_code, error_message):
         self.__index = index
