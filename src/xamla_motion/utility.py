@@ -163,23 +163,8 @@ class ROSNodeSteward(object):
     Maintain ros node
 
     If no rosnode exist create a new rosnode
-    and handle shutdown else keep the existing one
     """
-    __is_ros_init = 0
-    __self_created = False
 
     def __init__(self):
-        if (not self.__class__.__is_ros_init and
-                re.sub('[^A-Za-z0-9]+', '', rospy.get_name()) == 'unnamed'):
-            rospy.init_node('xamla_motion',
-                            anonymous=True,
-                            disable_signals=True)
-            self.__class__.__self_created = True
-
-        self.__class__.__is_ros_init += 1
-
-    def __del__(self):
-        self.__class__.__is_ros_init -= 1
-        if (not self.__class__.__is_ros_init and
-                self.__class__.__self_created):
-            rospy.signal_shutdown('xamla_motion shutdown')
+        if (re.sub('[^A-Za-z0-9]+', '', rospy.get_name()) == 'unnamed'):
+            rospy.init_node('xamla_motion', anonymous=True)
