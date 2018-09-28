@@ -131,27 +131,30 @@ class MoveGroup(object):
             details = groups[0]
 
         elif end_effector_name and not move_group_name:
-            details = next(g for g in groups
-                           if any([end_effector_name in
-                                   g.end_effector_names]))
-            if not details:
+            try:
+                details = next(g for g in groups
+                               if any([end_effector_name in
+                                       g.end_effector_names]))
+            except StopIteration:
                 raise RuntimeError('it exist no move group with'
                                    ' end effector: '
                                    + end_effector_name)
             move_group_name = details.name
 
         elif not end_effector_name and move_group_name:
-            details = next(g for g in groups
-                           if g.name == move_group_name)
-            if not details:
+            try:
+                details = next(g for g in groups
+                               if g.name == move_group_name)
+            except StopIteration:
                 raise RuntimeError('it exist no move group with'
                                    ' name: ' + move_group_name)
             end_effector_name = details.end_effector_name[0]
         else:
-            details = next(g for g in groups
-                           if any([end_effector_name in
-                                   g.end_effector_names]))
-            if not details:
+            try:
+                details = next(g for g in groups
+                               if any([end_effector_name in
+                                       g.end_effector_names]))
+            except StopIteration:
                 raise RuntimeError('move group: ' + move_group_name +
                                    ' with end effector: '
                                    + end_effector_name +
