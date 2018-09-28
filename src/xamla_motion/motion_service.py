@@ -1348,7 +1348,7 @@ class MotionService(object):
                                 ' type JointValues')
             elif seed.joint_set == parameters.joint_set:
                 pass
-            elif seed.joint_set.is_similar(parameters.joint_set):
+            elif parameters.joint_set.is_subset(seed.joint_set):
                 seed = seed.reorder(parameters.joint_set)
             else:
                 raise ValueError('joint set of parameters and seed do not'
