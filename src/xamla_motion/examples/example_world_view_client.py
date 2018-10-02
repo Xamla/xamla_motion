@@ -18,11 +18,12 @@
 
 #!/usr/bin/env python3
 
-from ..world_view_client import WorldViewClient
-from ..data_types import JointValues, JointSet, Pose, CartesianPath
-from ..data_types import CollisionObject, CollisionPrimitive
+from xamla_motion.world_view_client import WorldViewClient
+from xamla_motion.data_types import JointValues, JointSet, Pose, CartesianPath
+from xamla_motion.data_types import CollisionObject, CollisionPrimitive
 from pyquaternion import Quaternion
 import numpy as np
+
 
 def main():
     joint_set1 = JointSet(['Joint1', 'Joint2', 'Joint3'])
@@ -49,7 +50,6 @@ def main():
     pose3 = Pose(t3, q3, 'world')
 
     cartesian_path1 = CartesianPath([pose1, pose2, pose3])
-
 
     sphere = CollisionPrimitive.create_sphere(0.1, pose2)
     cylinder = CollisionPrimitive.create_cylinder(0.4, 0.05, pose2)
@@ -99,11 +99,10 @@ def main():
                                                    'test/joint_values')
     print('joint_values1 is: ' + str(get_value))
 
-
     print('---------------- query joint values --------------')
     # query all values which start with t under test/joint_values
-    queried_values = world_view_client.query_joint_values('test/joint_values', 't')
-
+    queried_values = world_view_client.query_joint_values(
+        'test/joint_values', 't')
 
     print('---------------- add poses --------------')
     world_view_client.add_pose(
@@ -129,11 +128,9 @@ def main():
                                            'test/poses')
     print('pose1 is: ' + str(get_value))
 
-
     print('---------------- query poses --------------')
     # query all poses which start with t under test/pose
     queried_values = world_view_client.query_poses('test/poses', 't')
-
 
     print('---------------- add cartesian path --------------')
     world_view_client.add_cartesian_path(
@@ -151,7 +148,6 @@ def main():
                                                      'test/cartesian_paths')
     print('cartesian_path1 is: ' + str(get_value))
 
-
     print('---------------- query cartesian paths --------------')
     # query all cartesian_paths which start with t under test/cartesian_path
     queried_values = world_view_client.query_cartesian_paths(
@@ -159,7 +155,6 @@ def main():
 
     for v in queried_values:
         print(str(v))
-
 
     print('---------------- add collision object --------------')
     world_view_client.add_collision_object(
@@ -182,7 +177,6 @@ def main():
                                                        'test/collision_objects')
     print('collision_object1 is: ' + str(get_value))
 
-
     print('---------------- query collision object --------------')
     # query all collision_objects which start with t under test/collision_object
     queried_values = world_view_client.query_collision_objects(
@@ -195,6 +189,7 @@ def main():
 
     print('----------------- remove folder test ---------------')
     world_view_client.remove_element('test', '')
+
 
 if __name__ == '__main__':
     main()

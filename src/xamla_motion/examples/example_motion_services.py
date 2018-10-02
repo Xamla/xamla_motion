@@ -18,8 +18,8 @@
 
 #!/usr/bin/env python3
 
-from ..data_types import *
-from ..motion_service import MotionService
+from xamla_motion.data_types import *
+from xamla_motion.motion_service import MotionService
 from pyquaternion import Quaternion
 import rospy
 
@@ -71,74 +71,70 @@ def main():
 
     print(pose)
 
-    # print('---------query collision free joint path------')
+    print('---------query collision free joint path------')
 
+    joint_path = JointPath(joint_states.joint_set, [joint_states.positions,
+                                                    joint_states1.positions])
+    rjoint_path = motion_service.query_collision_free_joint_path(groups[0].name,
+                                                                 joint_path)
 
-    # joint_path = JointPath(joint_states.joint_set, [joint_states.positions,
-    #                                                 joint_states1.positions])
-    # rjoint_path = motion_service.query_collision_free_joint_path(groups[0].name,
-    #                                                              joint_path)
+    print(rjoint_path)
 
-    # print(rjoint_path)
+    print('---------query joint trajectory------')
 
+    max_velocities = [1.0] * len(joint_path.joint_set)
+    max_accelerations = [0.2] * len(joint_path.joint_set)
+    max_deviation = 0.005
 
-    # print('---------query joint trajectory------')
+    joint_trajectory = motion_service.query_joint_trajectory(joint_path,
+                                                             max_velocities,
+                                                             max_accelerations,
+                                                             max_deviation,
+                                                             20.0)
 
-    # max_velocities = [1.0] * len(joint_path.joint_set)
-    # max_accelerations = [0.2] * len(joint_path.joint_set)
-    # max_deviation = 0.005
+    print(joint_trajectory)
 
-    # joint_trajectory = motion_service.query_joint_trajectory(joint_path,
-    #                                                          max_velocities,
-    #                                                          max_accelerations,
-    #                                                          max_deviation,
-    #                                                          20.0)
+    print('---------query task space trajectory------')
 
-    # print(joint_trajectory)
+    max_xyz_velocities = 1.0
+    max_xyz_accelerations = 0.2
+    max_angular_velocities = 0.2
+    max_angular_accelerations = 0.1
+    ik_jump_threshold = 1.2
+    max_deviation = 0.005
+    collision_check = True
+    dt = 125
 
-    # print('---------query task space trajectory------')
+    cartesian_path = CartesianPath([pose, pose1])
 
-    # max_xyz_velocities = 1.0
-    # max_xyz_accelerations = 0.2
-    # max_angular_velocities = 0.2
-    # max_angular_accelerations = 0.1
-    # ik_jump_threshold = 1.2
-    # max_deviation = 0.005
-    # collision_check = True
-    # dt = 125
+    joint_trajectory1 = motion_service.query_task_space_trajectory(list(end_effectors)[0],
+                                                                   cartesian_path,
+                                                                   joint_states.positions,
+                                                                   max_xyz_velocities,
+                                                                   max_xyz_accelerations,
+                                                                   max_angular_velocities,
+                                                                   max_angular_accelerations,
+                                                                   ik_jump_threshold,
+                                                                   max_deviation,
+                                                                   collision_check,
+                                                                   dt)
 
-    # cartesian_path = CartesianPath([pose, pose1])
+    print(joint_trajectory1)
 
-    # joint_trajectory1 = motion_service.query_task_space_trajectory(list(end_effectors)[0],
-    #                                                                cartesian_path,
-    #                                                                joint_states.positions,
-    #                                                                max_xyz_velocities,
-    #                                                                max_xyz_accelerations,
-    #                                                                max_angular_velocities,
-    #                                                                max_angular_accelerations,
-    #                                                                ik_jump_threshold,
-    #                                                                max_deviation,
-    #                                                                collision_check,
-    #                                                                dt)
+    print('---------query joint path collisions------')
 
-    # print(joint_trajectory1)
+    joint_path = JointPath(joint_states.joint_set, [joint_states.positions,
+                                                    joint_states1.positions])
+    rjoint_path = motion_service.query_collision_free_joint_path(groups[0].name,
+                                                                 joint_path)
 
+    collisions = motion_service.query_joint_path_collisions(groups[0].name,
+                                                            joint_path)
 
-    # print('---------query joint path collisions------')
+    collisions1 = motion_service.query_joint_path_collisions(groups[0].name,
+                                                             rjoint_path)
 
-
-    # joint_path = JointPath(joint_states.joint_set, [joint_states.positions,
-    #                                                 joint_states1.positions])
-    # rjoint_path = motion_service.query_collision_free_joint_path(groups[0].name,
-    #                                                              joint_path)
-
-    # collisions = motion_service.query_joint_path_collisions(groups[0].name,
-    #                                                         joint_path)
-
-    # collisions1 = motion_service.query_joint_path_collisions(groups[0].name,
-    #                                                          rjoint_path)
-
-    # print(collisions)
+    print(collisions)
 
     print('---------create plan parameters------------')
 
@@ -159,56 +155,50 @@ def main():
                                                              velocity_scaling=0.6)
     print(plan_parameters3)
 
+    print('---------create task space plan parameters------------')
 
-    # print('---------create task space plan parameters------------')
+    t_plan_parameters0 = motion_service.create_task_space_plan_parameters()
+    print(t_plan_parameters0)
+    t_plan_parameters1 = motion_service.create_task_space_plan_parameters(
+        list(end_effectors)[0])
+    print(t_plan_parameters1)
 
-    # t_plan_parameters0 = motion_service.create_task_space_plan_parameters()
-    # print(t_plan_parameters0)
-    # t_plan_parameters1 = motion_service.create_task_space_plan_parameters(
-    #     list(end_effectors)[0])
-    # print(t_plan_parameters1)
+    max_xyz_velocities = 1.0
+    t_plan_parameters3 = motion_service.create_task_space_plan_parameters(list(end_effectors)[0],
+                                                                          max_xyz_velocities,
+                                                                          velocity_scaling=0.6)
+    print(t_plan_parameters3)
 
-    # max_xyz_velocities = 1.0
-    # t_plan_parameters3 = motion_service.create_task_space_plan_parameters(list(end_effectors)[0],
-    #                                                                       max_xyz_velocities,
-    #                                                                       velocity_scaling=0.6)
-    # print(t_plan_parameters3)
+    print('---------plan move pose linear------------')
 
+    cartesian_path = CartesianPath.from_start_stop_point(pose, pose1)
+    trajectory = motion_service.plan_move_pose_linear(cartesian_path,
+                                                      joint_states.positions,
+                                                      t_plan_parameters3)
+    print(trajectory)
 
-    # print('---------plan move pose linear------------')
+    print('---------plan move joints------------')
 
-    # cartesian_path = CartesianPath.from_start_stop_point(pose, pose1)
-    # trajectory = motion_service.plan_move_pose_linear(cartesian_path,
-    #                                                   joint_states.positions,
-    #                                                   t_plan_parameters3)
-    # print(trajectory)
+    joint_path = JointPath.from_start_stop_point(joint_states.positions,
+                                                 joint_states1.positions)
+    trajectory = motion_service.plan_move_joints(joint_path,
+                                                 plan_parameters3)
+    print(trajectory)
 
+    print('--------- plan cartesian path------------')
 
-    # print('---------plan move joints------------')
+    cartesian_path = CartesianPath.from_start_stop_point(pose, pose1)
 
-    # joint_path = JointPath.from_start_stop_point(joint_states.positions,
-    #                                              joint_states1.positions)
-    # trajectory = motion_service.plan_move_joints(joint_path,
-    #                                             plan_parameters3)
-    # print(trajectory)
+    path = motion_service.plan_cartesian_path(cartesian_path,
+                                              plan_parameters3)
 
-
-    # print('--------- plan cartesian path------------')
-
-    # cartesian_path = CartesianPath.from_start_stop_point(pose, pose1)
-
-    # path = motion_service.plan_cartesian_path(cartesian_path,
-    #                                           plan_parameters3)
-
-
-    # print(path)
-
+    print(path)
 
     print('--------- get current joint values ------------')
 
-    positions = motion_service.get_current_joint_values(plan_parameters3.joint_set)
+    positions = motion_service.get_current_joint_values(
+        plan_parameters3.joint_set)
     print(positions)
-
 
     print('---------- move pose ------------------')
 
@@ -233,6 +223,7 @@ def main():
                                                                plan_parameters3))
     finally:
         ioloop.close()
+
 
 if __name__ == '__main__':
     main()

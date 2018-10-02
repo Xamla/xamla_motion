@@ -18,10 +18,10 @@
 
 #!/usr/bin/env python3
 
-from ..data_types import *
-from ..motion_client import MoveGroup, EndEffector
-from ..gripper_client import *
-from ..motion_service import SteppedMotionClient
+from xamla_motion.data_types import *
+from xamla_motion.motion_client import MoveGroup, EndEffector
+from xamla_motion.gripper_client import *
+from xamla_motion.motion_service import SteppedMotionClient
 from threading import Thread
 from pyquaternion import Quaternion
 import time
