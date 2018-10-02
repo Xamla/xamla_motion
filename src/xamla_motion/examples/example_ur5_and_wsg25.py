@@ -139,33 +139,33 @@ def main():
     finally:
         ioloop.close()
 
-    print('-----stepped motion client------')
+    # print('-----stepped motion client------')
 
-    def run_motion(motion_client):
-        ioloop = asyncio.new_event_loop()
-        asyncio.set_event_loop(ioloop)
-        ioloop.run_until_complete(motion_client.moveJ_supervised(joint_trajectory,
-                                                                 0.1))
-        ioloop.close()
+    # def run_motion(motion_client):
+    #     ioloop = asyncio.new_event_loop()
+    #     asyncio.set_event_loop(ioloop)
+    #     ioloop.run_until_complete(motion_client.moveJ_supervised(joint_trajectory,
+    #                                                              0.1))
+    #     ioloop.close()
 
-    stepped_motion_client = SteppedMotionClient()
+    # stepped_motion_client = SteppedMotionClient()
 
-    thread = Thread(target=run_motion, args=(stepped_motion_client,))
-    thread.start()
+    # thread = Thread(target=run_motion, args=(stepped_motion_client,))
+    # thread.start()
 
-    time.sleep(2)
-    import pdb
-    count = 0
-    while stepped_motion_client.state != None:
-        time.sleep(0.05)
-        stepped_motion_client.next()
+    # time.sleep(2)
+    # import pdb
+    # count = 0
+    # while stepped_motion_client.state != None:
+    #     time.sleep(0.05)
+    #     stepped_motion_client.next()
 
-        if not (count % 100):
-            print('progress {:5.2f} percent'.format(
-                stepped_motion_client.state.progress))
-        count += 1
+    #     if not (count % 100):
+    #         print('progress {:5.2f} percent'.format(
+    #             stepped_motion_client.state.progress))
+    #     count += 1
 
-    thread.join()
+    # thread.join()
 
 
 if __name__ == '__main__':

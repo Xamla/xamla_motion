@@ -214,7 +214,7 @@ def main():
     ioloop = asyncio.get_event_loop()
 
     try:
-        for i in range(0, 10):
+        for i in range(0, 2):
             ioloop.run_until_complete(motion_service.move_pose(pose_l,
                                                                '',
                                                                plan_parameters3))

@@ -800,9 +800,11 @@ class MotionService(object):
                                    ' joint collisions'
                                    ' failed, abort') from exc
 
+        response.in_collision = list(response.in_collision)
+        response.error_codes = list(response.error_codes)
         if (len(response.in_collision) != len(joint_path) or
-            len(response.error_code) != len(joint_path) or
-                len(response.message) != len(joint_path)):
+            len(response.error_codes) != len(joint_path) or
+                len(response.messages) != len(joint_path)):
             raise ServiceException('service call for query joint'
                                    ' collisions was not successful. '
                                    'service name:' +
@@ -811,7 +813,7 @@ class MotionService(object):
                                    str(response.error_code.val))
 
         result = [JointValuesCollisions(i, response.error_codes[i],
-                                        response.message[i])
+                                        response.messages[i])
                   for i in range(0, len(joint_path))
                   if response.in_collision[i]]
 
