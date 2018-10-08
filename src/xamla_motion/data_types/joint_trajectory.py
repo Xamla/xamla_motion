@@ -285,7 +285,7 @@ class JointTrajectory(object):
     @property
     def efforts(self):
         """
-        positions : List[JointValues]
+        efforts : List[JointValues]
             List of JointValues where each item is the efforts field
             of JointTrajectoryPoints
         """
@@ -294,7 +294,7 @@ class JointTrajectory(object):
     @property
     def time_from_start(self):
         """
-        positions : List[datatime.timedelta]
+        timedelta : List[datatime.timedelta]
             List of timedeltas where each item is the time_from_start field
             of JointTrajectoryPoints
         """

@@ -23,7 +23,7 @@ from .joint_set import JointSet
 
 class EndEffectorDescription(object):
     """
-    Class which describes a end effector 
+    Class which describes an end effector 
 
     """
 

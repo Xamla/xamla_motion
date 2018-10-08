@@ -48,6 +48,7 @@ release = '0.0.1'
 extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.githubpages',
+    'sphinx.ext.viewcode',
     'm2r',
 ]
 
@@ -172,4 +173,4 @@ texinfo_documents = [
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {'https://docs.python.org/3': None}

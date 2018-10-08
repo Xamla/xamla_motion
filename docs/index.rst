@@ -7,11 +7,18 @@ Welcome to xamla_motion's documentation!
 ========================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   :caption: Notes
 
-   source/readme_link
-   source/modules
+   notes/quick_start
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Package Reference
+
+   source/motion_client
+   source/motion_service
+   source/data_types
 
 
 Indices and tables

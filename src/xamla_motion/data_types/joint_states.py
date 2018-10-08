@@ -27,7 +27,7 @@ import numpy as np
 class JointStates(object):
 
     """
-    Class which holds can hold a complete JointState (pos, vel, eff)
+    Class which can hold a complete JointState (pos, vel, eff)
 
     The JointState class can hold the complete information about a
     the state of joints of a robot. For this purpose it holds an 

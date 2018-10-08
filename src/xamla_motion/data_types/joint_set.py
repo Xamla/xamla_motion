@@ -218,7 +218,7 @@ class JointSet(object):
         index : int
             List index of the searched joint name
 
-        Raises:
+        Raises
         ------
         TypeError : type mismatch
             If parameter name is not type of str
