@@ -19,6 +19,7 @@
 #!/usr/bin/env python3
 
 from functools import total_ordering
+from copy import deepcopy
 
 
 @total_ordering
@@ -34,6 +35,8 @@ class JointSet(object):
         Creates new JointSet where prefix is added to every joint name
     is_subset(other)
         Checks if it is a subset of the JointSet in parameter other
+    is_superset(other)
+        Checks if it is a superset of the JointSet in parameter other
     is_similar(other)
         Checks if it contains the same joint names as in JointSet other
     try_get_index_of(name)
@@ -67,12 +70,20 @@ class JointSet(object):
             If input parameter names is not of type str or Iterable[str convertable]
         """
 
+        self.__names = list()
+        self.__names_set = set()
+
         if isinstance(names, str):
-            self.__names = list(s.strip() for s in names.split(','))
+            for name in names.split(','):
+                name = name.strip()
+                if name not in self.__names_set:
+                    self.__names_set.add(name)
+                    self.__names.append(name)
         else:
-            self.__names = list()
             for name in names:
-                self.__names.append(str(name))
+                if name not in self.__names_set:
+                    self.__names_set.add(str(name))
+                    self.__names.append(str(name))
 
     @staticmethod
     def empty():
@@ -85,6 +96,7 @@ class JointSet(object):
             The created empty JointSet
         """
         joint_set = JointSet('')
+        joint_set.__JointSet__names_set = set()
         joint_set.__JointSet__names = list()
         return joint_set
 
@@ -122,6 +134,36 @@ class JointSet(object):
         names = list(map(lambda x: prefix + x, self.__names))
         return self.__class__(names)
 
+    def union(self, other):
+        """
+        Creates new JointSet which contains the union of self and other joints
+
+        Parameters
+        ----------
+        other : JointSet
+            JointSet with which the union is performed
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If input parameter prefix is not of type str
+
+        Returns
+        ------
+        JointSet
+            The created JointSet with union joint names
+
+        """
+
+        if not isinstance(other, JointSet):
+            raise TypeError('other has not expected type JointSet')
+
+        names = deepcopy(self.__names)
+        for name in other.names:
+            if name not in self.__names_set:
+                names.append(name)
+        return self.__class__(names)
+
     def is_subset(self, other):
         """
         Checks if it is a subset of the JointSet in parameter other
@@ -143,9 +185,34 @@ class JointSet(object):
             If the parameter other is not of type JointSet
         """
         if not isinstance(other, self.__class__):
-            raise TypeError('other expected type is JointSet')
+            raise TypeError('other has not expected type JointSet')
 
-        return all(name in other.__names for name in self.__names)
+        return self.__names_set.issubset(other.__names_set)
+
+    def is_superset(self, other):
+        """
+        Checks if it is a superset of the JointSet in parameter other
+
+        Parameters
+        ----------
+        other : JointSet
+            JointSet which is used for comparision
+
+        Returns
+        -------
+        result : bool
+            If this JointSet is a superset of the other JointSet
+            returns True else False
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If the parameter other is not of type JointSet
+        """
+        if not isinstance(other, self.__class__):
+            raise TypeError('other has not expected type JointSet')
+
+        return self.__names_set.issuperset(other.__names_set)
 
     def is_similar(self, other):
         """
@@ -171,7 +238,7 @@ class JointSet(object):
             If the parameter other is not of type JointSet
         """
         if not isinstance(other, self.__class__):
-            raise TypeError('other expected type is JointSet')
+            raise TypeError('other has not expected type JointSet')
 
         return len(other) == len(self.__names) and self.is_subset(other)
 
@@ -256,9 +323,10 @@ class JointSet(object):
         if not isinstance(name, str):
             raise TypeError('name expected type is str')
 
-        is_found, _ = self.try_get_index_of(name)
-
-        return is_found
+        if name in self.__names_set:
+            return True
+        else:
+            return False
 
     def __getitem__(self, index):
         """
@@ -318,11 +386,11 @@ class JointSet(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __lt__(self, other):
+    def __gt__(self, other):
         if not isinstance(other, self.__class__):
             return False
 
-        if len(other) != len(self.__names) and self.is_subset(other):
+        if len(other) != len(self.__names) and self.is_superset(other):
             return True
         else:
             return False

@@ -18,7 +18,7 @@
 
 #!/usr/bin/env python3
 
-from .data_types import MoveGripperResult, WsgCommand, WsgResult
+from xamla_motion.data_types import MoveGripperResult, WsgCommand, WsgResult
 from xamla_motion.motion_client import MoveGroup
 from xamla_motion.gripper_client import WeissWsgGripperProperties, CommonGripperProperties
 from xamla_motion.gripper_client import WeissWsgGripper, CommonGripper
@@ -60,5 +60,6 @@ def main():
     finally:
         ioloop.close()
 
-    if __name__ == '__main__':
-        main()
+
+if __name__ == '__main__':
+    main()
