@@ -22,10 +22,10 @@ from xamla_motion.world_view_client import WorldViewClient
 from xamla_motion.data_types import JointValues, JointSet, Pose, CartesianPath
 from xamla_motion.data_types import CollisionObject, CollisionPrimitive
 from pyquaternion import Quaternion
-import numpy as np
 
 
 def main():
+    # create entities which should be added to and manipulated in world view
     joint_set1 = JointSet(['Joint1', 'Joint2', 'Joint3'])
 
     joint_values1 = JointValues(joint_set1, [1.0, 2.0, 3.0])
@@ -62,7 +62,9 @@ def main():
     collision_object2 = CollisionObject([sphere, cylinder])
     collision_object3 = CollisionObject([plane, cone])
 
+    # create a instance of WorldViewClient to get access to rosvita world view
     world_view_client = WorldViewClient()
+
     print('---------------- add folder --------------')
     # add folder test at WorldView root
     world_view_client.add_folder('test', '')

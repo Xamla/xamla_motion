@@ -17,6 +17,8 @@ Welcome to xamla_motion's documentation!
    :caption: Package Reference
 
    source/motion_client
+   source/gripper_client
+   source/world_view_client
    source/motion_service
    source/data_types
 

@@ -57,6 +57,7 @@ class MoveGroup(object):
         Initialize MoveGroup class
 
         The initialization process is possible with diffent settings:
+
         move_group_name and end_effector_name are None:
             In this case the first available move group and its
             first end effector is selected automatically. If no
