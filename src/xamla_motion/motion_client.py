@@ -281,11 +281,12 @@ class MoveGroup(object):
             activate collision check or deactivate it
         """
 
-        if value == self.__plan_parameters.collision_check:
+        if np.isclose(value, self.__plan_parameters.collision_check):
             return
 
         self.__plan_parameters.collision_check = value
-        self.__task_space_plan_parameters.collision_check = value
+        if self.__task_space_plan_parameters:
+            self.__task_space_plan_parameters.collision_check = value
 
     @property
     def sample_resolution(self):
@@ -309,11 +310,12 @@ class MoveGroup(object):
             seconds else in Hz
         """
 
-        if value == self.__plan_parameters.sample_resolution:
+        if np.isclose(value, self.__plan_parameters.sample_resolution):
             return
 
         self.__plan_parameters.sample_resolution = value
-        self.__task_space_plan_parameters.sample_resolution = value
+        if self.__task_space_plan_parameters:
+            self.__task_space_plan_parameters.sample_resolution = value
 
     @property
     def max_deviation(self):
@@ -336,11 +338,12 @@ class MoveGroup(object):
             maximal deviation
         """
 
-        if value == self.__plan_parameters.max_deviation:
+        if np.isclose(value, self.__plan_parameters.max_deviation):
             return
 
         self.__plan_parameters.max_deviation = value
-        # self.__task_space_plan_parameters.sample_resolution = value
+        if self.__task_space_plan_parameters:
+            self.__task_space_plan_parameters.max_deviation = value
 
     @property
     def ik_jump_threshold(self):
@@ -348,8 +351,11 @@ class MoveGroup(object):
         ik_jump_threshold : float convertable
             maximal allowed inverse kinematics jump threshold
         """
-
-        return self.__task_space_plan_parameters.ik_jump_threshold
+        if self.__task_space_plan_parameters:
+            return self.__task_space_plan_parameters.ik_jump_threshold
+        else:
+            raise RuntimeError('task space plan parameters not defined'
+                               ' because move group has no end effector')
 
     @ik_jump_threshold.setter
     def ik_jump_threshold(self, value):
@@ -361,11 +367,11 @@ class MoveGroup(object):
         value : float convertable
             new maximal allowed inverse kinematics jump threshold
         """
-
-        if value == self.__task_space_plan_parameters.ik_jump_threshold:
+        if not self.__task_space_plan_parameters:
             return
 
-        self.__task_space_plan_parameters.ik_jump_threshold = value
+        if not np.isclose(value, self.__task_space_plan_parameters.ik_jump_threshold):
+            self.__task_space_plan_parameters.ik_jump_threshold = value
 
     @property
     def velocity_scaling(self):
@@ -388,7 +394,8 @@ class MoveGroup(object):
 
         if not np.isclose(value, self.velocity_scaling):
             self.__plan_parameters.velocity_scaling = value
-            self.__task_space_plan_parameters.velocity_scaling = value
+            if self.__task_space_plan_parameters:
+                self.__task_space_plan_parameters.velocity_scaling = value
 
     @property
     def acceleration_scaling(self):
@@ -411,7 +418,8 @@ class MoveGroup(object):
 
         if not np.isclose(value, self.acceleration_scaling):
             self.__plan_parameters.acceleration_scaling = value
-            self.__task_space_plan_parameters.acceleration_scaling = value
+            if self.__task_space_plan_parameters:
+                self.__task_space_plan_parameters.acceleration_scaling = value
 
     def set_default_end_effector(self, end_effector_name):
         """
@@ -988,7 +996,7 @@ class EndEffector(object):
     def name(self):
         """
         name : str (read only)
-            end effector name 
+            end effector name
         """
         return self.__name
 
@@ -996,7 +1004,7 @@ class EndEffector(object):
     def move_group(self):
         """
         move_group : MoveGroup
-            Instance of MoveGroup which manages the 
+            Instance of MoveGroup which manages the
             move group where the end effector belongs to
         """
         return self.__move_group
