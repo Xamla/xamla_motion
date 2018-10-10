@@ -406,7 +406,7 @@ class Pose(object):
                                     in enumerate(self.__quaternion)])
 
         return ('Pose:\n' + translation_str + '\n' + quaternion_str +
-                '\nframe_id\n' + self.__frame_id)
+                '\nframe_id : ' + self.__frame_id)
 
     def __repr__(self):
         return self.__str__()

@@ -222,6 +222,9 @@ class JointSet(object):
         """
         Checks if it is a subset of the JointSet in parameter other
 
+        The method returns True if it is a subset or similar to other.
+        The ordering of the joint names is not checked.
+
         Parameters
         ----------
         other : JointSet
@@ -237,6 +240,17 @@ class JointSet(object):
         ------
         TypeError : type mismatch
             If the parameter other is not of type JointSet
+
+        Examples
+        --------
+        Check if one joint set is the subset of another
+
+        >>> from xamla_motion.data_types import JointSet
+        >>> joint_set1 = JointSet('joint1, joint2, joint3')
+        >>> joint_set2 = JointSet('joint1, joint2')
+        >>> joint_set2.is_subset(joint_set1)
+        True
+
         """
         if not isinstance(other, self.__class__):
             raise TypeError('other has not expected type JointSet')
@@ -246,6 +260,9 @@ class JointSet(object):
     def is_superset(self, other):
         """
         Checks if it is a superset of the JointSet in parameter other
+
+        The method returns True if it is a superset or similar to other.
+        The ordering of the joint names is not checked.
 
         Parameters
         ----------
@@ -262,6 +279,17 @@ class JointSet(object):
         ------
         TypeError : type mismatch
             If the parameter other is not of type JointSet
+
+        Examples
+        --------
+        Check if one joint set is the superset of another
+
+        >>> from xamla_motion.data_types import JointSet
+        >>> joint_set1 = JointSet('joint1, joint2, joint3')
+        >>> joint_set2 = JointSet('joint1, joint2')
+        >>> joint_set1.is_superset(joint_set2)
+        True
+
         """
         if not isinstance(other, self.__class__):
             raise TypeError('other has not expected type JointSet')
@@ -290,6 +318,20 @@ class JointSet(object):
         ------
         TypeError : type mismatch
             If the parameter other is not of type JointSet
+
+        Examples
+        --------
+        Check if one joint set is the similar to another
+
+        >>> from xamla_motion.data_types import JointSet
+        >>> joint_set1 = JointSet('joint1, joint2, joint3')
+        >>> joint_set2 = JointSet('joint1, joint3, joint2')
+        >>> joint_set3 = JointSet('joint1, joint3')
+        >>> joint_set1.is_similar(joint_set2)
+        True
+        >>> joint_set3.is_similar(joint_set1)
+        False
+
         """
         if not isinstance(other, self.__class__):
             raise TypeError('other has not expected type JointSet')
@@ -316,6 +358,18 @@ class JointSet(object):
         ------
         TypeError : type mismatch
             If parameter name is not type of str
+
+        Examples
+        --------
+        Try to get index of a specific joint in JointSet
+
+        >>> from xamla_motion.data_types import JointSet
+        >>> joint_set1 = JointSet('joint0')
+        >>> joint_set1.try_get_index_of('joint0')
+        (True, 0)
+        >>> joint_set1.try_get_index_of('joint1')
+        (False, None)
+
         """
         if not isinstance(name, str):
             raise TypeError('name expected is type str')
@@ -345,6 +399,18 @@ class JointSet(object):
             If parameter name is not type of str
         ValueError : value not exists
             If joint name not exists
+
+        Examples
+        --------
+        Get index of a specific joint in JointSet
+
+        >>> from xamla_motion.data_types import JointSet
+        >>> joint_set1 = JointSet('joint0')
+        >>> joint_set1.get_index_of('joint0')
+        0
+        >>> joint_set1.try_get_index_of('joint1')
+        ValueError: This JointSet not contains a joint with name: joint1
+
         """
         if not isinstance(name, str):
             raise TypeError('name expected type is str')
@@ -352,7 +418,8 @@ class JointSet(object):
         try:
             return self.__names.index(name)
         except ValueError as exc:
-            raise ValueError('get_index_of: %s', exc)
+            raise ValueError('This JointSet not contains a'
+                             ' joint with name: ' + name) from exc
 
     def contains(self, name):
         """
@@ -373,6 +440,18 @@ class JointSet(object):
         ------
         TypeError : type mismatch
             If parameter name is not type of str
+
+        Examples
+        --------
+        Get index of a specific joint in JointSet
+
+        >>> from xamla_motion.data_types import JointSet
+        >>> joint_set1 = JointSet('joint0')
+        >>> joint_set1.contains('joint0')
+        True
+        >>> joint_set1.contains('joint1')
+        False
+
         """
         if not isinstance(name, str):
             raise TypeError('name expected type is str')

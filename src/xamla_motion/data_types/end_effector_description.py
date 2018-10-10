@@ -30,7 +30,7 @@ class EndEffectorDescription(object):
     def __init__(self, name, sub_move_group_ids, joint_set,
                  move_group_name, link_name):
         """
-        Initialization of EndeffectorDescription class
+        Initialization of EndEffectorDescription class
 
         Parameters
         ----------
@@ -58,6 +58,22 @@ class EndEffectorDescription(object):
         ------
         EndEffectorDescription
             The created EndEffectorDescription
+
+        Examples
+        --------
+        Create a instance of EndEffectorDescription
+
+        >>> from xamla_motion.data_types import EndEffectorDescription
+        >>> joint_set = JointSet('joint0')
+        >>> EndEffectorDescription('tcp',[1],joint_set,['group1'],'tcp_link')
+        EndEffectorDescription
+        link_name = tcp_link
+        name = tcp
+        move_group_name = ['group1']
+        joint_set = JointSet:
+        joint0
+        sub_move_group_ids = ['1']
+
         """
 
         self.__name = str(name)

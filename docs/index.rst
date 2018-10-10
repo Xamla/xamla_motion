@@ -8,14 +8,9 @@ Welcome to xamla_motion's documentation!
 
 .. toctree::
    :maxdepth: 1
-   :caption: Notes
-
-   notes/quick_start
-
-.. toctree::
-   :maxdepth: 1
    :caption: Package Reference
 
+   source/quick_start
    source/motion_client
    source/gripper_client
    source/world_view_client

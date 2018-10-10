@@ -127,6 +127,31 @@ class CollisionPrimitive(object):
             is described only by zeros
             If kind is not CollisionPrimitveKind.plane and a parameter in
             parameters is smaller than zero
+
+        Examples
+        --------
+
+        Create a instance of a box collision primitive which is one meter in size
+        in all three dimensions and the origin is the origin of the world 
+        coordinate system
+
+        >>> import numpy as np
+        >>> from xamla_motion.data_types import CollisionPrimitive, CollisionPrimitiveKind, Pose
+        >>> origin = Pose.from_transformation_matrix(np.eye(4),'world')
+        >>> CollisionPrimitive(CollisionPrimitiveKind.box,[1.0,1.0,1.0], origin)
+        CollisionPrimitive
+        pose = Pose:
+        translation.x : 0.0
+        translation.y : 0.0
+        translation.z : 0.0
+        quaternion.w : 1.0
+        quaternion.x : 0.0
+        quaternion.y : 0.0
+        quaternion.z : 0.0
+        frame_id : world
+        kind = CollisionPrimitiveKind.box
+        parameters = [ 1.  1.  1.]
+
         """
 
         if not isinstance(kind, CollisionPrimitiveKind):

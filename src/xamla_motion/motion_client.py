@@ -154,8 +154,8 @@ class MoveGroup(object):
                                    ' name: ' + move_group_name)
 
             try:
-                end_effector_name = details.end_effector_name[0]
-            except expression as identifier:
+                end_effector_name = details.end_effector_names[0]
+            except IndexError:
                 end_effector_name = None
 
         else:

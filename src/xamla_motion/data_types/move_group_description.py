@@ -59,6 +59,21 @@ class MoveGroupDescription(object):
         ------
         MoveGroupDescription
             The created MoveGroupDescription
+
+        Examples
+        --------
+        Create a instance of MoveGroupDescription
+
+        >>> from xamla_motion.data_types import MoveGroupDescription
+        >>> joint_set = JointSet('joint0')
+        >>> MoveGroupDescription('group1',[1],joint_set,['tcp'],['tcp_link'])
+        MoveGroupDescription
+        end_effector_names = ['tcp']
+        sub_move_group_ids = ['1']
+        end_effector_link_names = ['tcp_link']
+        joint_set = JointSet:
+        joint0
+        name = group1
         """
 
         self.__name = str(name)
