@@ -25,7 +25,7 @@ from copy import deepcopy
 @total_ordering
 class JointSet(object):
     """
-    Manages a list of joint names
+    Manages a list of unique joint names
 
     Methods
     -------
@@ -39,6 +39,8 @@ class JointSet(object):
         Checks if it is a superset of the JointSet in parameter other
     is_similar(other)
         Checks if it contains the same joint names as in JointSet other
+    union(other)
+        Creates new JointSet which contains the union of self and other joints
     try_get_index_of(name)
         Tries to get the list index of the joint by name
     get_index_of(name)
@@ -68,6 +70,25 @@ class JointSet(object):
         ------
         TypeError : type mismatch
             If input parameter names is not of type str or Iterable[str convertable]
+
+        Examples
+        --------
+        Create an instance of JointSet by string and iterable type
+
+        >>> from xamla_motion.data_types import JointSet
+        >>> JointSet('Joint1, Joint2')
+        JointSet:
+        Joint1
+        Joint2
+        >>> JointSet(['Joint1','Joint2'])
+        JointSet:
+        Joint1
+        Joint2
+        >>> JointSet('Joint1,Joint1,Joint2')
+        JointSet:
+        Joint1
+        Joint2
+
         """
 
         self.__names = list()
@@ -94,6 +115,15 @@ class JointSet(object):
         ------
         JointSet
             The created empty JointSet
+
+        Examples
+        --------
+        Create a empty JointSet instance
+
+        >>> from xamla_motion.data_types import JointSet
+        >>> JointSet.empty()
+        JointSet:
+
         """
         joint_set = JointSet('')
         joint_set.__JointSet__names_set = set()
@@ -106,7 +136,7 @@ class JointSet(object):
         names : List[str] (readonly)
             List of joint names
         """
-        return self.__names
+        return deepcopy(self.__names)
 
     def add_prefix(self, prefix):
         """
@@ -127,6 +157,17 @@ class JointSet(object):
         ------
         JointSet
             The created JointSet with added prefix to joint names
+
+        Examples
+        --------
+        Create new JointSet instance with added prefix
+
+        >>> from xamla_motion.data_types import JointSet
+        >>> joint_set = JointSet('joint1, joint2')
+        >>> joint_set.add_prefix('robot1_')
+        JointSet:
+        robot1_joint1
+        robot1_joint2
 
         """
         if not isinstance(prefix, str):
@@ -152,6 +193,19 @@ class JointSet(object):
         ------
         JointSet
             The created JointSet with union joint names
+
+        Examples
+        --------
+        Create new JointSet instance which is the union of two existing ones
+
+        >>> from xamla_motion.data_types import JointSet
+        >>> joint_set1 = JointSet('joint1, joint2')
+        >>> joint_set2 = JointSet('joint2, joint3')
+        >>> joint_set1.union(joint_set2)
+        JointSet:
+        joint1
+        joint2
+        joint3
 
         """
 

@@ -2,3 +2,4 @@
 
 #sphinx-apidoc -f -o source/ ../src/xamla_motion/
 make html
+firefox _build/html/index.html

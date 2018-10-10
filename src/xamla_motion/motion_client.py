@@ -128,7 +128,10 @@ class MoveGroup(object):
 
         if not end_effector_name and not move_group_name:
             move_group_name = groups[0].name
-            end_effector_name = groups[0].end_effector_names[0]
+            try:
+                end_effector_name = groups[0].end_effector_names[0]
+            except IndexError:
+                end_effector_name = None
             details = groups[0]
 
         elif end_effector_name and not move_group_name:
@@ -149,7 +152,12 @@ class MoveGroup(object):
             except StopIteration:
                 raise RuntimeError('it exist no move group with'
                                    ' name: ' + move_group_name)
-            end_effector_name = details.end_effector_name[0]
+
+            try:
+                end_effector_name = details.end_effector_name[0]
+            except expression as identifier:
+                end_effector_name = None
+
         else:
             try:
                 details = next(g for g in groups
@@ -171,13 +179,19 @@ class MoveGroup(object):
         self.__plan_parameters = p
 
         names = self.__details.end_effector_names
-        link_names = self.__details.end_effector_link_names
-        self.__end_effectors = {name: EndEffector(self,
-                                                  name,
-                                                  link_names[i])
-                                for i, name in enumerate(names)}
 
-        self.set_default_end_effector(end_effector_name)
+        if names:
+            link_names = self.__details.end_effector_link_names
+            self.__end_effectors = {name: EndEffector(self,
+                                                      name,
+                                                      link_names[i])
+                                    for i, name in enumerate(names)}
+
+            self.set_default_end_effector(end_effector_name)
+        else:
+            self.__end_effectors = {}
+            self.__selected_end_effector = None
+            self.__task_space_plan_parameters = None
 
     @property
     def name(self):
@@ -462,7 +476,11 @@ class MoveGroup(object):
                                    'is not available for move group: '
                                    + self.__name) from exc
         else:
-            return self.__end_effectors[self.__selected_end_effector]
+            try:
+                return self.__end_effectors[self.__selected_end_effector]
+            except KeyError as exc:
+                raise RuntimeError('move group: ' + self.__name +
+                                   ' does not have any end effectors') from exc
 
     def get_current_joint_states(self):
         """
