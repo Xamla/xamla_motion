@@ -52,14 +52,14 @@ class Pose(object):
         Creates an instance of the ROS message PoseStamped from Pose
     """
 
-    def __init__(self, translation, rotation, frame_id='',
+    def __init__(self, translation, rotation, frame_id='world',
                  normalize_rotation=False):
         """
         Initialization of the pose class
 
         For the internal quaternion representation and also to initialize the
         the class the library pyquaternion is used :
-        http://kieranwynn.github.io/pyquaternion/
+        https://kieranwynn.github.io/pyquaternion/
 
         Parameters
         ----------

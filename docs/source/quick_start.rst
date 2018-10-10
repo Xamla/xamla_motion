@@ -31,8 +31,8 @@ the `ROSVITA Documentation <http://docs.xamla.com/rosvita/Getting_Started.html>`
 
 After ROSVITA is started, please login and create a new project. A 'how to' for this steps is also available:
 
--  `login <http://docs.xamla.com/rosvita/Main_View.html>`_.
--  `ROSVITA Documentation <http://docs.xamla.com/rosvita/New_Project.html>`_.
+-  `login <http://docs.xamla.com/rosvita/Main_View.html>`_
+-  `create new project <http://docs.xamla.com/rosvita/New_Project.html>`_
 
 Then add a ur5 and a WSG-25 gripper as simulated components to the configuration, compile, start ROS and switch to WorldView 
 (`how to <http://docs.xamla.com/rosvita/Getting_Started.html>`_).
@@ -46,4 +46,61 @@ is that the data types are immutable. Therefore, it is not possible to change a
 value of a existing data type instance but rather it is neccessary to create
 a new instance which contains the changes.
 
-The second design decision is that all types  
+The second design decision is that all types heavily depend on numpy and especially 
+represent all tensors with help of numpy ndarrays.
+
+When people start to think of how to solve a specific robotics problem many will start
+to define their problem in poses the robot has to reach and do specific actions with
+their tools. Therefore, one of the most important data types xamla_motion defines is
+the Pose data type. 
+
+A pose in xamla_motion is defined as three dimensional translation vector [meter], a quaternion
+which represents the orientation. For quaternion representation xamla_motion use 
+`PyQuaternion <https://kieranwynn.github.io/pyquaternion/>`_. Therefore, the creation of
+an instance of xamla_motions Pose data type is possible with this to parameters.
+
+.. code::
+
+    >>> from xamla_motion.data_types import Pose
+    >>> import numpy as np
+    >>> from pyquaternion import Quaternion
+    >>> p = [0.502, 0.258, 0.367]
+    >>> q = Quaternion(w=0.304, x=0.527, y=0.687, z=0.396)
+    >>> pose = Pose(p, q)
+    >>> print(pose)
+    Pose:
+    translation.x : 0.502
+    translation.y : 0.258
+    translation.z : 0.367
+    quaternion.w : 0.304
+    quaternion.x : 0.527
+    quaternion.y : 0.687
+    quaternion.z : 0.396
+    frame_id : world
+    >>> pose.translation
+    array([ 0.502,  0.258,  0.367])
+    >>> pose.quaternion
+    Quaternion(0.304, 0.527, 0.687, 0.396)
+
+As you can see the pose data type also has a third parameter frame id. This parameter specifics
+in which cooridnate system the pose is defined. The default value is world.
+
+Another common representation of poses in robotics is the representation as a 4x4 matrix
+in homogenous coordinates. The xamla_motion pose data type can also be created from this
+representation.
+
+.. code::
+
+    >>> from xamla_motion.data_types import Pose
+    >>> import numpy as np
+    >>> pose = Pose.from_transformation_matrix(np.eye(4))
+    >>> print(pose)
+    Pose:
+    translation.x : 0.0
+    translation.y : 0.0
+    translation.z : 0.0
+    quaternion.w : 1.0
+    quaternion.x : 0.0
+    quaternion.y : 0.0
+    quaternion.z : 0.0
+    frame_id : world
