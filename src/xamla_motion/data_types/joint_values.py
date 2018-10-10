@@ -174,7 +174,7 @@ class JointValues(object):
         return joint_values
 
     @staticmethod
-    def zero(self, joint_set):
+    def zero(joint_set):
         """
         Creates instance of JointValues with all values 0.0
 
