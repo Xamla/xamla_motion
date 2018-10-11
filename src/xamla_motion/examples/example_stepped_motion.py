@@ -49,7 +49,7 @@ def main():
     joint_path = move_group.motion_service.query_inverse_kinematics_many(cartesian_path,
                                                                          move_group.default_plan_parameters,
                                                                          seed).path
-
+    joint_path = joint_path.prepend(move_group.get_current_joint_positions())
     joint_path_cf = move_group.motion_service.plan_collision_free_joint_path(joint_path,
                                                                              move_group.default_plan_parameters)
     joint_trajectory = move_group.motion_service.plan_move_joints(joint_path_cf,
@@ -57,15 +57,16 @@ def main():
 
     async def stepped_execution(stepped_motion_client):
         count = 0
-        print('start_stepped_execution')
+        print('start stepped execution')
         while stepped_motion_client.state:
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
             stepped_motion_client.next()
 
             if not (count % 100):
                 print('progress {:5.2f} percent'.format(
                     stepped_motion_client.state.progress))
             count += 1
+        print('finished stepped execution')
 
     ioloop = asyncio.get_event_loop()
 

@@ -1907,6 +1907,7 @@ class SteppedMotionClient(object):
         # with LeaseBaseLock(trajectory.joint_set.names):
         self.__m_action.send_goal(goal, done_cb=done_callback)
 
+        print('Hallo')
         self.__goal_id = self.__m_action.gh.comm_state_machine.action_goal.goal_id
 
         if not self.__goal_id:
@@ -1917,7 +1918,6 @@ class SteppedMotionClient(object):
             return await action_done
         except (asyncio.CancelledError, ServiceException) as exc:
             action.cancel()
-            raise exc
         finally:
             self.__goal_id = None
             self.__progress = None

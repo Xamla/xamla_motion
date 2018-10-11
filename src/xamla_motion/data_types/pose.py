@@ -69,7 +69,7 @@ class Pose(object):
             rotation the pose describes as Quaternion
         frame_id : str (optinal defaul = '')
             name of the coordinate system the pose is defined
-        normalize_roation : bool (optinal default = False)
+        normalize_rotation : bool (optinal default = False)
             If true quaternion normalization is performed in the
             initialization process
 
@@ -131,7 +131,7 @@ class Pose(object):
         self.__quaternion.q.flags.writeable = False
 
     @classmethod
-    def from_transformation_matrix(cls, matrix, frame_id='',
+    def from_transformation_matrix(cls, matrix, frame_id='world',
                                    normalize_rotation=False):
         """
         Initialization of the pose class from transformation matrix
@@ -228,7 +228,7 @@ class Pose(object):
         return cls(translation, quaternion, frame_id)
 
     @classmethod
-    def from_pose_msg(cls, msg, frame_id=''):
+    def from_pose_msg(cls, msg, frame_id='world'):
         """
         Initialize Pose from ros geometry_msgs/Pose
 

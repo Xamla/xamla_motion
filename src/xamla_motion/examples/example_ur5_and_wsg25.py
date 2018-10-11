@@ -66,15 +66,16 @@ def main():
 
     async def stepped_execution(stepped_motion_client):
         count = 0
-        print('start_stepped_execution')
+        print('start stepped execution')
         while stepped_motion_client.state:
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
             stepped_motion_client.next()
 
             if not (count % 100):
                 print('progress {:5.2f} percent'.format(
                     stepped_motion_client.state.progress))
             count += 1
+        print('finished stepped execution')
 
     try:
         print('test MoveGroup class')
