@@ -110,4 +110,45 @@ representation or vise versa.
        [ 0.,  0.,  1.,  0.],
        [ 0.,  0.,  0.,  1.]])
 
-But the most import ability of xamla_motions pose data type is that we can directly 
+Now we have poses which are represented as xamla_motion pose data types. But why we should
+represent poses with help of this data types. The answer is, because we will do less errors
+with help of them. For example we can do simple transformations like translate 0.5 meter in 
++x and +y direction.
+
+.. code::
+
+    >>> from xamla_motion.data_types import Pose
+    >>> import numpy as np
+    >>> translate = np.eye(4)
+    >>> translate[0:2,3] = 0.5
+    >>> pose = Pose.from_transformation_matrix(np.eye(4))
+    >>> print(pose)
+    Pose:
+    translation.x : 0.0
+    translation.y : 0.0
+    translation.z : 0.0
+    quaternion.w : 1.0
+    quaternion.x : 0.0
+    quaternion.y : 0.0
+    quaternion.z : 0.0
+    frame_id : world
+    >>> pose * translate
+    Pose:
+    translation.x : 0.5
+    translation.y : 0.5
+    translation.z : 0.0
+    quaternion.w : 1.0
+    quaternion.x : 0.0
+    quaternion.y : 0.0
+    quaternion.z : 0.0
+    frame_id : world 
+
+
+In the future more information about the main data types will be added.
+But for know take a look into the other chapters to learn following:
+
+- how to move a robot with help of the :doc:`motion client classes <motion_client>`
+- how to control a gripper with help of the :doc:`gripper client classes <gripper_client>`
+- how to interact with ROSVITA WorldView with help of the :doc:`world view client <world_view_client>`
+- more details about the xamla_motion :doc:`data types <data_types>`
+

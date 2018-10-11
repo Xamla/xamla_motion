@@ -10,7 +10,7 @@ Data types
 Overview
 ------------------------------------------
 
-In order to give a bettern overview of the data types
+In order to give a better overview of the data types
 which are defined by xamla_motion these are 
 devided into five groups. 
 
@@ -20,15 +20,15 @@ state/result data types
 
 Robot and environment description types
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-==================================================================  =================================  ========================================================================================   
-Data type                                                           How to use it                      Description                                         
-==================================================================  =================================  ========================================================================================   
-:class:`xamla_motion.data_types.JointSet`                           :ref:`jointset`                    Manages a list of joint names which describes a robot or part of it
-:class:`xamla_motion.data_types.EndEffectorDescription`             :ref:`endeffectordescription`      Describes an end effector of a robot
-:class:`xamla_motion.data_types.MoveGroupDescription`               :ref:`movegroupdescription`        Describes a robot or a subset of it by move groups, end effectors and joints
-:class:`xamla_motion.data_types.CollisionPrimitive`                 :ref:`collisionprimitive`          Defines and describe a primitive collision object
-:class:`xamla_motion.data_types.CollisionObject`                    :ref:`collisionobject`             Defines a collision object which consists of a single primitive or an assembly of them
-==================================================================  =================================  ========================================================================================
+==================================================================  ========================================================================================   
+Data type                                                           Description                                         
+==================================================================  ========================================================================================   
+:class:`xamla_motion.data_types.JointSet`                           Manages a list of joint names which describes a robot or part of it
+:class:`xamla_motion.data_types.EndEffectorDescription`             Describes an end effector of a robot
+:class:`xamla_motion.data_types.MoveGroupDescription`               Describes a robot or a subset of it by move groups, end effectors and joints
+:class:`xamla_motion.data_types.CollisionPrimitive`                 Defines and describe a primitive collision object
+:class:`xamla_motion.data_types.CollisionObject`                    Defines a collision object which consists of a single primitive or an assembly of them
+==================================================================  ========================================================================================
 
 
 Joint space data types
