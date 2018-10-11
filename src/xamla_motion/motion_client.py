@@ -1083,6 +1083,118 @@ class EndEffector(object):
 
         return p
 
+    def inverse_kinematics(self, pose, collision_check, seed, timeout, const_seed=False) -> IkResults:
+        """
+        inverse kinematic solutions for many poses
+
+        Parameters
+        ----------
+        poses : pose
+            Pose to transform to joint space
+        collision_check : None or bool convertable
+            If true the trajectory planing try to plan a
+            collision free trajectory and before executing
+            a trajectory a collision check is performed
+        seed : JointValues (optional)
+            Numerical seed to control joint configuration
+        timeout : datatime.timedelta
+            timeout
+        const_seed : boolean
+            Determines if for each pose in poses the same seed should be used
+
+        Returns
+        -------
+        IkResult
+            Instance of IkResult with all found solutions as
+            a JointPath and error codes
+
+        Raises
+        ------
+        TypeError
+            If poses is not of correct type
+        ServiceError
+            If query service is not available
+        """
+        if isinstance(pose, Pose):
+            pose = CartesianPath.from_one_point(pose)
+        else:
+            raise TypeError('target is not one of expected '
+                            'types Pose')
+
+        if not seed:
+            seed = self.__move_group.get_current_joint_positions()
+
+        parameters = self.__move_group._build_plan_parameters(1.0,
+                                                              collision_check)
+
+        ik = self.__m_service.query_inverse_kinematics(pose,
+                                                       parameters,
+                                                       seed,
+                                                       self.__link_name)
+
+        if not ik.succeeded:
+            raise ServiceException('inverse kinematics returns'
+                                   ' with error: ' + str(ik))
+
+        return ik
+
+    def inverse_kinematics_many(self, poses, collision_check, seed, timeout, const_seed=False) -> IkResults:
+        """
+        inverse kinematic solutions for many poses
+
+        Parameters
+        ----------
+        poses : Pose or CartesianPath
+            Poses to transform to joint space
+        collision_check : None or bool convertable
+            If true the trajectory planing try to plan a
+            collision free trajectory and before executing
+            a trajectory a collision check is performed
+        seed : JointValues (optional)
+            Numerical seed to control joint configuration
+        timeout : datatime.timedelta
+            timeout
+        const_seed : boolean
+            Determines if for each pose in poses the same seed should be used
+
+        Returns
+        -------
+        IkResult
+            Instance of IkResult with all found solutions as
+            a JointPath and error codes
+
+        Raises
+        ------
+        TypeError
+            If poses is not of correct type
+        ServiceError
+            If query service is not available
+        """
+        if isinstance(poses, Pose):
+            poses = CartesianPath.from_one_point(poses)
+        elif isinstance(poses, CartesianPath):
+            pass
+        else:
+            raise TypeError('target is not one of expected '
+                            'types Pose or CartesianPath')
+
+        if not seed:
+            seed = self.__move_group.get_current_joint_positions()
+
+        parameters = self.__move_group._build_plan_parameters(1.0,
+                                                              collision_check)
+
+        ik = self.__m_service.query_inverse_kinematics_many(poses,
+                                                            parameters,
+                                                            seed,
+                                                            self.__link_name)
+
+        if not ik.succeeded:
+            raise ServiceException('inverse kinematics returns'
+                                   ' with error: ' + str(ik))
+
+        return ik
+
     async def move_poses(self, target, velocity_scaling=None,
                          collision_check=None, max_deviation=None,
                          acceleration_scaling=None, seed=None):
@@ -1137,14 +1249,7 @@ class EndEffector(object):
                                                               max_deviation,
                                                               acceleration_scaling)
 
-        ik = self.__m_service.query_inverse_kinematics_many(target,
-                                                            parameters,
-                                                            seed,
-                                                            self.__link_name)
-
-        if not ik.succeeded:
-            raise ServiceException('inverse kinematics returns'
-                                   ' with error: ' + str(ik))
+        ik = self.inverse_kinematics_many(target, collision_check, seed, False)
 
         await self.__move_group.move_joints(ik.path,
                                             velocity_scaling,
@@ -1202,14 +1307,7 @@ class EndEffector(object):
                                                               max_deviation,
                                                               acceleration_scaling)
 
-        ik = self.__m_service.query_inverse_kinematics_many(target,
-                                                            parameters,
-                                                            seed,
-                                                            self.__link_name)
-
-        if not ik.succeeded:
-            raise ServiceException('inverse kinematics returns'
-                                   ' with error: ' + str(ik))
+        ik = self.inverse_kinematics_many(target, False, seed, False)
 
         await self.__move_group.move_joints_collision_free(ik.path,
                                                            velocity_scaling,
