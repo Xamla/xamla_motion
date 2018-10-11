@@ -1811,53 +1811,8 @@ class SteppedMotionClient(object):
     __feedback_topic = '/xamlaMoveActions/feedback'
     __movej_action_name = 'moveJ_step_action'
 
-    def __init__(self):
-        self.__mutex = Lock()
-
-        self.__ros_node_steward = ROSNodeSteward()
-
-        self.__m_action = actionlib.SimpleActionClient(self.__movej_action_name,
-                                                       StepwiseMoveJAction)
-
-        if not self.__m_action.wait_for_server(rospy.Duration(5)):
-            raise ServiceException('connection to stepped motion action'
-                                   ' server could not be established')
-
-        self.__next_pub = rospy.Publisher(self.__next_topic,
-                                          GoalID,
-                                          queue_size=1)
-        self.__previous_pub = rospy.Publisher(self.__previous_topic,
-                                              GoalID,
-                                              queue_size=1)
-
-        self.__feedback_sub = rospy.Subscriber(self.__feedback_topic,
-                                               TrajectoryProgress,
-                                               callback=self._feedback_callback,
-                                               queue_size=10)
-
-        self.__goal_id = None
-        self.__progress = None
-        self.__state = None
-
-    @property
-    def state(self):
-        """
-        state : SteppedMotionState or None
-            Current state of the supervised trajectory execution
-        """
-        with self.__mutex:
-            return deepcopy(self.__state)
-
-    @property
-    def goal_id(self):
-        """
-        goal_id : GoalId or None
-            Current ros action goal id
-        """
-        return self.__goal_id
-
-    async def moveJ_supervised(self, trajectory: JointTrajectory,
-                               velocity_scaling: float, check_collision: bool=True):
+    def __init__(self, trajectory: JointTrajectory,
+                 velocity_scaling: float, check_collision: bool=True):
         """
         Run supervised trajectory execution
 
@@ -1880,6 +1835,20 @@ class SteppedMotionClient(object):
         ServiceException 
             If action goal handle is not available
         """
+        self.__mutex = Lock()
+
+        self.__ros_node_steward = ROSNodeSteward()
+
+        self.__m_action = actionlib.SimpleActionClient(self.__movej_action_name,
+                                                       StepwiseMoveJAction)
+
+        if not self.__m_action.wait_for_server(rospy.Duration(5)):
+            raise ServiceException('connection to stepped motion action'
+                                   ' server could not be established')
+
+        self.__goal_id = None
+        self.__progress = None
+        self.__state = None
 
         if not isinstance(trajectory, JointTrajectory):
             raise TypeError('trajectory is not of expected type'
@@ -1894,17 +1863,15 @@ class SteppedMotionClient(object):
         goal.trajectory = trajectory.to_joint_trajectory_msg()
 
         loop = asyncio.get_event_loop()
-        action_done = loop.create_future()
+        self.__action_done = loop.create_future()
 
         def done_callback(goal_status, result):
             status = ActionLibGoalStatus(goal_status)
             if status != ActionLibGoalStatus.SUCCEEDED:
                 print('action end unsuccessfully with'
                       ' state: {}'.format(status))
-            loop.call_soon_threadsafe(action_done.set_result, result)
+            self.__action_done.set_result(result)
 
-        # motion server performs lock
-        # with LeaseBaseLock(trajectory.joint_set.names):
         self.__m_action.send_goal(goal, done_cb=done_callback)
 
         self.__goal_id = self.__m_action.gh.comm_state_machine.action_goal.goal_id
@@ -1913,15 +1880,43 @@ class SteppedMotionClient(object):
             self.__m_action.cancel_goal()
             raise ServiceException('action goal handle is not available')
 
-        try:
-            return await action_done
-        except (asyncio.CancelledError, ServiceException) as exc:
-            action.cancel()
-            print(exc)
-        finally:
-            self.__goal_id = None
-            self.__progress = None
-            self.__state = None
+        self.__next_pub = rospy.Publisher(self.__next_topic,
+                                          GoalID,
+                                          queue_size=1)
+        self.__previous_pub = rospy.Publisher(self.__previous_topic,
+                                              GoalID,
+                                              queue_size=1)
+
+        self.__feedback_sub = rospy.Subscriber(self.__feedback_topic,
+                                               TrajectoryProgress,
+                                               callback=self._feedback_callback,
+                                               queue_size=10)
+
+    @property
+    def state(self):
+        """
+        state : SteppedMotionState or None
+            Current state of the supervised trajectory execution
+        """
+        with self.__mutex:
+            return deepcopy(self.__state)
+
+    @property
+    def goal_id(self):
+        """
+        goal_id : GoalId or None
+            Current ros action goal id
+        """
+        return self.__goal_id
+
+    @property
+    def action_done_future(self):
+        """
+        action_done_future : asyncio.future
+            future which is done when supervised move is done of cancelled
+        """
+
+        return self.__action_done
 
     def next(self):
         """

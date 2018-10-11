@@ -21,6 +21,7 @@
 from .motion_service import MotionService
 from .xamla_motion_exceptions import *
 from .data_types import *
+from datetime import timedelta
 
 import numpy as np
 from copy import deepcopy
@@ -1083,7 +1084,7 @@ class EndEffector(object):
 
         return p
 
-    def inverse_kinematics(self, pose, collision_check, seed, timeout, const_seed=False) -> IkResults:
+    def inverse_kinematics(self, pose: Pose, collision_check: bool, seed: JointValues, timeout: timedelta, const_seed: bool=False) -> IkResults:
         """
         inverse kinematic solutions for many poses
 
@@ -1138,7 +1139,7 @@ class EndEffector(object):
 
         return ik
 
-    def inverse_kinematics_many(self, poses, collision_check, seed, timeout, const_seed=False) -> IkResults:
+    def inverse_kinematics_many(self, poses: Pose, collision_check: bool, seed: JointValues, timeout: timedelta, const_seed: bool=False) -> IkResults:
         """
         inverse kinematic solutions for many poses
 

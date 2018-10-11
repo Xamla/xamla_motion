@@ -55,34 +55,26 @@ def main():
     joint_trajectory = move_group.motion_service.plan_move_joints(joint_path_cf,
                                                                   move_group.default_plan_parameters)
 
-    async def stepped_execution(stepped_motion_client):
-        await asyncio.sleep(1.0)
-        count = 0
-        print('start stepped execution')
-        while stepped_motion_client.goal_id:
-            await asyncio.sleep(0.1)
-            print('next')
-            stepped_motion_client.next()
+    def perform_steps(joint_trajectory):
 
-            if not (count % 20):
-                print('progress {:5.2f} percent'.format(
-                    stepped_motion_client.state.progress))
-            count += 1
+        print('start stepped execution')
+        count = 0
+        while not stepped_motion_client.action_done_future.done():
+            time.sleep(0.1)
+            if stepped_motion_client.state:
+                stepped_motion_client.next()
+
+                if not (count % 10):
+                    print('progress {:5.2f} percent'.format(
+                        stepped_motion_client.state.progress))
+                count += 1
+
         print('finished stepped execution')
 
-    ioloop = asyncio.get_event_loop()
+    print('-----stepped motion client------')
 
-    try:
-        print('-----stepped motion client------')
-
-        stepped_motion_client = SteppedMotionClient()
-
-        ioloop.run_until_complete(asyncio.wait(
-            [stepped_motion_client.moveJ_supervised(joint_trajectory, 0.1),
-             stepped_execution(stepped_motion_client)]))
-
-    finally:
-        ioloop.close()
+    stepped_motion_client = SteppedMotionClient(joint_trajectory, 0.1)
+    perform_steps(stepped_motion_client)
 
 
 if __name__ == '__main__':

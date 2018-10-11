@@ -64,21 +64,6 @@ def main():
     async def print_Hallo():
         print('Hallo')
 
-    async def stepped_execution(stepped_motion_client):
-        await asyncio.sleep(1.0)
-        count = 0
-        print('start stepped execution')
-        while stepped_motion_client.goal_id:
-            await asyncio.sleep(0.1)
-            print('next')
-            stepped_motion_client.next()
-
-            if not (count % 20):
-                print('progress {:5.2f} percent'.format(
-                    stepped_motion_client.state.progress))
-            count += 1
-        print('finished stepped execution')
-
     try:
         print('test MoveGroup class')
         print('----------------move joints collision free -------------------')
@@ -150,13 +135,6 @@ def main():
 
         print('move')
         result1 = ioloop.run_until_complete(gripper.move(0.1, 0.005))
-
-        print('-----stepped motion client------')
-        stepped_motion_client = SteppedMotionClient()
-
-        ioloop.run_until_complete(asyncio.wait(
-            [stepped_motion_client.moveJ_supervised(joint_trajectory, 0.1),
-             stepped_execution(stepped_motion_client)]))
 
     finally:
         ioloop.close()
