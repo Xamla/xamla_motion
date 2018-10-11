@@ -20,14 +20,10 @@
 
 from xamla_motion.data_types import *
 from xamla_motion.motion_client import MoveGroup, EndEffector
-from xamla_motion.gripper_client import *
 from xamla_motion.motion_service import SteppedMotionClient
-from threading import Thread
 from pyquaternion import Quaternion
 import time
 import asyncio
-
-import pdb
 
 
 def main():
@@ -59,11 +55,6 @@ def main():
     joint_trajectory = move_group.motion_service.plan_move_joints(joint_path_cf,
                                                                   move_group.default_plan_parameters)
 
-    ioloop = asyncio.get_event_loop()
-
-    async def print_Hallo():
-        print('Hallo')
-
     async def stepped_execution(stepped_motion_client):
         count = 0
         print('start_stepped_execution')
@@ -76,79 +67,11 @@ def main():
                     stepped_motion_client.state.progress))
             count += 1
 
+    ioloop = asyncio.get_event_loop()
+
     try:
-        print('test MoveGroup class')
-        print('----------------move joints collision free -------------------')
-
-        for i in range(0, 2):
-            print('trajectory loop: ' + str(i))
-            ioloop.run_until_complete(
-                asyncio.wait([move_group.move_joints_collision_free(joint_path),
-                              print_Hallo()]))
-
-        print('--------------------- move joints ----------------------------')
-
-        for i in range(0, 3):
-            print('--- trajectory loop: ' + str(i) + ' -----')
-            print('point1 10 percent of max velocity')
-            ioloop.run_until_complete(
-                move_group.move_joints(joint_path[0], 0.1))
-            print('point2 50 percent of max velocity')
-            ioloop.run_until_complete(
-                move_group.move_joints(joint_path[1], 0.5))
-            print('point3 100 percent of max velocity')
-            ioloop.run_until_complete(
-                move_group.move_joints(joint_path[2], 1.0))
-
-        print('test EndEffector class')
-        print('----------------move poses collision free -------------------')
-
-        end_effector = EndEffector.from_end_effector_name(
-            move_group.selected_end_effector)
-
-        for i in range(0, 2):
-            print('trajectory loop: ' + str(i))
-            ioloop.run_until_complete(
-                end_effector.move_poses_collision_free(cartesian_path))
-
-        print('--------------------- move poses ----------------------------')
-
-        for i in range(0, 3):
-            print('--- trajectory loop: ' + str(i) + ' -----')
-            print('point1 10 percent of max velocity')
-            ioloop.run_until_complete(
-                end_effector.move_poses(cartesian_path[0], 0.1))
-            print('point2 50 percent of max velocity')
-            ioloop.run_until_complete(
-                end_effector.move_poses(cartesian_path[1], 0.5))
-            print('point3 100 percent of max velocity')
-            ioloop.run_until_complete(
-                end_effector.move_poses(cartesian_path[2], 1.0))
-
-        print('---------- wsg gripper -------------')
-
-        properties = WeissWsgGripperProperties('wsg50')
-
-        wsg_gripper = WeissWsgGripper(properties, move_group.motion_service)
-
-        print('homeing')
-        ioloop.run_until_complete(wsg_gripper.homing())
-
-        print('move gripper')
-        ioloop.run_until_complete(wsg_gripper.move(0.1, 0.05, 0.05, True))
-
-        print('perform grasp')
-        result = ioloop.run_until_complete(wsg_gripper.grasp(0.02, 0.1, 0.05))
-
-        print('---------- common gripper -------------')
-        properties1 = CommonGripperProperties('wsg50', 'xamla/wsg_driver')
-
-        gripper = CommonGripper(properties1, move_group.motion_service)
-
-        print('move')
-        result1 = ioloop.run_until_complete(gripper.move(0.1, 0.005))
-
         print('-----stepped motion client------')
+
         stepped_motion_client = SteppedMotionClient()
 
         ioloop.run_until_complete(asyncio.wait(

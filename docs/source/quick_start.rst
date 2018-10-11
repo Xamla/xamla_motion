@@ -83,11 +83,11 @@ an instance of xamla_motions Pose data type is possible with this to parameters.
     Quaternion(0.304, 0.527, 0.687, 0.396)
 
 As you can see the pose data type also has a third parameter frame id. This parameter specifics
-in which cooridnate system the pose is defined. The default value is world.
+in which coordinate system the pose is defined. The default value is world.
 
 Another common representation of poses in robotics is the representation as a 4x4 matrix
 in homogenous coordinates. The xamla_motion pose data type can also be created from this
-representation.
+representation or vise versa.
 
 .. code::
 
@@ -104,3 +104,10 @@ representation.
     quaternion.y : 0.0
     quaternion.z : 0.0
     frame_id : world
+    >>> pose.transformation_matrix()
+    array([[ 1.,  0.,  0.,  0.],
+       [ 0.,  1.,  0.,  0.],
+       [ 0.,  0.,  1.,  0.],
+       [ 0.,  0.,  0.,  1.]])
+
+But the most import ability of xamla_motions pose data type is that we can directly 

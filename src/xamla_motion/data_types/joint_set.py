@@ -19,7 +19,6 @@
 #!/usr/bin/env python3
 
 from functools import total_ordering
-from copy import deepcopy
 
 
 @total_ordering
@@ -91,20 +90,18 @@ class JointSet(object):
 
         """
 
-        self.__names = list()
+        self.__names = []
         self.__names_set = set()
 
         if isinstance(names, str):
-            for name in names.split(','):
-                name = name.strip()
-                if name not in self.__names_set:
-                    self.__names_set.add(name)
-                    self.__names.append(name)
-        else:
-            for name in names:
-                if name not in self.__names_set:
-                    self.__names_set.add(str(name))
-                    self.__names.append(str(name))
+            names = map(lambda x: x.strip(), names.split(','))
+
+        for name in names:
+            if name not in self.__names_set:
+                self.__names_set.add(str(name))
+                self.__names.append(str(name))
+
+        self.__names = tuple(self.__names)
 
     @staticmethod
     def empty():
@@ -127,7 +124,7 @@ class JointSet(object):
         """
         joint_set = JointSet('')
         joint_set.__JointSet__names_set = set()
-        joint_set.__JointSet__names = list()
+        joint_set.__JointSet__names = tuple()
         return joint_set
 
     @property
@@ -136,7 +133,7 @@ class JointSet(object):
         names : List[str] (readonly)
             List of joint names
         """
-        return deepcopy(self.__names)
+        return list(self.__names)
 
     def add_prefix(self, prefix):
         """
@@ -212,7 +209,7 @@ class JointSet(object):
         if not isinstance(other, JointSet):
             raise TypeError('other has not expected type JointSet')
 
-        names = deepcopy(self.__names)
+        names = list(self.__names)
         for name in other.names:
             if name not in self.__names_set:
                 names.append(name)

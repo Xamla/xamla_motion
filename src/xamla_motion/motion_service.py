@@ -1899,8 +1899,8 @@ class SteppedMotionClient(object):
         def done_callback(goal_status, result):
             status = ActionLibGoalStatus(goal_status)
             if status != ActionLibGoalStatus.SUCCEEDED:
-                raise ServiceException('action end unsuccessfully with'
-                                       ' state: {}'.format(status))
+                print('action end unsuccessfully with'
+                      ' state: {}'.format(status))
             loop.call_soon_threadsafe(action_done.set_result, result)
 
         # motion server performs lock

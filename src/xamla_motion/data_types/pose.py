@@ -346,6 +346,21 @@ class Pose(object):
         transformation_matrix[:-1, -1] = self.__translation
         return transformation_matrix
 
+    def pinv(self, new_frame_id):
+        """
+        Creates an instance which contains the inverse of this pose
+
+        The inverse is computed by (Moore-Penrose) pseudo inverse
+        of the fransformation matrix
+
+        Parameters
+        ----------
+        new_frame_id : str convertable
+            name of the coordinate system in which pose is now defined 
+        """
+        pinv = np.linalg.pinv(self.transformation_matrix())
+        return self.__class__.from_transformation_matrix(pinv)
+
     def to_posestamped_msg(self):
         """
         Creates an instance of the ROS message PoseStamped
