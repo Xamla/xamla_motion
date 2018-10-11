@@ -65,13 +65,15 @@ def main():
         print('Hallo')
 
     async def stepped_execution(stepped_motion_client):
+        await asyncio.sleep(1.0)
         count = 0
         print('start stepped execution')
-        while stepped_motion_client.state:
+        while stepped_motion_client.goal_id:
             await asyncio.sleep(0.1)
+            print('next')
             stepped_motion_client.next()
 
-            if not (count % 100):
+            if not (count % 20):
                 print('progress {:5.2f} percent'.format(
                     stepped_motion_client.state.progress))
             count += 1
