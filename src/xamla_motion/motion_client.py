@@ -1051,6 +1051,38 @@ class EndEffector(object):
 
         return p
 
+    def computePose(self, joint_values):
+        """
+        compute pose from joint values / configuration
+
+        Parameters
+        ----------
+        joint_values : JointValues
+            Joint configuration of the robot which should be
+            transformed to a cartesian pose
+
+        Returns
+        -------
+        pose : Pose
+            An instance of Pose which represents the joint
+            configuration of joint_values as a pose in
+            cartesian space
+
+        Raises
+        ------
+        ServiceError
+            If query services from motion server are not
+            available or finish unsuccessfully
+        TypeError
+            If joint_values is not of expected type JointValues
+        """
+
+        p = self.__m_service.query_pose(self.__move_group.name,
+                                        joint_values,
+                                        self.__link_name)
+
+        return p
+
     async def move_poses(self, target, velocity_scaling=None,
                          collision_check=None, max_deviation=None,
                          acceleration_scaling=None, seed=None):
