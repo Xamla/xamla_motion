@@ -46,10 +46,8 @@ def main():
 
     cartesian_path = CartesianPath([pose_1, pose_2, pose_3])
 
-    seed = move_group.get_current_joint_positions()
-    joint_path = move_group.motion_service.query_inverse_kinematics_many(cartesian_path,
-                                                                         move_group.default_plan_parameters,
-                                                                         seed).path
+    joint_path = end_effector.inverse_kinematics_many(cartesian_path,
+                                                      False).path
 
     ioloop = asyncio.get_event_loop()
 

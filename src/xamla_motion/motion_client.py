@@ -869,7 +869,7 @@ class MoveGroup(object):
         Returns
         -------
         executor : SteppedMotionClient
-            Executor for supervised executor of trajectory
+            Executor for supervised execution of trajectory
 
         Raises
         ------
@@ -893,7 +893,7 @@ class MoveGroup(object):
                                                                       acceleration_scaling)
 
         return self.__m_service.execute_joint_trajectory_supervised(trajectory,
-                                                                    velocity_scaling,
+                                                                    parameters.velocity_scaling,
                                                                     False)
 
     async def move_joints(self, target, velocity_scaling=None,
@@ -975,7 +975,7 @@ class MoveGroup(object):
         Returns
         -------
         executor : SteppedMotionClient
-            Executor for supervised executor of trajectory
+            Executor for supervised execution of trajectory
 
         Raises
         ------
@@ -1000,7 +1000,7 @@ class MoveGroup(object):
                                                        acceleration_scaling)
 
         return self.__m_service.execute_joint_trajectory_supervised(trajectory,
-                                                                    velocity_scaling,
+                                                                    parameters.velocity_scaling,
                                                                     parameters.collision_check)
 
 
@@ -1421,11 +1421,10 @@ class EndEffector(object):
                                                               max_deviation,
                                                               acceleration_scaling)
 
-        ik = self.__m_service.query_inverse_kinematics_many(poses,
+        ik = self.__m_service.query_inverse_kinematics_many(target,
                                                             parameters,
                                                             seed,
-                                                            self.__link_name,
-                                                            timeout)
+                                                            self.__link_name)
 
         if not ik.succeeded:
             raise ServiceException('Ik computation failed')
@@ -1439,10 +1438,94 @@ class EndEffector(object):
         await self.__m_service.execute_joint_trajectory(trajectory,
                                                         plan_parameters.collision_check)
 
-    async def move_poses_collision_free(self, target,
-                                        velocity_scaling=None,
-                                        max_deviation=None,
-                                        acceleration_scaling=None, seed=None):
+    def move_poses_supervised(self, target: (Pose, CartesianPath),
+                              seed: (None, JointValues)=None,
+                              velocity_scaling: (None, float)=None,
+                              collision_check: (None, bool)=None,
+                              max_deviation: (None, float)=None,
+                              acceleration_scaling: (None, float)=None):
+        """
+        Plan trajectory from task space input and create executor
+
+        Parameters
+        ----------
+        target : Pose or CartesianPath
+            Target joint positions
+        seed : JointValues (optional)
+            Numerical seed to control joint configuration    
+        velocity_scaling : float convertable  (optional)
+            Scaling factor which is applied on the maximal
+            possible joint velocities
+        collision_check : bool convertable  (optional)
+            If true the trajectory planing try to plan a
+            collision free trajectory and before executing
+            a trajectory a collision check is performed
+        max_deviation : float convertable  (optional)
+            Defines the maximal deviation from trajectory points
+            when it is a fly-by-point in joint space
+        acceleration_scaling : float convertable  (optional)
+            Scaling factor which is applied on the maximal
+            possible joint accelerations
+
+        Returns
+        -------
+        executor : SteppedMotionClient
+            Executor for supervised execution of trajectory
+
+        Raises
+        ------
+        TypeError
+            If target is not one of types Pose or CartesianPath
+            If seed is defined and not of type JointValues
+            If all other inputs are not convertable to specified types
+        ValueError
+            If scaling inputs are not between 0.0 and 1.0
+        ServiceError
+            If underlying services from motion server are not available
+            or finish not successfully
+        """
+
+        if isinstance(target, Pose):
+            target = CartesianPath.from_one_point(target)
+        elif isinstance(target, CartesianPath):
+            if len(target) == 0:
+                return
+        else:
+            raise TypeError('target is not one of expected '
+                            'types Pose or CartesianPath')
+
+        if not seed:
+            seed = self.__move_group.get_current_joint_positions()
+
+        parameters = self.__move_group._build_plan_parameters(velocity_scaling,
+                                                              collision_check,
+                                                              max_deviation,
+                                                              acceleration_scaling)
+
+        ik = self.__m_service.query_inverse_kinematics_many(target,
+                                                            parameters,
+                                                            seed,
+                                                            self.__link_name)
+
+        if not ik.succeeded:
+            raise ServiceException('Ik computation failed')
+
+        trajectory, plan_parameters = self.__move_group.plan_move_joints(ik.path,
+                                                                         velocity_scaling,
+                                                                         collision_check,
+                                                                         max_deviation,
+                                                                         acceleration_scaling)
+
+        return self.__m_service.execute_joint_trajectory_supervised(trajectory,
+                                                                    plan_parameters.velocity_scaling,
+                                                                    plan_parameters.collision_check)
+
+    async def move_poses_collision_free(self, target: (Pose, CartesianPath),
+                              seed: (None, JointValues)=None,
+                              velocity_scaling: (None, float)=None,
+                              collision_check: (None, bool)=None,
+                              max_deviation: (None, float)=None,
+                              acceleration_scaling: (None, float)=None):
         """
         Asynchronous plan and execute collision free trajectory from task space input
 
@@ -1450,13 +1533,19 @@ class EndEffector(object):
         ----------
         target : Pose or CartesianPath
             Target joint positions
-        velocity_scaling : None or float convertable
+        seed : JointValues (optional)
+            Numerical seed to control joint configuration    
+        velocity_scaling : float convertable  (optional)
             Scaling factor which is applied on the maximal
             possible joint velocities
-        max_deviation : None or float convertable
+        collision_check : bool convertable  (optional)
+            If true the trajectory planing try to plan a
+            collision free trajectory and before executing
+            a trajectory a collision check is performed
+        max_deviation : float convertable  (optional)
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
-        acceleration_scaling : None or float convertable
+        acceleration_scaling : float convertable  (optional)
             Scaling factor which is applied on the maximal
             possible joint accelerations
 
@@ -1490,11 +1579,10 @@ class EndEffector(object):
                                                               max_deviation,
                                                               acceleration_scaling)
 
-        ik = self.__m_service.query_inverse_kinematics_many(poses,
+        ik = self.__m_service.query_inverse_kinematics_many(target,
                                                             parameters,
                                                             seed,
-                                                            self.__link_name,
-                                                            timeout)
+                                                            self.__link_name)
 
         if not ik.succeeded:
             raise ServiceException('Ik computation failed')
@@ -1506,6 +1594,87 @@ class EndEffector(object):
 
         await self.__m_service.execute_joint_trajectory(trajectory,
                                                         plan_parameters.collision_check)
+
+    async def move_poses_collision_free_supervised(self, target: (Pose, CartesianPath),
+                              seed: (None, JointValues)=None,
+                              velocity_scaling: (None, float)=None,
+                              collision_check: (None, bool)=None,
+                              max_deviation: (None, float)=None,
+                              acceleration_scaling: (None, float)=None):
+        """
+        Plan collision free trajectory from task space input and create executor
+
+        Parameters
+        ----------
+        target : Pose or CartesianPath
+            Target joint positions
+        seed : JointValues (optional)
+            Numerical seed to control joint configuration    
+        velocity_scaling : float convertable  (optional)
+            Scaling factor which is applied on the maximal
+            possible joint velocities
+        collision_check : bool convertable  (optional)
+            If true the trajectory planing try to plan a
+            collision free trajectory and before executing
+            a trajectory a collision check is performed
+        max_deviation : float convertable  (optional)
+            Defines the maximal deviation from trajectory points
+            when it is a fly-by-point in joint space
+        acceleration_scaling : float convertable  (optional)
+            Scaling factor which is applied on the maximal
+            possible joint accelerations
+
+        Returns
+        -------
+        executor : SteppedMotionClient
+            Executor for supervised execution of collision free trajectory
+
+        Raises
+        ------
+        TypeError
+            If target is not one of types Pose or CartesianPath
+            If seed is defined and not of type JointValues
+            If all other inputs are not convertable to specified types
+        ValueError
+            If scaling inputs are not between 0.0 and 1.0
+        ServiceError
+            If underlying services from motion server are not available
+            or finish not successfully
+        """
+
+        if isinstance(target, Pose):
+            target = CartesianPath.from_one_point(target)
+        elif isinstance(target, CartesianPath):
+            if len(target) == 0:
+                return
+        else:
+            raise TypeError('target is not one of expected '
+                            'types Pose or CartesianPath')
+
+        if not seed:
+            seed = self.__move_group.get_current_joint_positions()
+
+        parameters = self.__move_group._build_plan_parameters(velocity_scaling,
+                                                              False,
+                                                              max_deviation,
+                                                              acceleration_scaling)
+
+        ik = self.__m_service.query_inverse_kinematics_many(target,
+                                                            parameters,
+                                                            seed,
+                                                            self.__link_name)
+
+        if not ik.succeeded:
+            raise ServiceException('Ik computation failed')
+
+        trajectory, plan_parameters = self.__move_group.plan_move_joints_collision_free(ik.path,
+                                                                                        velocity_scaling,
+                                                                                        max_deviation,
+                                                                                        acceleration_scaling)
+
+        await self.__m_service.execute_joint_trajectory_supervised(trajectory,
+                                                                   plan_parameters.velocity_scaling,
+                                                                   plan_parameters.collision_check)
 
     def plan_poses_linear(self, target, velocity_scaling=None,
                           collision_check=None, max_deviation=None,

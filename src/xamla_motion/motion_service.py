@@ -1540,21 +1540,26 @@ class MotionService(object):
 
         duration = self._ros_duration_from_timedelta(timeout)
 
-        poses_msgs = EndEffectorPoses()
+        poses_msgs = []
 
         for p in path:
-            poses_msgs.poses.append(p.to_posestamped_msg())
-            poses_msgs.link_names.append(end_effector_link)
+            poses = EndEffectorPoses()
+            poses.poses.append(p.to_posestamped_msg())
+            poses.link_names.append(end_effector_link)
+            poses_msgs.append(poses)
+
+        req = GetIKSolution2Request()
+        req.group_name = parameters.move_group_name
+        req.joint_names = parameters.joint_set.names
+        req.seed = seed.to_joint_values_point_msg()
+        req.const_seed = const_seed
+        req.points = poses_msgs
+        req.collision_check = parameters.collision_check
+        req.attemts = attempts
+        req.timeout = duration
 
         try:
-            response = self.__ik_service(parameters.move_group_name,
-                                         parameters.joint_set.names,
-                                         seed.to_joint_path_point_msg(),
-                                         const_seed,
-                                         poses_msgs,
-                                         parameters.collision_check,
-                                         attempts,
-                                         duration)
+            response = self.__ik_service(req)
         except rospy.ServiceException as exc:
             print('service call for query inverse kinematics'
                   ' failed, abort ')

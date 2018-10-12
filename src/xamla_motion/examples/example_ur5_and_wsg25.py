@@ -32,6 +32,8 @@ import functools
 def main():
     move_group = MoveGroup()
 
+    end_effector = move_group.get_end_effector()
+
     t1 = [0.502522, 0.2580, 0.3670]
     q1 = Quaternion(w=0.304389, x=0.5272, y=0.68704, z=0.39666)
 
@@ -47,16 +49,11 @@ def main():
 
     cartesian_path = CartesianPath([pose_1, pose_2, pose_3])
 
-    seed = move_group.motion_service.query_joint_states(
-        move_group.default_plan_parameters.joint_set).positions
-    joint_path = move_group.motion_service.query_inverse_kinematics_many(cartesian_path,
-                                                                         move_group.default_plan_parameters,
-                                                                         seed).path
+    joint_path = end_effector.inverse_kinematics_many(cartesian_path,
+                                                      False).path
 
-    joint_path_cf = move_group.motion_service.plan_collision_free_joint_path(joint_path,
-                                                                             move_group.default_plan_parameters)
-    joint_trajectory = move_group.motion_service.plan_move_joints(joint_path_cf,
-                                                                  move_group.default_plan_parameters)
+    joint_trajectory = end_effector.move_group.plan_move_joints_collision_free(
+        joint_path)
 
     async def shutdown(sig, loop):
         print('caught {0}'.format(sig.name))
@@ -69,9 +66,9 @@ def main():
         loop.stop()
 
     ioloop = asyncio.get_event_loop()
-    ioloop.add_signal_handler(signal.SIGTERM,
-                              functools.partial(asyncio.ensure_future,
-                                                shutdown(signal.SIGTERM, ioloop)))
+    # ioloop.add_signal_handler(signal.SIGTERM,
+    #                           functools.partial(asyncio.ensure_future,
+    #                                             shutdown(signal.SIGTERM, ioloop)))
 
     async def print_Hallo():
         print('Hallo')
@@ -103,9 +100,6 @@ def main():
         print('test EndEffector class')
         print('----------------move poses collision free -------------------')
 
-        end_effector = EndEffector.from_end_effector_name(
-            move_group.selected_end_effector)
-
         for i in range(0, 2):
             print('trajectory loop: ' + str(i))
             ioloop.run_until_complete(
@@ -117,13 +111,13 @@ def main():
             print('--- trajectory loop: ' + str(i) + ' -----')
             print('point1 10 percent of max velocity')
             ioloop.run_until_complete(
-                end_effector.move_poses(cartesian_path[0], 0.1))
+                end_effector.move_poses(cartesian_path[0], None, 0.1))
             print('point2 50 percent of max velocity')
             ioloop.run_until_complete(
-                end_effector.move_poses(cartesian_path[1], 0.5))
+                end_effector.move_poses(cartesian_path[1], None, 0.5))
             print('point3 100 percent of max velocity')
             ioloop.run_until_complete(
-                end_effector.move_poses(cartesian_path[2], 1.0))
+                end_effector.move_poses(cartesian_path[2], None, 1.0))
 
         print('---------- wsg gripper -------------')
 
