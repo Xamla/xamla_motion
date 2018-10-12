@@ -29,6 +29,8 @@ import asyncio
 def main():
     move_group = MoveGroup()
 
+    end_effector = move_group.get_end_effector()
+
     t1 = [0.502522, 0.2580, 0.3670]
     q1 = Quaternion(w=0.304389, x=0.5272, y=0.68704, z=0.39666)
 
@@ -44,37 +46,72 @@ def main():
 
     cartesian_path = CartesianPath([pose_1, pose_2, pose_3])
 
-    seed = move_group.motion_service.query_joint_states(
-        move_group.default_plan_parameters.joint_set).positions
-    joint_path = move_group.motion_service.query_inverse_kinematics_many(cartesian_path,
-                                                                         move_group.default_plan_parameters,
-                                                                         seed).path
-    joint_path = joint_path.prepend(move_group.get_current_joint_positions())
-    joint_path_cf = move_group.motion_service.plan_collision_free_joint_path(joint_path,
-                                                                             move_group.default_plan_parameters)
-    joint_trajectory = move_group.motion_service.plan_move_joints(joint_path_cf,
-                                                                  move_group.default_plan_parameters)
+    joint_path = end_effector.inverse_kinematics_many(cartesian_path,
+                                                      False).path
 
-    def perform_steps(joint_trajectory):
+    joint_trajectory, _ = end_effector.move_group.plan_move_joints_collision_free(
+        joint_path)
+    print(type(joint_trajectory))
 
-        print('start stepped execution')
-        count = 0
-        while not stepped_motion_client.action_done_future.done():
-            time.sleep(0.1)
+    async def next(stepped_motion_client):
+        while True:
+            await asyncio.sleep(0.1)
             if stepped_motion_client.state:
                 stepped_motion_client.next()
+                print('progress {:5.2f} percent'.format(
+                    stepped_motion_client.state.progress))
 
-                if not (count % 10):
-                    print('progress {:5.2f} percent'.format(
-                        stepped_motion_client.state.progress))
-                count += 1
+    async def run_supervised(stepped_motion_client):
+        print('start supervised execution')
 
-        print('finished stepped execution')
+        task_next = asyncio.ensure_future(next(stepped_motion_client))
+
+        await stepped_motion_client.action_done_future
+        task_next.cancel()
+
+        print('finished supervised execution')
 
     print('-----stepped motion client------')
 
     stepped_motion_client = SteppedMotionClient(joint_trajectory, 0.1)
-    perform_steps(stepped_motion_client)
+
+    loop = asyncio.get_event_loop()
+
+    try:
+        loop.run_until_complete(run_supervised(stepped_motion_client))
+    finally:
+        loop.close()
+
+    # try:
+    #     print('test MoveGroup class')
+    #     print('----------------move joints supervised -------------------')
+
+    #     for i in range(0, 2):
+    #         print('trajectory loop: ' + str(i))
+    #         ioloop.run_until_complete(
+    #             move_group.move_joints_collision_free(joint_path))
+
+    #     print('----------------move joints collision free supervised -------------------')
+
+    #     for i in range(0, 2):
+    #         print('trajectory loop: ' + str(i))
+    #         ioloop.run_until_complete(
+    #             move_group.move_joints_collision_free(joint_path))
+
+    #     print('test EndEffector class')
+    #     print('----------------move poses collision free supervised -------------------')
+
+    #     for i in range(0, 2):
+    #         print('trajectory loop: ' + str(i))
+    #         ioloop.run_until_complete(
+    #             end_effector.move_poses_collision_free(cartesian_path))
+
+    #     print('----------------move poses collision free supervised -------------------')
+
+    #     for i in range(0, 2):
+    #         print('trajectory loop: ' + str(i))
+    #         ioloop.run_until_complete(
+    #             end_effector.move_poses_collision_free(cartesian_path))
 
 
 if __name__ == '__main__':

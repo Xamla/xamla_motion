@@ -1228,9 +1228,7 @@ class EndEffector(object):
         ServiceError
             If query service is not available
         """
-        if isinstance(pose, Pose):
-            pose = CartesianPath.from_one_point(pose)
-        else:
+        if not isinstance(pose, Pose):
             raise TypeError('target is not one of expected '
                             'types Pose')
 
@@ -1240,17 +1238,13 @@ class EndEffector(object):
         parameters = self.__move_group._build_plan_parameters(1.0,
                                                               collision_check)
 
-        ik = self.__m_service.query_inverse_kinematics(pose,
+        path = self.__m_service.query_inverse_kinematics(pose,
                                                        parameters,
                                                        seed,
                                                        self.__link_name,
                                                        timeout)
 
-        if not ik.succeeded:
-            raise ServiceException('inverse kinematics returns'
-                                   ' with error: ' + str(ik))
-
-        return ik
+        return path
 
     def inverse_kinematics_many(self, poses: (Pose, CartesianPath),
                                 collision_check: bool,

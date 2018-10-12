@@ -132,7 +132,7 @@ class SteppedMotionClient(object):
             if status != ActionLibGoalStatus.SUCCEEDED:
                 print('action end unsuccessfully with'
                       ' state: {}'.format(status))
-            self.__action_done.set_result(result)
+            loop.call_soon_threadsafe(self.__action_done.set_result, result)
 
         self.__m_action.send_goal(goal, done_cb=done_callback)
 
@@ -153,6 +153,9 @@ class SteppedMotionClient(object):
                                                TrajectoryProgress,
                                                callback=self._feedback_callback,
                                                queue_size=10)
+
+    def __del__(self):
+        self.__m_action.cancel_all_goals()
 
     @property
     def state(self):
@@ -1423,9 +1426,9 @@ class MotionService(object):
 
         Returns
         -------
-        IkResult
-            Instance of IkResult with all found solutions as
-            a JointPath and error codes
+        JointValues
+            Instance of JointValues which is the joint space
+            equivalent of the task space pose  
 
         Raises
         ------

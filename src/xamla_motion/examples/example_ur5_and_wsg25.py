@@ -52,7 +52,7 @@ def main():
     joint_path = end_effector.inverse_kinematics_many(cartesian_path,
                                                       False).path
 
-    joint_trajectory = end_effector.move_group.plan_move_joints_collision_free(
+    joint_trajectory, _ = end_effector.move_group.plan_move_joints_collision_free(
         joint_path)
 
     async def shutdown(sig, loop):
