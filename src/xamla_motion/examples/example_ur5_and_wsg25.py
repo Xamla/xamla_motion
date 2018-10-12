@@ -22,12 +22,11 @@ from xamla_motion.data_types import *
 from xamla_motion.motion_client import MoveGroup, EndEffector
 from xamla_motion.gripper_client import *
 from xamla_motion.motion_service import SteppedMotionClient
-from threading import Thread
 from pyquaternion import Quaternion
 import time
 import asyncio
-
-import pdb
+import signal
+import functools
 
 
 def main():
@@ -59,7 +58,20 @@ def main():
     joint_trajectory = move_group.motion_service.plan_move_joints(joint_path_cf,
                                                                   move_group.default_plan_parameters)
 
+    async def shutdown(sig, loop):
+        print('caught {0}'.format(sig.name))
+        tasks = [task for task in asyncio.Task.all_tasks() if task is not
+                 asyncio.tasks.Task.current_task()]
+        list(map(lambda task: task.cancel(), tasks))
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        print('finished awaiting cancelled tasks'
+              ', results: {0}'.format(results))
+        loop.stop()
+
     ioloop = asyncio.get_event_loop()
+    ioloop.add_signal_handler(signal.SIGTERM,
+                              functools.partial(asyncio.ensure_future,
+                                                shutdown(signal.SIGTERM, ioloop)))
 
     async def print_Hallo():
         print('Hallo')

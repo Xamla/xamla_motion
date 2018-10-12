@@ -60,7 +60,7 @@ class ActionLibGoalStatus(enum.Enum):
 class MotionService(object):
 
     __movej_action = 'moveJ_action'
-    __query_inverse_kinematics_service = "xamlaMoveGroupServices/query_ik"
+    __query_inverse_kinematics_service = "xamlaMoveGroupServices/query_ik2"
 
     def __init__(self):
 
@@ -69,7 +69,7 @@ class MotionService(object):
         try:
             self.__ik_service = rospy.ServiceProxy(
                 self.__query_inverse_kinematics_service,
-                GetIKSolution)
+                GetIKSolution2)
 
         except rospy.ServiceException as exc:
             raise ServiceException('init service for query'
@@ -1178,8 +1178,6 @@ class MotionService(object):
                                           parameters.max_deviation,
                                           parameters.sample_resolution)
 
-    # to do ExecuteJointTrajectory and ExecuteJointTrajectorySupervised
-
     async def execute_joint_trajectory(self, trajectory, collision_check):
         """
         Executes a joint trajectory
@@ -1223,6 +1221,34 @@ class MotionService(object):
                                ' SimpleActionClient for moveJ action')
 
         return response.result
+
+    def execute_joint_trajectory_supervised(self, trajectory: JointTrajectory,
+                                            velocity_scaling: float,
+                                            collision_check: bool) -> SteppedMotionClient
+        """
+        Creates a instance of SteppedMotionClient for supervised trajectory execution
+        Parameters
+        ----------
+        trajectory : JointTrajectory 
+            Joint trajectory which should be executed
+        velocity_scaling : float
+            scaling of velocity range 0.0 to 1.0
+        collision_check : bool convertable
+            If True check for collision while executing
+
+        Returns
+        -------
+        result : int
+            Result of the trajectory execution
+
+        Raises
+        ------
+        TypeError 
+            If trajectory is not of type JointTrajectory
+            or if collision_check is not convertable to bool
+        """
+
+        return SteppedMotionClient(trajectory, velocity_scaling, collision_check)
 
     def query_inverse_kinematics(self, pose, parameters,
                                  seed=[],
@@ -1367,14 +1393,18 @@ class MotionService(object):
 
         duration = self._ros_duration_from_timedelta(timeout)
 
+        poses_msgs = EndEffectorPoses()
+
+        for p in path:
+            poses_msgs.poses.append(p.to_posestamped_msg())
+            poses_msgs.link_names.append(end_effector_link)
+
         try:
             response = self.__ik_service(parameters.move_group_name,
                                          parameters.joint_set.names,
-                                         end_effector_link,
                                          seed.to_joint_path_point_msg(),
                                          const_seed,
-                                         [p.to_posestamped_msg()
-                                             for p in path],
+                                         poses_msgs,
                                          parameters.collision_check,
                                          attempts,
                                          duration)
@@ -1514,139 +1544,131 @@ class MotionService(object):
         print(rospy.get_name())
         return cls.query_joint_states(joint_set).positions
 
-    async def move_joints(self, target, parameters):
-        """
-        Moves joints to target joint positions
+    # async def move_joints(self, target, parameters):
+    #     """
+    #     Moves joints to target joint positions
 
-        Parameters
-        ----------
-        target : JointValues
-            target joint positions
-        parameters : PlanParameters
-            Plan parameters which defines the limits, settings
-            and move group name
+    #     Parameters
+    #     ----------
+    #     target : JointValues
+    #         target joint positions
+    #     parameters : PlanParameters
+    #         Plan parameters which defines the limits, settings
+    #         and move group name
 
-        Returns
-        -------
-        None
+    #     Returns
+    #     -------
+    #     None
 
-        Raises
-        ------
-        TypeError
-            If target is not of type JointValues or
-            if parameters is not of type PlanParameters
-        ServiceError
-            If query services are not available or finish
-            with a fail state
-        """
+    #     Raises
+    #     ------
+    #     TypeError
+    #         If target is not of type JointValues or
+    #         if parameters is not of type PlanParameters
+    #     ServiceError
+    #         If query services are not available or finish
+    #         with a fail state
+    #     """
 
-        if not isinstance(target, JointValues):
-            raise TypeError('target is not of expected type JointValues')
+    #     if not isinstance(target, JointValues):
+    #         raise TypeError('target is not of expected type JointValues')
 
-        if not isinstance(parameters, PlanParameters):
-            raise TypeError('parameters is not of expected'
-                            ' type PlanParameters')
+    #     if not isinstance(parameters, PlanParameters):
+    #         raise TypeError('parameters is not of expected'
+    #                         ' type PlanParameters')
 
-        source = self.get_current_joint_values(parameters.joint_set)
-        path = JointPath.from_start_stop_point(source, target)
-        trajectory = self.plan_move_joints(path, parameters)
-        await self.execute_joint_trajectory(trajectory, parameters.collision_check)
+    #     source = self.get_current_joint_values(parameters.joint_set)
+    #     path = JointPath.from_start_stop_point(source, target)
+    #     trajectory = self.plan_move_joints(path, parameters)
+    #     await self.execute_joint_trajectory(trajectory, parameters.collision_check)
 
-    async def move_pose(self, target, end_effector_link, parameters, seed=None):
-        """
-        Moves to target pose
+    # async def move_pose(self, target, end_effector_link, parameters, seed=None):
+    #     """
+    #     Moves to target pose
 
-        Parameters
-        ----------
-        target : Pose
-            target pose
-        end_effector_link : str convertable
-            specifies for which link the pose is defined
-        seed : JointValues or None
-            numerical seed to control the robot configuration
-            if none the current joint position is used
-        parameters : PlanParameters
-            Plan parameters which defines the limits, settings
-            and move group name
+    #     Parameters
+    #     ----------
+    #     target : Pose
+    #         target pose
+    #     end_effector_link : str convertable
+    #         specifies for which link the pose is defined
+    #     parameters : PlanParameters
+    #         Plan parameters which defines the limits, settings
+    #         and move group name
+    #     seed : JointValues or None
+    #         numerical seed to control the robot configuration
+    #         if none the current joint position is used
 
-        Returns
-        -------
-        None
+    #     Raises
+    #     ------
+    #     TypeError
+    #         If target is not of type Pose
+    #         If parameters is not of type PlanParameters
+    #         If end_effector_link is not convertable to str
+    #         If seed is not of type JointValues
+    #     ServiceError
+    #         If query services are not available or finish
+    #         with a fail state
+    #     """
 
-        Raises
-        ------
-        TypeError
-            If target is not of type Pose
-            If parameters is not of type PlanParameters
-            If end_effector_link is not convertable to str
-            If seed is not of type JointValues
-        ServiceError
-            If query services are not available or finish
-            with a fail state
-        """
+    #     if not isinstance(target, Pose):
+    #         raise TypeError('target is not of expected type Pose')
 
-        if not isinstance(target, Pose):
-            raise TypeError('target is not of expected type Pose')
+    #     if not seed:
+    #         seed = self.get_current_joint_values(parameters.joint_set)
 
-        if not seed:
-            seed = self.get_current_joint_values(parameters.joint_set)
+    #     joint_values = self.query_inverse_kinematics(target, parameters,
+    #                                                  seed,
+    #                                                  end_effector_link)
 
-        joint_values = self.query_inverse_kinematics(target, parameters,
-                                                     seed,
-                                                     end_effector_link)
+    #     await self.move_joints(joint_values, parameters)
 
-        await self.move_joints(joint_values, parameters)
+    # async def move_pose_linear(self, target, end_effector_link, parameters, seed=None):
+    #     """
+    #     Moves to target pose linear
 
-    async def move_pose_linear(self, target, end_effector_link, parameters, seed=None):
-        """
-        Moves to target pose linear
+    #     Parameters
+    #     ----------
+    #     target : Pose
+    #         target pose
+    #     end_effector_link : str convertable
+    #         specifies for which link the pose is defined
+    #     parameters : TaskPlanParameters
+    #         Task space plan parameters which defines the limits, settings
+    #         and end effector name
+    #     seed : JointValues
+    #         numerical seed to control the robot configuration
 
-        Parameters
-        ----------
-        target : Pose
-            target pose
-        end_effector_link : str convertable
-            specifies for which link the pose is defined
-        seed : JointValues
-            numerical seed to control the robot configuration
-        parameters : TaskPlanParameters
-            Task space plan parameters which defines the limits, settings
-            and end effector name
+    #     Raises
+    #     ------
+    #     TypeError
+    #         If target is not of type Pose
+    #         If parameters is not of type TaskSpacePlanParameters
+    #         If end_effector_link is not convertable to str
+    #         If seed is not of type JointValues or None
+    #     ServiceError
+    #         If query services are not available or finish
+    #         with a fail state
+    #     """
 
-        Returns
-        -------
-        None
+    #     groups = self.query_available_move_groups()
+    #     group = next(g for g in groups
+    #                  if any([parameters.end_effector_name in
+    #                          g.end_effector_names]))
 
-        Raises
-        ------
-        TypeError
-            If target is not of type Pose
-            If parameters is not of type TaskSpacePlanParameters
-            If end_effector_link is not convertable to str
-            If seed is not of type JointValues or None
-        ServiceError
-            If query services are not available or finish
-            with a fail state
-        """
+    #     if not group:
+    #         raise RuntimeError('no move group is available with'
+    #                            ' requested end effector name: ' +
+    #                            parameters.end_effector_name)
 
-        groups = self.query_available_move_groups()
-        group = next(g for g in groups
-                     if any([parameters.end_effector_name in
-                             g.end_effector_names]))
+    #     if not seed:
+    #         seed = self.get_current_joint_values(group.joint_set)
 
-        if not group:
-            raise RuntimeError('no move group is available with'
-                               ' requested end effector name: ' +
-                               parameters.end_effector_name)
-
-        if not seed:
-            seed = self.get_current_joint_values(group.joint_set)
-
-        source = self.query_pose(group.name, seed, end_effector_link)
-        path = CartesianPath.from_start_stop_point(source, target)
-        trajectory = self.plan_move_pose_linear(path, seed, parameters)
-        await self.execute_joint_trajectory(trajectory,
-                                            parameters.collision_check)
+    #     source = self.query_pose(group.name, seed, end_effector_link)
+    #     path = CartesianPath.from_start_stop_point(source, target)
+    #     trajectory = self.plan_move_pose_linear(path, seed, parameters)
+    #     await self.execute_joint_trajectory(trajectory,
+    #                                         parameters.collision_check)
 
     async def move_gripper(self, action_name, position, max_effort):
         """
