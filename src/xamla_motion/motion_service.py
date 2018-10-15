@@ -1459,8 +1459,8 @@ class MotionService(object):
                                                     attempts)
 
         if not result.succeeded:
-            raise ServiceException('service call for query inverse'
-                                   ' kinematics was not successful')
+            raise ServiceException('ik service call failed with error'
+                                   ' code: {}'.format(result.error_codes[0]))
 
         return result.path[0]
 

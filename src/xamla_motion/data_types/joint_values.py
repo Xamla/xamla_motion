@@ -361,13 +361,13 @@ class JointValues(object):
             raise ValueError('name ' + name +
                              ' not exist in joint names') from exc
 
-    def merge(self, other):
+    def merge(self, others):
         """
-        Merge JointValues instance with other JointValues
+        Merge JointValues instance with others JointValues
 
         Parameters
         ----------
-        other: JointValues or Iterable[JointValues]
+        others: JointValues or Iterable[JointValues]
             JointValues which are merge with current instance
 
 
@@ -375,30 +375,46 @@ class JointValues(object):
         -------
         JointValues
             New instance of JointValues with contains Values for
-            all Joints defined in this and other JointValues instances
+            all Joints defined in this and others JointValues instances
 
         Raises
         ------
         TypeError : type mismatch
-            If other is not one of expected types JointValues
+            If others is not one of expected types JointValues
             or Iterable[JointValues]
         """
-        def check_compatability(joint_set_a, joint_set_b):
-            if any(joint_set_a.contains(joint_set.names)):
-                raise ValueError('merge conflict, values for a specific'
-                                 ' joint are defined in multiple instance'
-                                 ' which should be merged')
 
-        if isinstance(other, JointValues):
-            check_compatability()
-            joint_set = JointSet.union(other)
-            values = np.append(self.__values, other.values)
-            return JointValues(joint_set, values)
+        names_set = set(self.joint_set.names)
 
-        elif all(isinstance(v, JointValues) for v in other):
-            pass
+        def check_compatability(joint_set):
+            nonlocal names_set
+            conflicts = names_set.intersection(joint_set.names)
+            if conflicts:
+                raise ValueError('merge conflict, values for'
+                                 ' joints: {} are defined in multiple'
+                                 ' instances of JointValues which should'
+                                 ' be merged'.format(conflicts))
+            else:
+                names_set = names_set.union(joint_set.names)
+
+        if isinstance(others, JointValues):
+            check_compatability(others.joint_set)
+            joint_set = self.__joint_set.union(others.joint_set)
+            values = np.append(self.__values, others.values)
+            return self.__class__(joint_set, values)
+
+        elif (isinstance(others, Iterable) and
+              all(isinstance(v, JointValues) for v in others)):
+            for other in others:
+                check_compatability(other.joint_set)
+            joint_set = self.__joint_set.union(
+                list(map(lambda x: x.joint_set, others)))
+            values = np.append(self.__values, list(
+                map(lambda x: x.values, others)))
+            return self.__class__(joint_set, values)
+
         else:
-            raise TypeError('other is not one of expected types '
+            raise TypeError('others is not one of expected types '
                             'JointValues or Iterable[JointValues]')
 
     def to_joint_path_point_msg(self):

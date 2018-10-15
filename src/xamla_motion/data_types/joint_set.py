@@ -172,13 +172,13 @@ class JointSet(object):
         names = list(map(lambda x: prefix + x, self.__names))
         return self.__class__(names)
 
-    def union(self, other):
+    def union(self, others):
         """
-        Creates new JointSet which contains the union of self and other joints
+        Creates new JointSet which contains the union of self and others joints
 
         Parameters
         ----------
-        other : JointSet
+        others : JointSet or Iterable[JointSet]
             JointSet with which the union is performed
 
         Raises
@@ -206,13 +206,23 @@ class JointSet(object):
 
         """
 
-        if not isinstance(other, JointSet):
-            raise TypeError('other has not expected type JointSet')
-
         names = list(self.__names)
-        for name in other.names:
-            if name not in self.__names_set:
-                names.append(name)
+        names_set = set(self.__names_set)
+
+        if isinstance(others, JointSet):
+            for name in others.names:
+                if name not in self.__names_set:
+                    names.append(name)
+        elif all(isinstance(i, JointSet) for i in others):
+            for other in others:
+                for name in other.names:
+                    if name not in names_set:
+                        names.append(name)
+                        names_set.add(name)
+        else:
+            raise TypeError('others is not one of expected types'
+                            ' JointSet or Iterable of JointSet')
+
         return self.__class__(names)
 
     def is_subset(self, other):

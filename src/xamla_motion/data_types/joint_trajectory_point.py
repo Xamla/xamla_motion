@@ -19,6 +19,7 @@
 #!/usr/bin/env python3
 
 from datetime import timedelta
+from typing import Iterable
 import numpy as np
 import rospy
 
@@ -44,13 +45,13 @@ class JointTrajectoryPoint(object):
 
     def __init__(self, time_from_start, positions, velocities=None,
                  accelertations=None, efforts=None):
-        """ 
+        """
         Initialize JointTrajectoryPoint class
 
         Parameters
         ----------
         time_from_start : datatime.timedelta
-            duration between start of trajectory and this point 
+            duration between start of trajectory and this point
         positions : JointValues
             joint positions
         velocities : JointValues or None
@@ -58,7 +59,7 @@ class JointTrajectoryPoint(object):
         accelerations : JointValues
             joint accelerations
         efforts : JointValues
-            joint force for a prismatic joint or torque 
+            joint force for a prismatic joint or torque
             for a rotational joint
 
         Returns
@@ -74,7 +75,7 @@ class JointTrajectoryPoint(object):
             or if velocities, accelerations or efforts ist not one
             of the expected types None or JointValues
         ValueError
-            If the joint set of positions and if not None 
+            If the joint set of positions and if not None
             velocities, accelerations and efforts is not equal
         """
 
@@ -116,13 +117,13 @@ class JointTrajectoryPoint(object):
         joint_set : JointSet
             Set of joints for which the trajectroy point is defined
         msg : trajectory_msgs/JointTrajectoryPoint
-            Instance of ros message that should be converted to 
+            Instance of ros message that should be converted to
             JointTrajectoryPoint
 
         Returns
         -------
         JointTrajectoryPoint
-            New instance of JointTrajectoryPoint with the values 
+            New instance of JointTrajectoryPoint with the values
             of the ros message
 
         Raises
@@ -171,7 +172,7 @@ class JointTrajectoryPoint(object):
     def time_from_start(self):
         """
         time_from_start : datetime.timedelta (readonly)
-            Time span between trajectory start and this trajectory 
+            Time span between trajectory start and this trajectory
             point as a instance of datetime.timedelta
         """
         return self.__time_from_start
@@ -243,6 +244,75 @@ class JointTrajectoryPoint(object):
                               self.__accelerations,
                               self.__efforts)
 
+    def merge(self, others):
+        def check_values(a, b, name):
+            if not a:
+                if b:
+                    raise ValueError(name + ' are defined in others'
+                                     ' but not in self')
+                return false
+            else:
+                if not b:
+                    raise ValueError(name + ' are defined in self'
+                                     ' but not in others')
+                return true
+
+        velocites = None
+        accelerations = None
+        efforts = None
+
+        if isinstance(others, JointTrajectoryPoint):
+            if self.__time_from_start != others.time_from_start:
+                raise ValueError('time_from_start in others is not equal to'
+                                 '  self time_from_start')
+
+            positions = self.__positions.merge(others.positions)
+
+            if check_values(self.__velocities, others.velocities, 'velocities'):
+                velocites = self.__velocities.merge(others.velocities)
+            if check_values(self.__accelerations, others.accelerations, 'accelerations'):
+                velocites = self.__accelerations.merge(others.accelerations)
+            if check_values(self.__efforts, others.efforts, 'efforts'):
+                velocites = self.efforts.merge(others.efforts)
+
+        elif (isinstance(others, Iterable) and
+              all(isinstance(v, JointTrajectoryPoint) for v in others)):
+            time_not_equal = map(lambda x: x.time_from_start !=
+                                 self.__time_from_start, others)
+            if any(time_not_equal):
+                raise ValueError('time_from_start of others: {} is not'
+                                 ' equal to self '
+                                 'time_from_start'.format(time_not_equal))
+
+            positions = self.__positions.merge(
+                map(lambda x: x.positions, others))
+
+            check_velocities = map(lambda x: check_values(
+                self.__velocities, x.velocities, 'velocities'), others)
+            if all(check_velocities):
+                velocites = self.__velocities.merge(
+                    map(lambda x: x.velocities, others))
+
+            check_accelerations = map(lambda x: check_values(
+                self.__accelerations, x.accelerations, 'accelerations'), others)
+            if all(check_accelerations):
+                velocites = self.__accelerations.merge(
+                    map(lambda x: x.accelerations, others))
+
+            check_efforts = map(lambda x: check_values(
+                self.__efforts, x.efforts, 'efforts'), others)
+            if all(check_efforts):
+                velocites = self.__efforts.merge(
+                    map(lambda x: x.efforts, others))
+
+        else:
+            raise TypeError('others is not one of expected types '
+                            'JointTrajectoryPoint or '
+                            'Iterable[JointTrajectoryPoint]')
+
+        return self.__class__(time_from_start, positions, velocites,
+                              accelerations, efforts)
+
     def to_joint_trajectory_point_msg(self):
         """
         Converts JointTrajectoryPoint to JointTrajectoryPoint ros message
@@ -252,7 +322,7 @@ class JointTrajectoryPoint(object):
         Returns
         -------
         JointTrajectoryPoint msg
-            New instance of JointTrajectoryPoint with the values 
+            New instance of JointTrajectoryPoint with the values
             of the ros message
 
         """
