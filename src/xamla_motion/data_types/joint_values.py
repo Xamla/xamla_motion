@@ -19,6 +19,7 @@
 #!/usr/bin/env python3
 
 from functools import total_ordering
+from typing import Iterable
 
 import numpy as np
 
@@ -359,6 +360,46 @@ class JointValues(object):
         except ValueError as exc:
             raise ValueError('name ' + name +
                              ' not exist in joint names') from exc
+
+    def merge(self, other):
+        """
+        Merge JointValues instance with other JointValues
+
+        Parameters
+        ----------
+        other: JointValues or Iterable[JointValues]
+            JointValues which are merge with current instance
+
+
+        Returns
+        -------
+        JointValues
+            New instance of JointValues with contains Values for
+            all Joints defined in this and other JointValues instances
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If other is not one of expected types JointValues
+            or Iterable[JointValues]
+        """
+        def check_compatability(joint_set_a, joint_set_b):
+            if any(joint_set_a.contains(joint_set.names)):
+                raise ValueError('merge conflict, values for a specific'
+                                 ' joint are defined in multiple instance'
+                                 ' which should be merged')
+
+        if isinstance(other, JointValues):
+            check_compatability()
+            joint_set = JointSet.union(other)
+            values = np.append(self.__values, other.values)
+            return JointValues(joint_set, values)
+
+        elif all(isinstance(v, JointValues) for v in other):
+            pass
+        else:
+            raise TypeError('other is not one of expected types '
+                            'JointValues or Iterable[JointValues]')
 
     def to_joint_path_point_msg(self):
         """

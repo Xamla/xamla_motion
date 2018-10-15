@@ -1018,7 +1018,7 @@ class EndEffector(object):
         Creates an instance of MoveGroup and select the correct instance of EndEffector
     get_current_pose()
         Returns the current pose of the end effector
-    computePose(joint_values)
+    compute_pose(joint_values)
         compute pose from joint values / configuration
     inverse_kinematics(pose, collision_check, seed, timeout, const_seed)
         inverse kinematic solutions for one pose
@@ -1176,7 +1176,7 @@ class EndEffector(object):
 
         return p
 
-    def computePose(self, joint_values):
+    def compute_pose(self, joint_values):
         """
         compute pose from joint values / configuration
 

@@ -418,25 +418,25 @@ class JointSet(object):
             raise ValueError('This JointSet not contains a'
                              ' joint with name: ' + name) from exc
 
-    def contains(self, name):
+    def contains(self, names):
         """
-        Checks if this JointSet contains a specific joint name
+        Checks if this JointSet contains a specific joint names
 
         Parameters
         ----------
-        name : str
-            joint name for which it checks that it is available
+        names : str or Iterable[str]
+            joint names for which it checks that it is available
 
         Returns
         -------
-        is_found : bool
-            If joint name specified by name is found retruns
+        is_found : bool or Iterable of bool
+            If joint names specified by names is found retruns
             True else False
 
         Raises
         ------
         TypeError : type mismatch
-            If parameter name is not type of str
+            If parameter names is not type of str
 
         Examples
         --------
@@ -450,13 +450,12 @@ class JointSet(object):
         False
 
         """
-        if not isinstance(name, str):
-            raise TypeError('name expected type is str')
-
-        if name in self.__names_set:
-            return True
+        if isinstance(names, str):
+            return names in self.__names_set
+        elif all(isinstance(n, str) for n in names):
+            return list(map(lambda x: x in self.__names_set, names))
         else:
-            return False
+            raise TypeError('name expected type is str')
 
     def __getitem__(self, index):
         """
