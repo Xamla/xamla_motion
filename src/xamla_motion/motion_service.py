@@ -155,7 +155,7 @@ class SteppedMotionClient(object):
                                                queue_size=10)
 
     def __del__(self):
-        self.__m_action.cancel_all_goals()
+        self.__m_action.cancel_goal()
 
     @property
     def state(self):
@@ -1957,16 +1957,20 @@ class MotionService(object):
             def done_callback(goal_status, result):
                 status = ActionLibGoalStatus(goal_status)
                 if status != ActionLibGoalStatus.SUCCEEDED:
-                    raise ServiceException('action end unsuccessfully with'
-                                           ' state: {}'.format(status))
+                    print('action end unsuccessfully with'
+                          ' state: {}'.format(status))
 
                 loop.call_soon_threadsafe(action_done.set_result, result)
 
-            action.send_goal(goal, done_cb=done_callback)
             try:
-                return await action_done
+                action.send_goal(goal, done_cb=done_callback)
+                await action_done
             except (asyncio.CancelledError, ServiceException) as exc:
-                action.cancel()
-                raise exc
+                print('Cancel goal because of: {}'.format(exc))
+                action.cancel_goal()
+                await action_done
+                print('done2')
+
+            return action_done
 
         return run_action

@@ -45,7 +45,7 @@ class Pose(object):
     is_rotation_normalized()
         Return True if quaternion is normalized
     rotation_matrix()
-        Returns the roation matrix in homogenous coordinates (4x4 numpy array)
+        Returns the rotation matrix in homogenous coordinates (4x4 numpy array)
     transformation_matrix()
         Returns the transformation matrix in homogenous coordinates (4x4 numpy array)
     to_posestamped_msg()
@@ -65,7 +65,7 @@ class Pose(object):
         ----------
         translation : convertable to numpy array of shape (3,)
             translation or position the pose describes
-        roation : pyquaternion.Quaternion
+        rotation : pyquaternion.Quaternion
             rotation the pose describes as Quaternion
         frame_id : str (optinal defaul = '')
             name of the coordinate system the pose is defined
@@ -142,7 +142,7 @@ class Pose(object):
             A transformation matrix in homogenous coordinates
         frame_id : str (optional defaul = '')
             name of the coordinate system the pose is defined
-        normalize_roation : bool (optional default = False)
+        normalize_rotation : bool (optional default = False)
             If true quaternion normalization is performed in the
             initialization process
 
@@ -287,7 +287,7 @@ class Pose(object):
         """
         return self.__quaternion
 
-    def normalize_roation(self):
+    def normalize_rotation(self):
         """
         Creates an instance of Pose with normalized quaternion
 
@@ -306,14 +306,14 @@ class Pose(object):
         if self.__quaternion[0] < 0:
             self.__quaternion = -self.__quaternion
 
-    def is_roation_normalized(self):
+    def is_rotation_normalized(self):
         """
-        Returns True is roation is normalized
+        Returns True is rotation is normalized
 
         Returns
         -------
         result : bool
-            True is roation is normalized else False
+            True is rotation is normalized else False
         """
 
         if np.isclose(np.linalg.norm(self.__quaternion.elements), 1.0):
@@ -323,11 +323,11 @@ class Pose(object):
 
     def rotation_matrix(self):
         """
-        Returns the roation matrix in homogenous coordinates (4x4 numpy array)
+        Returns the rotation matrix in homogenous coordinates (4x4 numpy array)
 
         Returns
         ------
-            A 4x4 numpy array with dtype float which represents the roation
+            A 4x4 numpy array with dtype float which represents the rotation
             matrix in homogenous coordinates
         """
 

@@ -34,22 +34,26 @@ class MoveGroup(object):
 
     Methods
     -------
-    set_default_end_effector
+    set_default_end_effector(end_effector_name)
         set one of the end effector from the list of available ones as default
-    get_end_effector
+    get_end_effector(name)
         Get the end effector specified by name or the default end effector
-    get_current_joint_states
+    get_current_joint_states()
         Returns the current joint states of the move group joints
-    get_current_joint_positions
+    get_current_joint_positions()
         Returns the current joint positions of the move group joints
-    plan_move_joints
+    plan_move_joints(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
         Plans a trajectory from current state to target joint positions
-    plan_move_joints_collision_free
+    plan_move_joints_collision_free(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
         Plans a collision free trajectory from current to target joint positions
-    move_joints_collision_free
+    move_joints_collision_free(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
         Asynchronous plan and execute collision free joint trajectory
-    move_joints
+    move_joints_collision_free_supervised(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+        Plan collision free joint trajectory and creates a supervised executor
+    move_joints(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
         Asynchronous plan and execute joint trajectory
+    move_joints_supervised(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+        Plan joint trajectory and creates a supervised executor
     """
 
     def __init__(self, move_group_name=None,
@@ -952,7 +956,7 @@ class MoveGroup(object):
                                max_deviation: (None, float)=None,
                                acceleration_scaling: (None, float)=None) -> SteppedMotionClient:
         """
-        plan collision free joint trajectory and creates a supervised executor 
+        Plan joint trajectory and creates a supervised executor 
 
         Parameters
         ----------
@@ -1010,15 +1014,27 @@ class EndEffector(object):
 
     Methods
     -------
-    get_current_pose
+    from_end_effector_name(end_effector_name)
+        Creates an instance of MoveGroup and select the correct instance of EndEffector
+    get_current_pose()
         Returns the current pose of the end effector
-    move_poses
+    computePose(joint_values)
+        compute pose from joint values / configuration
+    inverse_kinematics(pose, collision_check, seed, timeout, const_seed)
+        inverse kinematic solutions for one pose
+    inverse_kinematics_many(cartesian_path, collision_check, seed, timeout, const_seed)
+        inverse kinematic solutions for many poses
+    move_poses(target, seed=None, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
         Asynchronous plan and execute trajectory from task space input
-    move_poses_collision_free
+    move_poses_supervised(target, seed=None, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+        Plan trajectory from task space input and create executor
+    move_poses_collision_free(target, seed=None, velocity_scaling=None, max_deviation=None, acceleration_scaling=None)
         Asynchronous plan and execute collision free trajectory from task space input
-    plan_poses_linear
+    move_poses_collision_free_supervised(target, seed=None, velocity_scaling=None, max_deviation=None, acceleration_scaling=None)
+        Plan collision free trajectory from task space input and create executor
+    plan_poses_linear(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
         Plans a trajectory with linear movements from task space input
-    move_poses_linear
+    move_poses_linear(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
         Plans and executes a trajectory with linear movements from task space input
     """
 
@@ -1198,7 +1214,7 @@ class EndEffector(object):
                            timeout: timedelta=None,
                            const_seed: bool=False) -> IkResults:
         """
-        inverse kinematic solutions for many poses
+        inverse kinematic solutions for one pose
 
         Parameters
         ----------
@@ -1589,7 +1605,7 @@ class EndEffector(object):
         await self.__m_service.execute_joint_trajectory(trajectory,
                                                         plan_parameters.collision_check)
 
-    async def move_poses_collision_free_supervised(self, target: (Pose, CartesianPath),
+    def move_poses_collision_free_supervised(self, target: (Pose, CartesianPath),
                               seed: (None, JointValues)=None,
                               velocity_scaling: (None, float)=None,
                               collision_check: (None, bool)=None,
@@ -1666,7 +1682,7 @@ class EndEffector(object):
                                                                                         max_deviation,
                                                                                         acceleration_scaling)
 
-        await self.__m_service.execute_joint_trajectory_supervised(trajectory,
+        return self.__m_service.execute_joint_trajectory_supervised(trajectory,
                                                                    plan_parameters.velocity_scaling,
                                                                    plan_parameters.collision_check)
 

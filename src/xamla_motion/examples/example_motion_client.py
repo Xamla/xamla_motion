@@ -21,7 +21,44 @@
 from xamla_motion.data_types import Pose, CartesianPath, JointPath
 from xamla_motion.motion_client import MoveGroup, EndEffector
 from pyquaternion import Quaternion
+import signal
+import functools
 import asyncio
+
+
+# function to shutdown asyncio properly
+def shutdown(loop, reason):
+    print('shutdown asyncio due to : {}'.format(reason), flush=True)
+    tasks = asyncio.gather(*asyncio.Task.all_tasks(loop=loop),
+                           loop=loop, return_exceptions=True)
+    tasks.add_done_callback(lambda t: loop.stop())
+    tasks.cancel()
+
+    # Keep the event loop running until it is either destroyed or all
+    # tasks have really terminated
+    while not tasks.done() and not loop.is_closed():
+        loop.run_forever()
+
+
+# functions for supervised executation
+async def next(stepped_motion_client):
+    while True:
+        await asyncio.sleep(0.1)
+        if stepped_motion_client.state:
+            stepped_motion_client.next()
+            print('progress {:5.2f} percent'.format(
+                stepped_motion_client.state.progress))
+
+
+async def run_supervised(stepped_motion_client):
+    print('start supervised execution')
+
+    task_next = asyncio.ensure_future(next(stepped_motion_client))
+
+    await stepped_motion_client.action_done_future
+    task_next.cancel()
+
+    print('finished supervised execution')
 
 
 def main():
@@ -49,27 +86,52 @@ def main():
     joint_path = end_effector.inverse_kinematics_many(cartesian_path,
                                                       False).path
 
-    ioloop = asyncio.get_event_loop()
+    loop = asyncio.get_event_loop()
+    loop.add_signal_handler(signal.SIGTERM,
+                            functools.partial(shutdown, loop, signal.SIGTERM))
+    loop.add_signal_handler(signal.SIGINT,
+                            functools.partial(shutdown, loop, signal.SIGINT))
 
     try:
         print('test MoveGroup class')
-        print('----------------move joints collision free -------------------')
+        print('----------------          move joints                 -------------------')
+        loop.run_until_complete(
+            move_group.move_joints(joint_path))
+        print('----------------      move joints collision free      -------------------')
+        loop.run_until_complete(
+            move_group.move_joints_collision_free(joint_path))
 
-        for i in range(0, 2):
-            print('trajectory loop: ' + str(i))
-            ioloop.run_until_complete(
-                move_group.move_joints_collision_free(joint_path))
+        print('----------------        move joints supervised        -------------------')
+        stepped_motion_client = move_group.move_joints_supervised(
+            joint_path, 0.5)
+        loop.run_until_complete(run_supervised(stepped_motion_client))
+
+        print('----------------move joints collision free supervised -------------------')
+        stepped_motion_client = move_group.move_joints_collision_free_supervised(
+            joint_path, 0.5)
+        loop.run_until_complete(run_supervised(stepped_motion_client))
 
         print('test EndEffector class')
-        print('----------------move poses collision free -------------------')
+        print('----------------           move poses                 -------------------')
+        loop.run_until_complete(
+            end_effector.move_poses_collision_free(cartesian_path))
 
-        for i in range(0, 2):
-            print('trajectory loop: ' + str(i))
-            ioloop.run_until_complete(
-                end_effector.move_poses_collision_free(cartesian_path))
+        print('----------------        move poses collision free     -------------------')
+        loop.run_until_complete(
+            end_effector.move_poses_collision_free(cartesian_path))
+
+        print('----------------          move poses supervised       -------------------')
+        stepped_motion_client = end_effector.move_poses_supervised(
+            cartesian_path, None, 0.5)
+        loop.run_until_complete(run_supervised(stepped_motion_client))
+
+        print('---------------- move poses collision free supervised -------------------')
+        stepped_motion_client = end_effector.move_poses_collision_free_supervised(
+            cartesian_path, None, 0.5)
+        loop.run_until_complete(run_supervised(stepped_motion_client))
 
     finally:
-        ioloop.close()
+        loop.close()
 
 
 if __name__ == '__main__':

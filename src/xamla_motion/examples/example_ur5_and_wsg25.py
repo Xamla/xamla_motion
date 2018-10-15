@@ -55,20 +55,24 @@ def main():
     joint_trajectory, _ = end_effector.move_group.plan_move_joints_collision_free(
         joint_path)
 
-    async def shutdown(sig, loop):
-        print('caught {0}'.format(sig.name))
-        tasks = [task for task in asyncio.Task.all_tasks() if task is not
-                 asyncio.tasks.Task.current_task()]
-        list(map(lambda task: task.cancel(), tasks))
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        print('finished awaiting cancelled tasks'
-              ', results: {0}'.format(results))
-        loop.stop()
+    # function to shutdown asyncio properly
+    def shutdown(loop, reason):
+        print('shutdown asyncio due to : {}'.format(reason), flush=True)
+        tasks = asyncio.gather(*asyncio.Task.all_tasks(loop=loop),
+                               loop=loop, return_exceptions=True)
+        tasks.add_done_callback(lambda t: loop.stop())
+        tasks.cancel()
+
+        # Keep the event loop running until it is either destroyed or all
+        # tasks have really terminated
+        while not tasks.done() and not loop.is_closed():
+            loop.run_forever()
 
     ioloop = asyncio.get_event_loop()
-    # ioloop.add_signal_handler(signal.SIGTERM,
-    #                           functools.partial(asyncio.ensure_future,
-    #                                             shutdown(signal.SIGTERM, ioloop)))
+    loop.add_signal_handler(signal.SIGTERM,
+                            functools.partial(shutdown, loop, signal.SIGTERM))
+    loop.add_signal_handler(signal.SIGINT,
+                            functools.partial(shutdown, loop, signal.SIGINT))
 
     async def print_Hallo():
         print('Hallo')
