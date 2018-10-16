@@ -245,17 +245,42 @@ class JointTrajectoryPoint(object):
                               self.__efforts)
 
     def merge(self, others):
+        """
+        Creates a new instance of JointTrajectory as a result of the merge operation
+
+        Parameters
+        ----------
+        others: JointTrajectoryPoint or Iterable[JointTrajectoryPoint]
+            TrajectoryPoints to merge with the current TrajectoryPoint
+
+        Returns
+        -------
+        JointTrajectoryPoint:
+            New instance of JointTrajectoryPoint which contains the merged
+            JointTrajectoryPoints
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If other not one of excpeted types JointTrajectoryPoint or
+            Iterable[JointTrajectoryPoint]
+        ValueError
+            If time_from_start in self and others dont match
+            If JointSets of self and others are not mergeable
+            If self and others define more or less properties
+            of JointTrajectoryPoint
+        """
         def check_values(a, b, name):
             if not a:
                 if b:
-                    raise ValueError(name + ' are defined in others'
-                                     ' but not in self')
-                return false
+                    raise ValueError('merge conflict, ' + name + ' are defined'
+                                     ' in others but not in self')
+                return False
             else:
                 if not b:
-                    raise ValueError(name + ' are defined in self'
-                                     ' but not in others')
-                return true
+                    raise ValueError('merge conflict, ' + name + ' are defined'
+                                     'in self but not in others')
+                return True
 
         velocites = None
         accelerations = None
@@ -263,8 +288,8 @@ class JointTrajectoryPoint(object):
 
         if isinstance(others, JointTrajectoryPoint):
             if self.__time_from_start != others.time_from_start:
-                raise ValueError('time_from_start in others is not equal to'
-                                 '  self time_from_start')
+                raise ValueError('merge conflict, time_from_start in others'
+                                 ' is not equal to self time_from_start')
 
             positions = self.__positions.merge(others.positions)
 
@@ -277,41 +302,41 @@ class JointTrajectoryPoint(object):
 
         elif (isinstance(others, Iterable) and
               all(isinstance(v, JointTrajectoryPoint) for v in others)):
-            time_not_equal = map(lambda x: x.time_from_start !=
-                                 self.__time_from_start, others)
+            time_not_equal = list(map(lambda x: x.time_from_start !=
+                                      self.__time_from_start, others))
             if any(time_not_equal):
                 raise ValueError('time_from_start of others: {} is not'
                                  ' equal to self '
                                  'time_from_start'.format(time_not_equal))
 
             positions = self.__positions.merge(
-                map(lambda x: x.positions, others))
+                list(map(lambda x: x.positions, others)))
 
             check_velocities = map(lambda x: check_values(
                 self.__velocities, x.velocities, 'velocities'), others)
             if all(check_velocities):
                 velocites = self.__velocities.merge(
-                    map(lambda x: x.velocities, others))
+                    list(map(lambda x: x.velocities, others)))
 
             check_accelerations = map(lambda x: check_values(
                 self.__accelerations, x.accelerations, 'accelerations'), others)
             if all(check_accelerations):
-                velocites = self.__accelerations.merge(
-                    map(lambda x: x.accelerations, others))
+                accelerations = self.__accelerations.merge(
+                    list(map(lambda x: x.accelerations, others)))
 
             check_efforts = map(lambda x: check_values(
                 self.__efforts, x.efforts, 'efforts'), others)
             if all(check_efforts):
-                velocites = self.__efforts.merge(
-                    map(lambda x: x.efforts, others))
+                efforts = self.__efforts.merge(
+                    list(map(lambda x: x.efforts, others)))
 
         else:
             raise TypeError('others is not one of expected types '
                             'JointTrajectoryPoint or '
                             'Iterable[JointTrajectoryPoint]')
 
-        return self.__class__(time_from_start, positions, velocites,
-                              accelerations, efforts)
+        return self.__class__(self.__time_from_start, positions,
+                              velocites, accelerations, efforts)
 
     def to_joint_trajectory_point_msg(self):
         """

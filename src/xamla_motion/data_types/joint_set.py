@@ -516,9 +516,9 @@ class JointSet(object):
         if id(other) == id(self):
             return True
 
-        for i, name in enumerate(other):
-            if self.__names[i] != name:
-                return False
+        if (len(self.__names) != len(other.names) or
+                self.__names_set.difference(other.names)):
+            return False
 
         return True
 
