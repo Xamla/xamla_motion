@@ -1370,7 +1370,7 @@ class MotionService(object):
             raise RuntimeError('Unexpected result received by'
                                ' SimpleActionClient for moveJ action')
 
-        return response.result
+        return response.result()
 
     def execute_joint_trajectory_supervised(self, trajectory: JointTrajectory,
                                             velocity_scaling: float,
@@ -1958,7 +1958,7 @@ class MotionService(object):
                 status = ActionLibGoalStatus(goal_status)
                 if status != ActionLibGoalStatus.SUCCEEDED:
                     print('action end unsuccessfully with'
-                          ' state: {}'.format(status))
+                          ' state: {}, reason: {}'.format(status, result))
 
                 loop.call_soon_threadsafe(action_done.set_result, result)
 
