@@ -39,6 +39,8 @@ class JointTrajectoryPoint(object):
     add_time_offset(offset)
         Creates a new instance of this JointTrajectoryPoint with same
         position, vel, acc, eff but with a modified time_from_start
+    merge(others)
+        Creates a new instance of JointTrajectory as a result of the merge operation
     to_joint_trajectory_point_msg()
         Converts JointTrajectoryPoint to JointTrajectoryPoint ros message
     """
