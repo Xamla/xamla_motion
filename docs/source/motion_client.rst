@@ -18,7 +18,7 @@ is defined in cartesian/task space.
 
 Example:
 
-.. literalinclude:: ../../src/xamla_motion/examples/example_motion_client.py
+.. literalinclude:: ../../examples/example_motion_client.py
     :lines: 21-
 
 MoveGroup

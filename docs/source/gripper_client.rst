@@ -21,7 +21,7 @@ the Weiss WSG series offers.
 
 Example:
 
-.. literalinclude:: ../../src/xamla_motion/examples/example_gripper_client.py
+.. literalinclude:: ../../examples/example_gripper_client.py
     :lines: 21-
 
 CommonGripper

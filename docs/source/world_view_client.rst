@@ -31,7 +31,7 @@ At the moment following functionalities are provided:
 
 Example:
 
-.. literalinclude:: ../../src/xamla_motion/examples/example_world_view_client.py
+.. literalinclude:: ../../examples/example_world_view_client.py
     :lines: 21-
 
 WorldViewClient

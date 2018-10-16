@@ -1877,7 +1877,7 @@ class MotionService(object):
                                ' gripper command action: ' +
                                action_name)
 
-        return MoveGripperResult.from_gripper_command_action_result(response)
+        return MoveGripperResult.from_gripper_command_action_result(response.result())
 
     async def wsg_gripper_command(self, action_name, command, width, speed,
                                   max_effort, stop_on_block=True):
@@ -1946,7 +1946,7 @@ class MotionService(object):
                                ' wsg gripper command action: ' +
                                action_name)
 
-        return WsgResult.from_wsg_command_action_result(response)
+        return WsgResult.from_wsg_command_action_result(response.result())
 
     def _generate_action_executor(self, action):
 
