@@ -86,7 +86,7 @@ class JointPath(object):
         if joint_values.joint_set == self.__joints:
             return joint_values
 
-        if not joint_values.is_similar(self.__joints):
+        if not joint_values.joint_set.is_similar(self.__joints):
             raise ValueError('Provided path points have joint values'
                              ' of incompatible joint sets')
 
