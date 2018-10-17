@@ -159,8 +159,9 @@ class SteppedMotionClient(object):
         def done_callback(goal_status, result):
             status = ActionLibGoalStatus(goal_status)
             if status != ActionLibGoalStatus.SUCCEEDED:
+                reason = MotionActionResult(result.result)
                 print('action end unsuccessfully with'
-                      ' state: {}'.format(status))
+                      ' state: {}, reason: {}'.format(status, reason))
             loop.call_soon_threadsafe(self.__action_done.set_result, result)
 
         self.__m_action.send_goal(goal, done_cb=done_callback)
