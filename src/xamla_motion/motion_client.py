@@ -578,7 +578,7 @@ class MoveGroup(object):
             parameters.collision_check = collision_check
 
         if max_deviation:
-            max_deviation = max_deviation
+            parameters.max_deviation = max_deviation
 
         if acceleration_scaling:
             parameters.acceleration_scaling = acceleration_scaling
@@ -640,7 +640,7 @@ class MoveGroup(object):
                 parameters.collision_check = collision_check
 
             if max_deviation:
-                max_deviation = max_deviation
+                parameters.max_deviation = max_deviation
 
             if acceleration_scaling:
                 parameters.acceleration_scaling = acceleration_scaling
