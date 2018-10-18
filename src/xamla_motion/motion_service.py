@@ -27,6 +27,7 @@ import enum
 from xamlamoveit_msgs.srv import *
 from xamlamoveit_msgs.msg import *
 from control_msgs.msg import GripperCommandAction, GripperCommandGoal
+from moveit_msgs.msg import MoveItErrorCodes
 from std_srvs.srv import SetBool
 
 from .xamla_motion_exceptions import ServiceException, ArgumentError
@@ -129,7 +130,7 @@ class SteppedMotionClient(object):
         def done_callback(goal_status, result):
             status = ActionLibGoalStatus(goal_status)
             if status != ActionLibGoalStatus.SUCCEEDED:
-                reason = (result.result)
+                reason = ActionResult(result.result)
                 print('action end unsuccessfully with'
                       ' state: {}, reason: {}'.format(status, reason))
             loop.call_soon_threadsafe(self.__action_done.set_result, result)
@@ -597,7 +598,7 @@ class MotionService(object):
                                    'invalid response')
 
         for i, error in enumerate(response.error_codes):
-            if error.val != ActionResult.SUCCESS:
+            if error.val != MoveItErrorCodes.SUCCESS:
                 raise ServiceException('service call for query forward'
                                        ' kinematics was not'
                                        ' successful for point: ' + str(i) +
@@ -675,7 +676,7 @@ class MotionService(object):
         response = cls._query_moveit_joint_path(move_group_name,
                                                 joint_path)
 
-        if response.error_code.val != ActionResult.SUCCESS:
+        if response.error_code.val != MoveItErrorCodes.SUCCESS:
             raise ServiceException('service call for query collision free'
                                    ' joint path was not successful. '
                                    'service name:' +
@@ -766,7 +767,7 @@ class MotionService(object):
                                    ' joint trajectory'
                                    ' failed, abort') from exc
 
-        if response.error_code.val != ActionResult.SUCCESS:
+        if response.error_code.val != MoveItErrorCodes.SUCCESS:
             raise ServiceException('service call for query joint'
                                    ' trajectory was not successful. '
                                    'service name:' +
@@ -886,7 +887,7 @@ class MotionService(object):
                                    ' cartesian trajectory'
                                    ' failed, abort') from exc
 
-        if response.error_code.val != ActionResult.SUCCESS:
+        if response.error_code.val != MoveItErrorCodes.SUCCESS:
             raise ServiceException('service call for query cartesian'
                                    ' trajectory was not successful. '
                                    'service name:' +

@@ -22,7 +22,7 @@ import enum
 
 
 @enum.unique
-class ActionResult(enum.IntEnum):
+class ActionResult(enum.Enum):
     SUCCESS = 1
     FAILURE = 99999
     SIGNAL_LOST = -9999
