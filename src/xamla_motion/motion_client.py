@@ -1319,8 +1319,8 @@ class EndEffector(object):
                                                             timeout)
 
         if not ik.succeeded:
-            raise ServiceException('inverse kinematics returns'
-                                   ' with error: ' + str(ik))
+            print('computation of inverse kinematic fails' 
+                  ' for one or more request in batch: ' + str(ik))
 
         return ik
 

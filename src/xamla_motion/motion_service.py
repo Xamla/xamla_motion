@@ -27,7 +27,6 @@ import enum
 from xamlamoveit_msgs.srv import *
 from xamlamoveit_msgs.msg import *
 from control_msgs.msg import GripperCommandAction, GripperCommandGoal
-from moveit_msgs.msg import MoveItErrorCodes
 from std_srvs.srv import SetBool
 
 from .xamla_motion_exceptions import ServiceException, ArgumentError
@@ -55,35 +54,6 @@ class ActionLibGoalStatus(enum.Enum):
     RECALLING = 7
     RECALLED = 8
     LOST = 9
-
-
-@enum.unique
-class MotionActionResult(enum.Enum):
-    SUCCESS = 1
-    FAILURE = 99999
-    SIGNAL_LOST = -9999
-    PLANNING_FAILED = -1
-    INVALID_MOTION_PLAN = -2
-    MOTION_PLAN_INVALIDATED_BY_ENVIRONMENT_CHANGE = -3
-    CONTROL_FAILED = -4
-    UNABLE_TO_AQUIRE_SENSOR_DATA = -5
-    TIMED_OUT = -6
-    PREEMPTED = -7
-    START_STATE_IN_COLLISION = -10
-    START_STATE_VIOLATES_PATH_CONSTRAINTS = -11
-    GOAL_IN_COLLISION = -12
-    GOAL_VIOLATES_PATH_CONSTRAINTS = -13
-    GOAL_CONSTRAINTS_VIOLATED = -14
-    INVALID_GROUP_NAME = -15
-    INVALID_GOAL_CONSTRAINTS = -16
-    INVALID_ROBOT_STATE = -17
-    INVALID_LINK_NAME = -18
-    INVALID_OBJECT_NAME = -19
-    FRAME_TRANSFORM_FAILURE = -21
-    COLLISION_CHECKING_UNAVAILABLE = -22
-    ROBOT_STATE_STALE = -23
-    SENSOR_INFO_STALE = -24
-    NO_IK_SOLUTION = -31
 
 
 class SteppedMotionClient(object):
@@ -159,7 +129,7 @@ class SteppedMotionClient(object):
         def done_callback(goal_status, result):
             status = ActionLibGoalStatus(goal_status)
             if status != ActionLibGoalStatus.SUCCEEDED:
-                reason = MotionActionResult(result.result)
+                reason = (result.result)
                 print('action end unsuccessfully with'
                       ' state: {}, reason: {}'.format(status, reason))
             loop.call_soon_threadsafe(self.__action_done.set_result, result)
@@ -627,7 +597,7 @@ class MotionService(object):
                                    'invalid response')
 
         for i, error in enumerate(response.error_codes):
-            if error.val != MoveItErrorCodes.SUCCESS:
+            if error.val != ActionResult.SUCCESS:
                 raise ServiceException('service call for query forward'
                                        ' kinematics was not'
                                        ' successful for point: ' + str(i) +
@@ -705,7 +675,7 @@ class MotionService(object):
         response = cls._query_moveit_joint_path(move_group_name,
                                                 joint_path)
 
-        if response.error_code.val != MoveItErrorCodes.SUCCESS:
+        if response.error_code.val != ActionResult.SUCCESS:
             raise ServiceException('service call for query collision free'
                                    ' joint path was not successful. '
                                    'service name:' +
@@ -796,7 +766,7 @@ class MotionService(object):
                                    ' joint trajectory'
                                    ' failed, abort') from exc
 
-        if response.error_code.val != MoveItErrorCodes.SUCCESS:
+        if response.error_code.val != ActionResult.SUCCESS:
             raise ServiceException('service call for query joint'
                                    ' trajectory was not successful. '
                                    'service name:' +
@@ -916,7 +886,7 @@ class MotionService(object):
                                    ' cartesian trajectory'
                                    ' failed, abort') from exc
 
-        if response.error_code.val != MoveItErrorCodes.SUCCESS:
+        if response.error_code.val != ActionResult.SUCCESS:
             raise ServiceException('service call for query cartesian'
                                    ' trajectory was not successful. '
                                    'service name:' +
@@ -1605,10 +1575,7 @@ class MotionService(object):
                                [f(parameters.joint_set, p)
                                 for p in response.solutions])
 
-        error_codes = [e.val if e.val != 0 else MoveItErrorCodes.FAILURE
-                       for e in response.error_codes]
-
-        return IkResults(joint_path, error_codes)
+        return IkResults(joint_path, response.error_codes)
 
     @staticmethod
     def _ros_duration_from_timedelta(timedelta):
@@ -1988,7 +1955,7 @@ class MotionService(object):
                 status = ActionLibGoalStatus(goal_status)
                 if status != ActionLibGoalStatus.SUCCEEDED:
                     try:
-                        reason = MotionActionResult(result.result)
+                        reason = ActionResult(result.result)
                         print('action end unsuccessfully with'
                               ' state: {}, reason: {}'.format(status, reason))
                     except AttributeError:
