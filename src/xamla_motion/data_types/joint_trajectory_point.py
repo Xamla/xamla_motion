@@ -314,20 +314,20 @@ class JointTrajectoryPoint(object):
             positions = self.__positions.merge(
                 list(map(lambda x: x.positions, others)))
 
-            check_velocities = map(lambda x: check_values(
-                self.__velocities, x.velocities, 'velocities'), others)
+            check_velocities = list(map(lambda x: check_values(
+                self.__velocities, x.velocities, 'velocities'), others))
             if all(check_velocities):
                 velocites = self.__velocities.merge(
                     list(map(lambda x: x.velocities, others)))
 
-            check_accelerations = map(lambda x: check_values(
-                self.__accelerations, x.accelerations, 'accelerations'), others)
+            check_accelerations = list(map(lambda x: check_values(
+                self.__accelerations, x.accelerations, 'accelerations'), others))
             if all(check_accelerations):
                 accelerations = self.__accelerations.merge(
                     list(map(lambda x: x.accelerations, others)))
 
-            check_efforts = map(lambda x: check_values(
-                self.__efforts, x.efforts, 'efforts'), others)
+            check_efforts = list(map(lambda x: check_values(
+                self.__efforts, x.efforts, 'efforts'), others))
             if all(check_efforts):
                 efforts = self.__efforts.merge(
                     list(map(lambda x: x.efforts, others)))

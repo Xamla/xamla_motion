@@ -346,20 +346,18 @@ class Pose(object):
         transformation_matrix[:-1, -1] = self.__translation
         return transformation_matrix
 
-    def pinv(self, new_frame_id):
+    def inverse(self, new_frame_id):
         """
         Creates an instance which contains the inverse of this pose
-
-        The inverse is computed by (Moore-Penrose) pseudo inverse
-        of the fransformation matrix
 
         Parameters
         ----------
         new_frame_id : str convertable
             name of the coordinate system in which pose is now defined 
         """
-        pinv = np.linalg.pinv(self.transformation_matrix())
-        return self.__class__.from_transformation_matrix(pinv)
+        q_inv = self.__quaternion.inverse
+        t_inv = q_inv.rotate(-self.translation)
+        return self.__class__(t_inv, q_inv, new_frame_id)
 
     def to_posestamped_msg(self):
         """
@@ -450,33 +448,31 @@ class Pose(object):
 
     def __mul__(self, other):
 
-        matrix_self = self.transformation_matrix()
         if isinstance(other, self.__class__):
-            matrix_other = other.transformation_matrix()
-            product = np.matmul(matrix_self, matrix_other)
-            return self.from_transformation_matrix(product, self.__frame_id)
+            new_q = self.__quaternion * other.quaternion
+            new_t = (self.__translation +
+                     self.__quaternion.rotate(other.translation))
+            return self.__class__(new_t, new_q)
         elif (isinstance(other, np.ndarray) and
                 issubclass(other.dtype.type, np.floating)):
-            if other.shape in [(3,), (3, 1)]:
-                vector = np.append(other, [[1.0]])
-                return np.matmul(matrix_self, vector)
-            elif other.shape == (1, 3):
-                vector = np.append(other, [[1.0]], axis=0)
-                return np.matmul(matrix_self, vector.T)
-            elif other.shape in [(4,), (4, 1)]:
-                return np.matmul(matrix_self, other)
-            elif other.shape == (1, 4):
-                return np.matmul(matrix_self, other.T)
+            if other.shape in [(3,), (3, 1), (1, 3)]:
+                new_t = (self.__translation +
+                         self.__quaternion.rotate(other))
+                return new_t
+            elif other.shape in [(4,), (4, 1), (1, 4)]:
+                new_t = (self.__translation +
+                         self.__quaternion.rotate(other[:3]))
+                return new_t
             elif other.shape == (4, 4):
-                product = np.matmul(matrix_self, other)
+                product = np.matmul(self.transformation_matrix(), other)
                 return self.from_transformation_matrix(product, self.__frame_id)
             else:
                 TypeError('vector is not of shape (3,), (3,1)'
                           '(1,3), (4,), (4,1) or (1,4) or matrix (4,4)')
 
         else:
-            TypeError('other is not of expected type Pose or'
-                      ' 3 dimensional numpy vector or'
+            TypeError('other is not of expected type Pose,'
+                      ' 3 or 4 dimensional numpy vector or'
                       ' 4x4 transformation matrix dtype floating')
 
     def __rmul__(self, other):
