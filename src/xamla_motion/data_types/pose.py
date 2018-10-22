@@ -29,8 +29,8 @@ class Pose(object):
 
     The translation is representated by a three dimensional
     row vector. The rotation is represented by a
-    quaternion. The pose itself is idenified by the frame_id
-    attribute
+    quaternion. The pose itself is defined in coordinate system
+    which is defined in frame_id (default world)
 
     Methods
     -------
@@ -455,20 +455,27 @@ class Pose(object):
             return self.__class__(new_t, new_q)
         elif (isinstance(other, np.ndarray) and
                 issubclass(other.dtype.type, np.floating)):
-            if other.shape in [(3,), (3, 1), (1, 3)]:
+            if other.shape in [(3,), (3, 1)]:
                 new_t = (self.__translation +
                          self.__quaternion.rotate(other))
                 return new_t
-            elif other.shape in [(4,), (4, 1), (1, 4)]:
-                new_t = (self.__translation +
-                         self.__quaternion.rotate(other[:3]))
+            elif other.shape == (4,):
+                new_t = np.ones(other.shape)
+                new_t[0:3] = (self.__translation +
+                              self.__quaternion.rotate(other[:3]))
+                return new_t
+            elif other.shape == (4, 1):
+                new_t = np.ones(other.shape)
+                t3 = (self.__translation +
+                      self.__quaternion.rotate(other[:3]))
+                new_t[0:3] = np.expand_dims(t3, axis=1)
                 return new_t
             elif other.shape == (4, 4):
                 product = np.matmul(self.transformation_matrix(), other)
                 return self.from_transformation_matrix(product, self.__frame_id)
             else:
-                TypeError('vector is not of shape (3,), (3,1)'
-                          '(1,3), (4,), (4,1) or (1,4) or matrix (4,4)')
+                TypeError('vector is not of shape (3,), (3,1),'
+                          ' (4,), (4,1)  or matrix (4,4)')
 
         else:
             TypeError('other is not of expected type Pose,'

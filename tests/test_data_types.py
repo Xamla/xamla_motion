@@ -52,31 +52,33 @@ class TestPose(object):
         gt[2] += vec[2]
         assert new_p == pytest.approx(gt)
 
-    def test_pose_mul_vect3_transpose(self):
-        vec = np.asarray([1.23, 2.3, 1.2])
+    def test_pose_mul_vect3_1(self):
+        vec = np.asarray([[1.23, 2.3, 1.2]])
         new_p = self.pose3*vec.T
         gt = self.pose3.translation.copy()
-        gt[0] += vec[1]
-        gt[1] -= vec[0]
-        gt[2] += vec[2]
+        gt[0] += vec[0][1]
+        gt[1] -= vec[0][0]
+        gt[2] += vec[0][2]
         assert new_p == pytest.approx(gt)
 
     def test_pose_mul_vect4(self):
         vec = np.asarray([1.23, 2.3, 1.2, 1.0])
         new_p = self.pose3*vec
-        gt = self.pose3.translation.copy()
+        gt = np.ones((4,))
+        gt[0:3] = self.pose3.translation.copy()
         gt[0] += vec[1]
         gt[1] -= vec[0]
         gt[2] += vec[2]
         assert new_p == pytest.approx(gt)
 
-    def test_pose_mul_vect4_transpose(self):
-        vec = np.asarray([1.23, 2.3, 1.2, 1.0])
+    def test_pose_mul_vect4_1(self):
+        vec = np.asarray([[1.23, 2.3, 1.2, 1.0]])
         new_p = self.pose3*vec.T
-        gt = self.pose3.translation.copy()
-        gt[0] += vec[1]
-        gt[1] -= vec[0]
-        gt[2] += vec[2]
+        gt = np.ones((4, 1))
+        gt[0:3] = np.expand_dims(self.pose3.translation.copy(), axis=1)
+        gt[0] += vec[0][1]
+        gt[1] -= vec[0][0]
+        gt[2] += vec[0][2]
         assert new_p == pytest.approx(gt)
 
 
