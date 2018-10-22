@@ -458,10 +458,10 @@ class Pose(object):
         elif (isinstance(other, np.ndarray) and
                 issubclass(other.dtype.type, np.floating)):
             if other.shape in [(3,), (3, 1)]:
-                vector = np.append(other, [[1.0]], axis=0)
+                vector = np.append(other, [[1.0]])
                 return np.matmul(matrix_self, vector)
             elif other.shape == (1, 3):
-                vector = np.append(other, [[1.0]], axis=1)
+                vector = np.append(other, [[1.0]], axis=0)
                 return np.matmul(matrix_self, vector.T)
             elif other.shape in [(4,), (4, 1)]:
                 return np.matmul(matrix_self, other)
