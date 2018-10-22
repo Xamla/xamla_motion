@@ -83,10 +83,10 @@ class SteppedMotionClient(object):
         trajectory : JointTrajectory
             Trajectory which should be executed supervised
         velocity_scaling : float
-            Scaling factor to reduce or increase the trajectory 
+            Scaling factor to reduce or increase the trajectory
             velocities range [0.0-1.0]
         check_collision : bool (default True)
-            If True collision check is performed 
+            If True collision check is performed
 
         Raises
         ------
@@ -94,7 +94,7 @@ class SteppedMotionClient(object):
             If trajectory is not of expected type JointTrajectory
         ValueError
             If velocity_scaling is not in range between 0.0 an 1.0
-        ServiceException 
+        ServiceException
             If action goal handle is not available
         """
         self.__mutex = Lock()
@@ -186,7 +186,7 @@ class SteppedMotionClient(object):
 
     def next(self):
         """
-        Request at supervised executor to perform next step 
+        Request at supervised executor to perform next step
         """
         if self.__goal_id:
             self.__next_pub.publish(self.__goal_id)
@@ -1335,7 +1335,7 @@ class MotionService(object):
 
         Parameters
         ----------
-        trajectory : JointTrajectory 
+        trajectory : JointTrajectory
             Joint trajectory which should be executed
         collision_check : bool convertable
             If True check for collision while executing
@@ -1347,7 +1347,7 @@ class MotionService(object):
 
         Raises
         ------
-        TypeError 
+        TypeError
             If trajectory is not of type JointTrajectory
             or if collision_check is not convertable to bool
         """
@@ -1380,7 +1380,7 @@ class MotionService(object):
         Creates a instance of SteppedMotionClient for supervised trajectory execution
         Parameters
         ----------
-        trajectory : JointTrajectory 
+        trajectory : JointTrajectory
             Joint trajectory which should be executed
         velocity_scaling : float
             scaling of velocity range 0.0 to 1.0
@@ -1394,7 +1394,7 @@ class MotionService(object):
 
         Raises
         ------
-        TypeError 
+        TypeError
             If trajectory is not of type JointTrajectory
             or if collision_check is not convertable to bool
         """
@@ -1429,7 +1429,7 @@ class MotionService(object):
         -------
         JointValues
             Instance of JointValues which is the joint space
-            equivalent of the task space pose  
+            equivalent of the task space pose
 
         Raises
         ------
@@ -1559,7 +1559,7 @@ class MotionService(object):
         req.const_seed = const_seed
         req.points = poses_msgs
         req.collision_check = parameters.collision_check
-        req.attemts = attempts
+        req.attempts = attempts
         req.timeout = duration
 
         try:
