@@ -18,6 +18,7 @@
 
 #!/usr/bin/env python3
 
+from copy import deepcopy
 from pyquaternion import Quaternion
 import geometry_msgs.msg as geometry_msgs
 import numpy as np
@@ -38,16 +39,22 @@ class Pose(object):
         Creates an instance of Pose from a transformation matrix
     from_posestamped_msg(msg)
         Initialize Pose from ROS posestamped message
-    from_pose_msg(cls, msg, frame_id='')
+    from_pose_msg(msg, frame_id='')
         Initialize Pose from ROS pose message
     normalize_rotation()
         Creates an instance of Pose with normalized quaternion
     is_rotation_normalized()
         Return True if quaternion is normalized
     rotation_matrix()
-        Returns the rotation matrix in homogenous coordinates (4x4 numpy array)
+        Returns the rotation matrix(3x3 numpy array)
     transformation_matrix()
         Returns the transformation matrix in homogenous coordinates (4x4 numpy array)
+    inverse(new_frame_id)
+        Creates an instance which contains the inverse of this pose
+    translate(translation)
+        Translate pose
+    translate(rotation)
+        Rotate pose
     to_posestamped_msg()
         Creates an instance of the ROS message PoseStamped from Pose
     """
@@ -75,7 +82,7 @@ class Pose(object):
 
         Returns
         ------
-        Pose
+        pose : Pose
             An instance of class Pose
 
         Raises
@@ -148,7 +155,7 @@ class Pose(object):
 
         Returns
         ------
-        Pose
+        pose : Pose
             An instance of class Pose
 
         Raises
@@ -157,7 +164,7 @@ class Pose(object):
             If tranformation matrix is not a 4x4 numpy array 
             with dtype floating
 
-         Examples
+        Examples
         --------
         Create a Pose instance from transformation matrix and
         set frame_id
@@ -199,7 +206,7 @@ class Pose(object):
 
         Returns
         -------
-        Pose
+        pose : Pose
             Instance of Pose generated from PoseStamped message
 
         Raises
@@ -239,7 +246,7 @@ class Pose(object):
 
         Returns
         -------
-        Pose
+        pose : Pose
             Instance of Pose from pose message
 
         Raises
@@ -293,6 +300,7 @@ class Pose(object):
 
         Returns
         ------
+        pose : Pose
             Instance of Pose with normalized quaternion / rotation
         """
         if np.isclose(np.linalg.norm(self.__quaternion.elements), 1.0):
@@ -323,15 +331,16 @@ class Pose(object):
 
     def rotation_matrix(self):
         """
-        Returns the rotation matrix in homogenous coordinates (4x4 numpy array)
+        Returns the rotation matrix (3x3 numpy array)
 
         Returns
         ------
-            A 4x4 numpy array with dtype float which represents the rotation
-            matrix in homogenous coordinates
+        rotation_matrix : np.ndarray
+            A 3x3 numpy array with dtype float which represents the rotation
+            matrix
         """
 
-        return self.__quaternion.transformation_matrix
+        return self.__quaternion.rotation_matrix
 
     def transformation_matrix(self):
         """
@@ -339,6 +348,7 @@ class Pose(object):
 
         Returns
         ------
+        transformation_matrix : np.ndarray
             A 4x4 numpy array with dtype float which represents the transformation
             matrix in homogenous coordinates
         """
@@ -354,10 +364,96 @@ class Pose(object):
         ----------
         new_frame_id : str convertable
             name of the coordinate system in which pose is now defined 
+
+        Returns
+        -------
+        inv_pose : Pose
+            pose which is the inverse of self
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If new_frame_id is not of type str
         """
         q_inv = self.__quaternion.inverse
         t_inv = q_inv.rotate(-self.translation)
         return self.__class__(t_inv, q_inv, new_frame_id)
+
+    def translate(self, translation):
+        """
+        Translate pose
+
+        Parameters
+        ----------
+        translation : Iterable
+            translation which defines the change in x,y,z
+
+        Returns
+        -------
+        translated_pose : Pose
+            pose which is translated by translate vector
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If translation is not convertable to np.ndarray
+        ValueError
+            If translation is not of size 3 (x,y,z)
+        """
+
+        try:
+            translation = np.fromiter(translation, float)
+            if translation.shape[0] != 3:
+                raise ValueError('provided translation is not'
+                                 ' convertabel to a numpy vector of size (3,)')
+        except (TypeError, ValueError) as exc:
+            raise exc
+
+        new_pose = deepcopy(self)
+        new_pose._Pose__translation += translation
+        return new_pose
+
+    def rotate(self, rotation):
+        """
+        Rotate pose
+
+        Parameters
+        ----------
+        rotation: (Quaternion or np.ndarray)
+            defines rotation by Quaternion or 3x3 rotation matrix
+
+        Returns
+        -------
+        rotated_pose : Pose
+            pose which is rotated by rotation
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If rotation is not one of expected types
+            3x3 np.ndarray or pyquaternion.Quaternion
+        ValueError
+            If initialization of Quaternion is not possible
+        """
+        is_quaternion = isinstance(rotation, Quaternion)
+        is_rotation_matrix = (isinstance(rotation, np.ndarray) and
+                              rotation.shape == (3, 3))
+
+        if is_quaternion:
+            new_q = self.__quaternion * rotation
+        elif is_rotation_matrix:
+            try:
+                new_q = self.__quaternion * Quaternion(matrix=rotation)
+            except ValueError as exc:
+                raise ValueError(
+                    'quaternion initialization went wrong') from exc
+        else:
+            raise TypeError('rotation is not one of expected types '
+                            'Quaternion or np.ndarray (3x3)')
+
+        new_pose = deepcopy(self)
+        new_pose._Pose__quaternion = new_q
+        return new_pose
 
     def to_posestamped_msg(self):
         """
@@ -459,6 +555,10 @@ class Pose(object):
                 new_t = (self.__translation +
                          self.__quaternion.rotate(other))
                 return new_t
+            elif other.shape == (3, 1):
+                new_t = (self.__translation +
+                         self.__quaternion.rotate(other[:3]))
+                return np.expand_dims(t3, axis=1)
             elif other.shape == (4,):
                 new_t = np.ones(other.shape)
                 new_t[0:3] = (self.__translation +

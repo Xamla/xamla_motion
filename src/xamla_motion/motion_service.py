@@ -1559,7 +1559,7 @@ class MotionService(object):
         req.const_seed = const_seed
         req.points = poses_msgs
         req.collision_check = parameters.collision_check
-        req.attemts = attempts
+        req.attempts = attempts
         req.timeout = duration
 
         try:

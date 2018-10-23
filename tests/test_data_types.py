@@ -28,16 +28,30 @@ class TestPose(object):
         cls.pose2 = Pose.from_transformation_matrix(m2)
 
         # create pose3 from transformation matrix
-        m3 = np.eye(4)
-        m3[0:3, 3] = np.asarray([0.8660254037844386, 0.0, 0.0])
-        m3[0:2, 0:2] = np.asarray([[0.0, 1.0], [-1.0, 0.0]])
-        cls.pose3 = Pose.from_transformation_matrix(m3)
+        cls.m3 = np.eye(4)
+        cls.m3[0:3, 3] = np.asarray([0.8660254037844386, 0.0, 0.0])
+        cls.m3[0:2, 0:2] = np.asarray([[0.0, 1.0], [-1.0, 0.0]])
+        cls.pose3 = Pose.from_transformation_matrix(cls.m3)
 
     def test_pose_inverse(self):
         p_inv = self.pose1.inverse('new_frame')
         p_m = (self.pose1*p_inv).transformation_matrix()
 
         assert p_m == pytest.approx(np.eye(4))
+
+    def test_translate(self):
+        t_pose = self.pose3.translate([0.0, 1.0, 1.0])
+        gt = self.m3.copy()
+        gt[1, 3] = 1.0
+        gt[2, 3] = 1.0
+        assert t_pose.transformation_matrix() == pytest.approx(gt)
+
+    def test_rotate(self):
+        m = self.m3.copy()
+        m[0:3, 0:3] = np.eye(3)
+        p = Pose.from_transformation_matrix(m)
+        r_pose = p.rotate(self.m3[0:3, 0:3])
+        assert r_pose.transformation_matrix() == pytest.approx(self.m3)
 
     def test_pose_mul_pose(self):
         tri_pose = (self.pose1*self.pose2)*self.pose3.inverse('pose3')

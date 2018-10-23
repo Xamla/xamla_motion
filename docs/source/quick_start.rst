@@ -119,8 +119,7 @@ with help of them. For example we can do simple transformations like translate 0
 
     >>> from xamla_motion.data_types import Pose
     >>> import numpy as np
-    >>> translate = np.eye(4)
-    >>> translate[0:2,3] = 0.5
+    >>> translation = np.asarray([0.5, 0.5, 0.0])
     >>> pose = Pose.from_transformation_matrix(np.eye(4))
     >>> print(pose)
     Pose:
@@ -132,7 +131,7 @@ with help of them. For example we can do simple transformations like translate 0
     quaternion.y : 0.0
     quaternion.z : 0.0
     frame_id : world
-    >>> pose * translate
+    >>> pose.translate(translation)
     Pose:
     translation.x : 0.5
     translation.y : 0.5
