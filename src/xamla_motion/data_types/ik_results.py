@@ -22,7 +22,7 @@ import enum
 
 
 @enum.unique
-class ActionResult(enum.Enum):
+class ErrorCodes(enum.Enum):
     SUCCESS = 1
     FAILURE = 99999
     SIGNAL_LOST = -9999
@@ -57,7 +57,7 @@ class IkResults(object):
 
     def __init__(self, path, error_codes):
         self.__path = path
-        self.__error_codes = [ActionResult(x.val) for x in error_codes]
+        self.__error_codes = [ErrorCodes(x.val) for x in error_codes]
 
     @property
     def path(self):
@@ -70,14 +70,14 @@ class IkResults(object):
     @property
     def error_codes(self):
         """
-        error_code : List[ActionResult]
+        error_code : List[ErrorCodes]
             error codes
         """
         return self.__error_codes
 
     @property
     def succeeded(self):
-        if all([e == ActionResult.SUCCESS
+        if all([e == ErrorCodes.SUCCESS
                 for e in self.__error_codes]):
             return True
         else:

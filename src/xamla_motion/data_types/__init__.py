@@ -16,7 +16,7 @@ from .end_effector_pose import EndEffectorPose
 from .joint_limits import JointLimits
 from .plan_parameters import PlanParameters
 from .task_space_plan_parameters import TaskSpacePlanParameters
-from .ik_results import IkResults, ActionResult
+from .ik_results import IkResults, ErrorCodes
 from .move_gripper_result import MoveGripperResult
 from .wsg import WsgCommand, WsgState, WsgResult
 from .collision_object import CollisionPrimitiveKind, CollisionPrimitive, CollisionObject
