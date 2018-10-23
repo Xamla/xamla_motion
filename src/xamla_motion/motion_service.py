@@ -137,6 +137,7 @@ class SteppedMotionClient(object):
             loop.call_soon_threadsafe(self.__action_done.set_result, result)
 
         self.__m_action.send_goal(goal, done_cb=done_callback)
+        rospy.on_shutdown(self.__m_action.cancel_goal())
 
         self.__goal_id = self.__m_action.gh.comm_state_machine.action_goal.goal_id
 
@@ -160,9 +161,6 @@ class SteppedMotionClient(object):
                                                TrajectoryProgress,
                                                callback=self._feedback_callback,
                                                queue_size=10)
-
-    def __del__(self):
-        self.__m_action.cancel_goal()
 
     @property
     def state(self):
@@ -2002,8 +2000,7 @@ class MotionService(object):
             except (asyncio.CancelledError, ServiceException) as exc:
                 print('Cancel goal because of: {}'.format(exc))
                 action.cancel_goal()
-                await action_done
-                print('done2')
+                action.wait_for_result()
 
             return action_done
 
