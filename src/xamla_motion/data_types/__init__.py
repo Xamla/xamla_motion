@@ -12,6 +12,7 @@ from .joint_trajectory import JointTrajectory
 from .move_group_description import MoveGroupDescription
 from .end_effector_description import EndEffectorDescription
 from .end_effector_limits import EndEffectorLimits
+from .end_effector_pose import EndEffectorPose
 from .joint_limits import JointLimits
 from .plan_parameters import PlanParameters
 from .task_space_plan_parameters import TaskSpacePlanParameters

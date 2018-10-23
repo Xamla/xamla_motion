@@ -19,6 +19,7 @@
 #!/usr/bin/env python3
 
 from .pose import Pose
+from xamlamoveit_msgs.msg import EndEffectorPoses
 
 
 class EndEffectorPose(object):
@@ -63,7 +64,7 @@ class EndEffectorPose(object):
         if not isinstance(end_effector_link, str):
             raise TypeError('end_effector_link is not of expected type str')
 
-        self.__pose = Pose
+        self.__pose = pose
         self.__end_effector_link = end_effector_link
 
     @property
@@ -82,3 +83,12 @@ class EndEffectorPose(object):
             the URDF model which is to be positioned
         """
         return self.__end_effector_link
+
+    def to_end_effector_pose_msg(self):
+        """
+        Returns a ROS EndEffectorPoses msg
+        """
+        ee_pose = EndEffectorPoses()
+        ee_pose.poses.append(self.__pose.to_posestamped_msg())
+        ee_pose.link_names.append(self.__end_effector_link)
+        return ee_pose

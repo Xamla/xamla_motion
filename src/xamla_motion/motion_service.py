@@ -68,6 +68,7 @@ class SteppedMotionClient(object):
         Run supervised trajectory execution
     """
 
+    __step_topic = '/xamlaMoveActions/step'
     __next_topic = '/xamlaMoveActions/next'
     __previous_topic = '/xamlaMoveActions/prev'
     __feedback_topic = '/xamlaMoveActions/feedback'
@@ -143,6 +144,11 @@ class SteppedMotionClient(object):
             self.__m_action.cancel_goal()
             raise ServiceException('action goal handle is not available')
 
+        self.__state = SteppedMotionState(self.__goal_id.id, '', 0, 0.0)
+
+        self.__step_pub = rospy.Publisher(self.__step_topic,
+                                          Step,
+                                          queue_size=1)
         self.__next_pub = rospy.Publisher(self.__next_topic,
                                           GoalID,
                                           queue_size=1)
@@ -184,6 +190,35 @@ class SteppedMotionClient(object):
 
         return self.__action_done
 
+    def step(self, velocity_scaling=0.5):
+        """
+        Requests the supervised executor to perform a step
+
+        The stepping direction is determined by the sign of the velocity_scaling
+
+        Parameters
+        ----------
+        velocity_scaling : float
+            Specifies the desired velocity and direction of the supervised motion.
+            Positive values mean forward and negative values backward stepping. 
+            To stop fast as possible set velocity scaling to 0.0. 
+            Valid range: [-1.0, 1.0]
+
+        Raises
+        ------
+        ValueError
+            If velocity_scaling is not between -1.0 and 1.0
+        """
+
+        if velocity_scaling < -1.00001 or velocity_scaling > 1.00001:
+            raise ValueError('velocity scaling is not in range [-1.0, 1.0]')
+
+        if self.__goal_id:
+            msg = Step()
+            msg.id = self.goal_id
+            msg.velocity_scaling = velocity_scaling
+            self.__step_pub.publish(msg)
+
     def next(self):
         """
         Request at supervised executor to perform next step
@@ -205,7 +240,7 @@ class SteppedMotionClient(object):
                 self.__state = SteppedMotionState(self.__goal_id.id,
                                                   trajectory_progress.error_msg,
                                                   trajectory_progress.error_code,
-                                                  trajectory_progress.progress)
+                                                  self.__progress)
 
 
 class MotionService(object):
@@ -1450,12 +1485,11 @@ class MotionService(object):
         if not isinstance(pose, Pose):
             raise TypeError('pose is not of expected type Pose')
 
-        ipath = CartesianPath.from_one_point(pose)
+        end_effector_pose = EndEffectorPose(pose, end_effector_link)
 
-        result = self.query_inverse_kinematics_many(ipath,
+        result = self.query_inverse_kinematics_many([end_effector_pose],
                                                     parameters,
                                                     seed,
-                                                    end_effector_link,
                                                     timeout,
                                                     attempts)
 
@@ -1465,26 +1499,23 @@ class MotionService(object):
 
         return result.path[0]
 
-    def query_inverse_kinematics_many(self, path, parameters,
+    def query_inverse_kinematics_many(self, poses, parameters,
                                       seed=[],
-                                      end_effector_link='',
                                       timeout=None,
                                       attempts=1,
                                       const_seed=False):
         """
-        Query inverse kinematic solutions for all point in path
+        Query inverse kinematic solutions for a Iterable of Poses
 
         Parameters
         ----------
-        path : CartesianPath
-            Path with poses to transform to joint space
+        poses : Iterable[EndEffectorPose]
+            Iterable with EndEffectorPoses to transform to joint space
         parameters : PlanParameters
             Plan parameters which defines the limits, settings
             and move group name
         seed : JointValues (optional)
             Numerical seed to control joint configuration
-        end_effector_link : str convertable (optinal)
-            necessary if poses are defined for end effector link
         timeout : datatime.timedelta
             timeout
         attempts : int convertable
@@ -1501,7 +1532,7 @@ class MotionService(object):
         Raises
         ------
         TypeError
-            If path is not of type CartesianPath or
+            If poses is not of type EndEffectorPose or
             parameters is not of type PlanParameters
             or seed is not empty list or type JointValues
             or the other parameters are not convertable
@@ -1514,8 +1545,11 @@ class MotionService(object):
             If query service is not available
         """
 
-        if not isinstance(path, CartesianPath):
-            raise TypeError('path is not of expected type CartesianPath')
+        if (not isinstance(poses, Iterable) and
+                any(not isinstance(p, EndEffectorPose)
+                    for p in poses)):
+            raise TypeError(
+                'poses is not of expected type Iterable[EndEffectorPose]')
 
         if not isinstance(parameters, PlanParameters):
             raise TypeError('parameters is not of expected'
@@ -1538,7 +1572,6 @@ class MotionService(object):
         else:
             timeout = timedelta(milliseconds=200)
 
-        end_effector_link = str(end_effector_link)
         attempts = int(attempts)
         const_seed = bool(const_seed)
 
@@ -1546,11 +1579,8 @@ class MotionService(object):
 
         poses_msgs = []
 
-        for p in path:
-            poses = EndEffectorPoses()
-            poses.poses.append(p.to_posestamped_msg())
-            poses.link_names.append(end_effector_link)
-            poses_msgs.append(poses)
+        for p in poses:
+            poses_msgs.append(p.to_end_effector_pose_msg())
 
         req = GetIKSolution2Request()
         req.group_name = parameters.move_group_name
@@ -1619,7 +1649,8 @@ class MotionService(object):
         """
 
         seed = self.query_joint_states(parameters.joint_set).positions
-        result = self.query_inverse_kinematics_many(path,
+        poses = [EndEffectorPose(p, '') for p in path]
+        result = self.query_inverse_kinematics_many(poses,
                                                     parameters,
                                                     seed)
 

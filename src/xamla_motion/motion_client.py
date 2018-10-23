@@ -42,17 +42,23 @@ class MoveGroup(object):
         Returns the current joint states of the move group joints
     get_current_joint_positions()
         Returns the current joint positions of the move group joints
-    plan_move_joints(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+    plan_move_joints(target, velocity_scaling=None, collision_check=None,
+                     max_deviation=None, acceleration_scaling=None)
         Plans a trajectory from current state to target joint positions
-    plan_move_joints_collision_free(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+    plan_move_joints_collision_free(
+        target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
         Plans a collision free trajectory from current to target joint positions
-    move_joints_collision_free(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+    move_joints_collision_free(target, velocity_scaling=None,
+                               collision_check=None, max_deviation=None, acceleration_scaling=None)
         Asynchronous plan and execute collision free joint trajectory
-    move_joints_collision_free_supervised(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+    move_joints_collision_free_supervised(
+        target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
         Plan collision free joint trajectory and creates a supervised executor
-    move_joints(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+    move_joints(target, velocity_scaling=None, collision_check=None,
+                max_deviation=None, acceleration_scaling=None)
         Asynchronous plan and execute joint trajectory
-    move_joints_supervised(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+    move_joints_supervised(target, velocity_scaling=None, collision_check=None,
+                           max_deviation=None, acceleration_scaling=None)
         Plan joint trajectory and creates a supervised executor
     """
 
@@ -854,7 +860,7 @@ class MoveGroup(object):
                                               max_deviation: (None, float)=None,
                                               acceleration_scaling: (None, float)=None) -> SteppedMotionClient:
         """
-        plan collision free joint trajectory and creates a supervised executor 
+        plan collision free joint trajectory and creates a supervised executor
 
         Parameters
         ----------
@@ -956,7 +962,7 @@ class MoveGroup(object):
                                max_deviation: (None, float)=None,
                                acceleration_scaling: (None, float)=None) -> SteppedMotionClient:
         """
-        Plan joint trajectory and creates a supervised executor 
+        Plan joint trajectory and creates a supervised executor
 
         Parameters
         ----------
@@ -1022,19 +1028,26 @@ class EndEffector(object):
         compute pose from joint values / configuration
     inverse_kinematics(pose, collision_check, seed, timeout, const_seed)
         inverse kinematic solutions for one pose
-    inverse_kinematics_many(cartesian_path, collision_check, seed, timeout, const_seed)
+    inverse_kinematics_many(
+        cartesian_path, collision_check, seed, timeout, const_seed)
         inverse kinematic solutions for many poses
-    move_poses(target, seed=None, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+    move_poses(target, seed=None, velocity_scaling=None,
+               collision_check=None, max_deviation=None, acceleration_scaling=None)
         Asynchronous plan and execute trajectory from task space input
-    move_poses_supervised(target, seed=None, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+    move_poses_supervised(target, seed=None, velocity_scaling=None,
+                          collision_check=None, max_deviation=None, acceleration_scaling=None)
         Plan trajectory from task space input and create executor
-    move_poses_collision_free(target, seed=None, velocity_scaling=None, max_deviation=None, acceleration_scaling=None)
+    move_poses_collision_free(target, seed=None, velocity_scaling=None,
+                              max_deviation=None, acceleration_scaling=None)
         Asynchronous plan and execute collision free trajectory from task space input
-    move_poses_collision_free_supervised(target, seed=None, velocity_scaling=None, max_deviation=None, acceleration_scaling=None)
+    move_poses_collision_free_supervised(
+        target, seed=None, velocity_scaling=None, max_deviation=None, acceleration_scaling=None)
         Plan collision free trajectory from task space input and create executor
-    plan_poses_linear(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+    plan_poses_linear(target, velocity_scaling=None, collision_check=None,
+                      max_deviation=None, acceleration_scaling=None)
         Plans a trajectory with linear movements from task space input
-    move_poses_linear(target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+    move_poses_linear(target, velocity_scaling=None, collision_check=None,
+                      max_deviation=None, acceleration_scaling=None)
         Plans and executes a trajectory with linear movements from task space input
     """
 
@@ -1299,9 +1312,9 @@ class EndEffector(object):
             If query service is not available
         """
         if isinstance(poses, Pose):
-            poses = CartesianPath.from_one_point(poses)
+            poses = [EndEffectorPose(pose, self.__link_name)]
         elif isinstance(poses, CartesianPath):
-            pass
+            poses = [EndEffectorPose(p, self.__link_name) for p in poses]
         else:
             raise TypeError('target is not one of expected '
                             'types Pose or CartesianPath')
@@ -1309,14 +1322,13 @@ class EndEffector(object):
         if not seed:
             seed = self.__move_group.get_current_joint_positions()
 
-        parameters = self.__move_group._build_plan_parameters(1.0,
+        parameters=self.__move_group._build_plan_parameters(1.0,
                                                               collision_check)
 
-        ik = self.__m_service.query_inverse_kinematics_many(poses,
-                                                            parameters,
-                                                            seed,
-                                                            self.__link_name,
-                                                            timeout)
+        ik=self.__m_service.query_inverse_kinematics_many(poses,
+                                                        parameters,
+                                                        seed,
+                                                        timeout)
 
         if not ik.succeeded:
             print('computation of inverse kinematic fails' 
@@ -1415,10 +1427,11 @@ class EndEffector(object):
         """
 
         if isinstance(target, Pose):
-            target = CartesianPath.from_one_point(target)
+            target = [EndEffectorPose(target, self.__link_name)]
         elif isinstance(target, CartesianPath):
             if len(target) == 0:
                 return
+            target = [EndEffectorPose(p, self.__link_name) for p in target]
         else:
             raise TypeError('target is not one of expected '
                             'types Pose or CartesianPath')
@@ -1433,8 +1446,7 @@ class EndEffector(object):
 
         ik = self.__m_service.query_inverse_kinematics_many(target,
                                                             parameters,
-                                                            seed,
-                                                            self.__link_name)
+                                                            seed)
 
         if not ik.succeeded:
             raise ServiceException('Ik computation failed')
@@ -1496,10 +1508,11 @@ class EndEffector(object):
         """
 
         if isinstance(target, Pose):
-            target = CartesianPath.from_one_point(target)
+            target = [EndEffectorPose(target, self.__link_name)]
         elif isinstance(target, CartesianPath):
             if len(target) == 0:
                 return
+            target = [EndEffectorPose(p, self.__link_name) for p in target]
         else:
             raise TypeError('target is not one of expected '
                             'types Pose or CartesianPath')
@@ -1514,8 +1527,7 @@ class EndEffector(object):
 
         ik = self.__m_service.query_inverse_kinematics_many(target,
                                                             parameters,
-                                                            seed,
-                                                            self.__link_name)
+                                                            seed)
 
         if not ik.succeeded:
             raise ServiceException('Ik computation failed')
@@ -1573,10 +1585,11 @@ class EndEffector(object):
         """
 
         if isinstance(target, Pose):
-            target = CartesianPath.from_one_point(target)
+            target = [EndEffectorPose(target, self.__link_name)]
         elif isinstance(target, CartesianPath):
             if len(target) == 0:
                 return
+            target = [EndEffectorPose(p, self.__link_name) for p in target]
         else:
             raise TypeError('target is not one of expected '
                             'types Pose or CartesianPath')
@@ -1591,8 +1604,7 @@ class EndEffector(object):
 
         ik = self.__m_service.query_inverse_kinematics_many(target,
                                                             parameters,
-                                                            seed,
-                                                            self.__link_name)
+                                                            seed)
 
         if not ik.succeeded:
             raise ServiceException('Ik computation failed')
@@ -1653,10 +1665,11 @@ class EndEffector(object):
         """
 
         if isinstance(target, Pose):
-            target = CartesianPath.from_one_point(target)
+            target = [EndEffectorPose(target, self.__link_name)]
         elif isinstance(target, CartesianPath):
             if len(target) == 0:
                 return
+            target = [EndEffectorPose(p, self.__link_name) for p in target]
         else:
             raise TypeError('target is not one of expected '
                             'types Pose or CartesianPath')
@@ -1671,8 +1684,7 @@ class EndEffector(object):
 
         ik = self.__m_service.query_inverse_kinematics_many(target,
                                                             parameters,
-                                                            seed,
-                                                            self.__link_name)
+                                                            seed)
 
         if not ik.succeeded:
             raise ServiceException('Ik computation failed')
