@@ -45,7 +45,7 @@ async def next(stepped_motion_client):
     while True:
         await asyncio.sleep(0.1)
         if stepped_motion_client.state:
-            stepped_motion_client.next()
+            stepped_motion_client.step()
             print('progress {:5.2f} percent'.format(
                 stepped_motion_client.state.progress))
 

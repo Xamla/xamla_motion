@@ -92,3 +92,12 @@ class EndEffectorPose(object):
         ee_pose.poses.append(self.__pose.to_posestamped_msg())
         ee_pose.link_names.append(self.__end_effector_link)
         return ee_pose
+
+    def __str__(self):
+        ss = '\n'.join([k+' = '+str(v) for k, v in self.__dict__.items()])
+        ss = ss.replace('_'+self.__class__.__name__+'__', '')
+        ss = ss.replace('\n', '\n  ')
+        return 'EndEffectorPose\n'+ss
+
+    def __repr__(self):
+        return self.__str__()

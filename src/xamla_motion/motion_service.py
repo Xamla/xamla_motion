@@ -75,29 +75,33 @@ class SteppedMotionClient(object):
     __movej_action_name = 'moveJ_step_action'
 
     class __ShutdownManager(object):
-        __instances = {}
 
         def __init__(self):
+            self.instances = {}
+            self.mutex = Lock()
             rospy.on_shutdown(self.on_shutdown)
 
         def on_shutdown(self):
-            for key, cancel in __instances.items():
+            for key, cancel in self.instances.items():
+                #print('cancel goal_id: {}'.format(key))
                 cancel()
 
         def register_instance(self, goal_id, cancel_func):
-            __instances[goal_id] = cancel_func
+            with self.mutex:
+                self.instances[goal_id] = cancel_func
+                #keys = [key for key in self.instances]
+                #print('instances after add: {}'.format(keys))
 
         def unregister_instance(self, goal_id):
-            try:
-                __instances.pop(goal_id)
-            except ValueError as exc:
-                print(exc)
+            with self.mutex:
+                try:
+                    self.instances.pop(goal_id)
+                except KeyError as exc:
+                    pass
+                #keys = [key for key in self.instances]
+                #print('instances after pop: {}'.format(keys))
 
     __shutdown_manager = None
-
-    def __new__(cls):
-        if __shutdown_manager is None:
-            __shutdown_manager = __ShutdownManager()
 
     def __init__(self, trajectory: JointTrajectory,
                  velocity_scaling: float, check_collision: bool=True):
@@ -124,6 +128,9 @@ class SteppedMotionClient(object):
             If action goal handle is not available
         """
         self.__mutex = Lock()
+
+        if type(self).__shutdown_manager is None:
+            type(self).__shutdown_manager = type(self).__ShutdownManager()
 
         self.__ros_node_steward = ROSNodeSteward()
 
@@ -161,13 +168,15 @@ class SteppedMotionClient(object):
                     reason = ErrorCodes(result.result)
                     print('action end unsuccessfully with'
                           ' state: {}, reason: {}'.format(status, reason))
-                except AttributeError:
+                except (AttributeError, ValueError):
                     print('action end unsuccessfully with'
                           ' state: {}'.format(status))
 
-            __shutdown_manager.unregister_instance(self.__goal_id.id)
+            type(self).__shutdown_manager.unregister_instance(self.__goal_id.id)
 
-            loop.call_soon_threadsafe(self.__action_done.set_result, result)
+            if not loop.is_closed():
+                loop.call_soon_threadsafe(self.__action_done.set_result,
+                                          result)
 
         self.__m_action.send_goal(goal, done_cb=done_callback)
 
@@ -177,8 +186,8 @@ class SteppedMotionClient(object):
             self.__m_action.cancel_goal()
             raise ServiceException('action goal handle is not available')
 
-        __shutdown_manager.register_instance(self.__goal_id.id,
-                                             self.__m_action.cancel_goal)
+        type(self).__shutdown_manager.register_instance(self.__goal_id.id,
+                                                        self.__m_action.cancel_goal)
 
         self.__state = SteppedMotionState(self.__goal_id.id, '', 0, 0.0)
 
@@ -198,7 +207,7 @@ class SteppedMotionClient(object):
                                                queue_size=10)
 
     def __del__(self):
-        __shutdown_manager.unregister_instance(self.__goal_id.id)
+        type(self).__shutdown_manager.unregister_instance(self.__goal_id.id)
 
     @property
     def state(self):
@@ -207,7 +216,7 @@ class SteppedMotionClient(object):
             Current state of the supervised trajectory execution
         """
         with self.__mutex:
-            return deepcopy(self.__state)
+            return self.__state
 
     @property
     def goal_id(self):
@@ -251,7 +260,7 @@ class SteppedMotionClient(object):
 
         if self.__goal_id:
             msg = Step()
-            msg.id = self.goal_id
+            msg.id = self.goal_id.id
             msg.velocity_scaling = velocity_scaling
             self.__step_pub.publish(msg)
 
@@ -276,7 +285,7 @@ class SteppedMotionClient(object):
                 self.__state = SteppedMotionState(self.__goal_id.id,
                                                   trajectory_progress.error_msg,
                                                   trajectory_progress.error_code,
-                                                  self.__progress)
+                                                  trajectory_progress.progress)
 
 
 class MotionService(object):
@@ -2026,11 +2035,12 @@ class MotionService(object):
                         reason = ErrorCodes(result.result)
                         print('action end unsuccessfully with'
                               ' state: {}, reason: {}'.format(status, reason))
-                    except AttributeError:
+                    except (AttributeError, ValueError):
                         print('action end unsuccessfully with'
                               ' state: {}'.format(status))
 
-                loop.call_soon_threadsafe(action_done.set_result, result)
+                if not loop.is_closed():
+                    loop.call_soon_threadsafe(action_done.set_result, result)
 
             try:
                 action.send_goal(goal, done_cb=done_callback)
