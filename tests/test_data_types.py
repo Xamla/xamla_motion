@@ -95,6 +95,13 @@ class TestPose(object):
         gt[2] += vec[0][2]
         assert new_p == pytest.approx(gt)
 
+    def test_pose_mul_pose(self):
+        pose = self.pose1 * self.pose2
+        pose_m = np.matmul(self.pose1.transformation_matrix(),
+                           self.pose2.transformation_matrix())
+
+        assert pose.transformation_matrix() == pytest.approx(pose_m)
+
 
 class TestJointTrajectoryPoint(object):
 
