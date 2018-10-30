@@ -548,7 +548,7 @@ class Pose(object):
             new_q = self.__quaternion * other.quaternion
             new_t = (self.__translation +
                      self.__quaternion.rotate(other.translation))
-            return self.__class__(new_t, new_q)
+            return self.__class__(new_t, new_q, self.frame_id)
         elif (isinstance(other, np.ndarray) and
                 issubclass(other.dtype.type, np.floating)):
             if other.shape in [(3,), (3, 1)]:
