@@ -551,22 +551,22 @@ class Pose(object):
             return self.__class__(new_t, new_q, self.frame_id)
         elif (isinstance(other, np.ndarray) and
                 issubclass(other.dtype.type, np.floating)):
-            if other.shape in [(3,), (3, 1)]:
+            if other.shape == (3,):
                 new_t = (self.__translation +
                          self.__quaternion.rotate(other))
                 return new_t
             elif other.shape == (3, 1):
                 new_t = (self.__translation +
-                         self.__quaternion.rotate(other[:3]))
+                         self.__quaternion.rotate(other))
                 return np.expand_dims(t3, axis=1)
             elif other.shape == (4,):
                 new_t = np.ones(other.shape)
-                new_t[0:3] = (self.__translation +
+                new_t[0:3] = (self.__translation * other[-1] +
                               self.__quaternion.rotate(other[:3]))
                 return new_t
             elif other.shape == (4, 1):
                 new_t = np.ones(other.shape)
-                t3 = (self.__translation +
+                t3 = (self.__translation * other[-1] +
                       self.__quaternion.rotate(other[:3]))
                 new_t[0:3] = np.expand_dims(t3, axis=1)
                 return new_t
