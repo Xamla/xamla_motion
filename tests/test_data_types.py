@@ -33,6 +33,14 @@ class TestPose(object):
         cls.m3[0:2, 0:2] = np.asarray([[0.0, 1.0], [-1.0, 0.0]])
         cls.pose3 = Pose.from_transformation_matrix(cls.m3)
 
+        # create pose4 from transformation matrix
+        translation = np.asarray([0.22419, -0.78420, 0.945699])
+        quaternion = Quaternion(x=0.6087561845779419,
+                                y=0.7779673933982849,
+                                z=0.047310106456279755,
+                                w=0.1481364518404007)
+        cls.pose4 = Pose(translation, quaternion)
+
     def test_pose_inverse(self):
         p_inv = self.pose1.inverse('new_frame')
         p_m = (self.pose1*p_inv).transformation_matrix()
@@ -96,10 +104,22 @@ class TestPose(object):
         assert new_p == pytest.approx(gt)
 
     def test_pose_mul_pose(self):
-        pose = self.pose2 * self.pose3
-        pose_m = np.matmul(self.pose2.transformation_matrix(),
-                           self.pose3.transformation_matrix())
+        pose = self.pose4 * self.pose2
+        pose_m = np.matmul(self.pose4.transformation_matrix(),
+                           self.pose2.transformation_matrix())
 
+        print('Pose type mul: {}'.format(pose.transformation_matrix()))
+        print('numpy mul: {}'.format(pose_m))
+        assert pose.transformation_matrix() == pytest.approx(pose_m)
+
+    def test_pose_mul2_pose(self):
+        pose = self.pose4 * self.pose2 * self.pose1
+        pose_m = np.matmul(self.pose4.transformation_matrix(),
+                           np.matmul(self.pose2.transformation_matrix(),
+                                     self.pose1.transformation_matrix()))
+
+        print('Pose type mul: {}'.format(pose.transformation_matrix()))
+        print('numpy mul: {}'.format(pose_m))
         assert pose.transformation_matrix() == pytest.approx(pose_m)
 
 
