@@ -558,7 +558,7 @@ class Pose(object):
             elif other.shape == (3, 1):
                 new_t = (self.__translation +
                          self.__quaternion.rotate(other))
-                return np.expand_dims(t3, axis=1)
+                return np.expand_dims(new_t, axis=1)
             elif other.shape == (4,):
                 new_t = np.ones(other.shape)
                 new_t[0:3] = (self.__translation * other[-1] +

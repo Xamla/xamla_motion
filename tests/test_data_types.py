@@ -69,7 +69,7 @@ class TestPose(object):
     def test_pose_mul_vect3_1(self):
         vec = np.asarray([[1.23, 2.3, 1.2]])
         new_p = self.pose3*vec.T
-        gt = self.pose3.translation.copy()
+        gt = np.expand_dims(self.pose3.translation.copy(), axis=1)
         gt[0] += vec[0][1]
         gt[1] -= vec[0][0]
         gt[2] += vec[0][2]
@@ -96,9 +96,9 @@ class TestPose(object):
         assert new_p == pytest.approx(gt)
 
     def test_pose_mul_pose(self):
-        pose = self.pose1 * self.pose2
-        pose_m = np.matmul(self.pose1.transformation_matrix(),
-                           self.pose2.transformation_matrix())
+        pose = self.pose2 * self.pose3
+        pose_m = np.matmul(self.pose2.transformation_matrix(),
+                           self.pose3.transformation_matrix())
 
         assert pose.transformation_matrix() == pytest.approx(pose_m)
 
