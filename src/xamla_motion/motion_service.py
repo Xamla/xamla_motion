@@ -211,6 +211,7 @@ class SteppedMotionClient(object):
 
     def cancel(self):
         type(self).__shutdown_manager.unregister_instance(self.__goal_id.id)
+        self.__m_action.cancel_goal()
 
     @property
     def state(self):
@@ -248,8 +249,8 @@ class SteppedMotionClient(object):
         ----------
         velocity_scaling : float
             Specifies the desired velocity and direction of the supervised motion.
-            Positive values mean forward and negative values backward stepping. 
-            To stop fast as possible set velocity scaling to 0.0. 
+            Positive values mean forward and negative values backward stepping.
+            To stop fast as possible set velocity scaling to 0.0.
             Valid range: [-1.0, 1.0]
 
         Raises
