@@ -189,7 +189,7 @@ class SteppedMotionClient(object):
         type(self).__shutdown_manager.register_instance(self.__goal_id.id,
                                                         self.__m_action.cancel_goal)
 
-        self.__state = SteppedMotionState(self.__goal_id.id, '', 0, 0.0)
+        self.__state = SteppedMotionState(self.__goal_id.id, '', 1, 0.0)
 
         self.__step_pub = rospy.Publisher(self.__step_topic,
                                           Step,
@@ -207,6 +207,9 @@ class SteppedMotionClient(object):
                                                queue_size=10)
 
     def __del__(self):
+        type(self).__shutdown_manager.unregister_instance(self.__goal_id.id)
+
+    def cancel(self):
         type(self).__shutdown_manager.unregister_instance(self.__goal_id.id)
 
     @property
