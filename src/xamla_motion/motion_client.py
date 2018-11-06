@@ -841,12 +841,6 @@ class MoveGroup(object):
         ServiceError
             If underlying services from motion server are not available
             or finish not successfully
-
-        Returns
-        -------
-        success : bool
-            True if move was executed successful else
-            return False
         """
 
         if not isinstance(target, (JointValues, JointPath)):
@@ -858,10 +852,8 @@ class MoveGroup(object):
                                                                       max_deviation,
                                                                       acceleration_scaling)
 
-        response = await self.__m_service.execute_joint_trajectory(trajectory,
-                                                                   False)
-
-        return ErrorCodes(response.result) == ErrorCodes.SUCCESS
+        await self.__m_service.execute_joint_trajectory(trajectory,
+                                                        False)
 
     def move_joints_collision_free_supervised(self, target: (JointValues, JointPath),
                                               velocity_scaling: (None, float)=None,
@@ -949,12 +941,6 @@ class MoveGroup(object):
         ServiceError
             If underlying services from motion server are not available
             or finish not successfully
-
-        Returns
-        -------
-        success : bool
-            True if move was executed successful else
-            return False
         """
 
         if not isinstance(target, (JointValues, JointPath)):
@@ -967,10 +953,8 @@ class MoveGroup(object):
                                                        max_deviation,
                                                        acceleration_scaling)
 
-        response = await self.__m_service.execute_joint_trajectory(trajectory,
-                                                                   parameters.collision_check)
-
-        return ErrorCodes(response.result) == ErrorCodes.SUCCESS
+        await self.__m_service.execute_joint_trajectory(trajectory,
+                                                        parameters.collision_check)
 
     def move_joints_supervised(self, target: (JointValues, JointPath),
                                velocity_scaling: (None, float)=None,
@@ -1284,10 +1268,10 @@ class EndEffector(object):
                                                               collision_check)
 
         path = self.__m_service.query_inverse_kinematics(pose,
-                                                         parameters,
-                                                         seed,
-                                                         self.__link_name,
-                                                         timeout)
+                                                       parameters,
+                                                       seed,
+                                                       self.__link_name,
+                                                       timeout)
 
         return path
 
@@ -1338,16 +1322,16 @@ class EndEffector(object):
         if not seed:
             seed = self.__move_group.get_current_joint_positions()
 
-        parameters = self.__move_group._build_plan_parameters(1.0,
+        parameters=self.__move_group._build_plan_parameters(1.0,
                                                               collision_check)
 
-        ik = self.__m_service.query_inverse_kinematics_many(poses,
-                                                            parameters,
-                                                            seed,
-                                                            timeout)
+        ik=self.__m_service.query_inverse_kinematics_many(poses,
+                                                        parameters,
+                                                        seed,
+                                                        timeout)
 
         if not ik.succeeded:
-            print('computation of inverse kinematic fails'
+            print('computation of inverse kinematic fails' 
                   ' for one or more request in batch: ' + str(ik))
 
         return ik
@@ -1440,12 +1424,6 @@ class EndEffector(object):
         ServiceError
             If underlying services from motion server are not available
             or finish not successfully
-
-        Returns
-        -------
-        success : bool
-            True if move was executed successful else
-            return False
         """
 
         if isinstance(target, Pose):
@@ -1479,10 +1457,8 @@ class EndEffector(object):
                                                                          max_deviation,
                                                                          acceleration_scaling)
 
-        response = await self.__m_service.execute_joint_trajectory(trajectory,
-                                                                   plan_parameters.collision_check)
-
-        return ErrorCodes(response.result) == ErrorCodes.SUCCESS
+        await self.__m_service.execute_joint_trajectory(trajectory,
+                                                        plan_parameters.collision_check)
 
     def move_poses_supervised(self, target: (Pose, CartesianPath),
                               seed: (None, JointValues)=None,
@@ -1567,11 +1543,11 @@ class EndEffector(object):
                                                                     plan_parameters.collision_check)
 
     async def move_poses_collision_free(self, target: (Pose, CartesianPath),
-                                        seed: (None, JointValues)=None,
-                                        velocity_scaling: (None, float)=None,
-                                        collision_check: (None, bool)=None,
-                                        max_deviation: (None, float)=None,
-                                        acceleration_scaling: (None, float)=None):
+                              seed: (None, JointValues)=None,
+                              velocity_scaling: (None, float)=None,
+                              collision_check: (None, bool)=None,
+                              max_deviation: (None, float)=None,
+                              acceleration_scaling: (None, float)=None):
         """
         Asynchronous plan and execute collision free trajectory from task space input
 
@@ -1606,12 +1582,6 @@ class EndEffector(object):
         ServiceError
             If underlying services from motion server are not available
             or finish not successfully
-
-        Returns
-        -------
-        success : bool
-            True if move was executed successful else
-            return False
         """
 
         if isinstance(target, Pose):
@@ -1644,17 +1614,15 @@ class EndEffector(object):
                                                                                         max_deviation,
                                                                                         acceleration_scaling)
 
-        response = await self.__m_service.execute_joint_trajectory(trajectory,
-                                                                   plan_parameters.collision_check)
-
-        return ErrorCodes(response.result) == ErrorCodes.SUCCESS
+        await self.__m_service.execute_joint_trajectory(trajectory,
+                                                        plan_parameters.collision_check)
 
     def move_poses_collision_free_supervised(self, target: (Pose, CartesianPath),
-                                             seed: (None, JointValues)=None,
-                                             velocity_scaling: (None, float)=None,
-                                             collision_check: (None, bool)=None,
-                                             max_deviation: (None, float)=None,
-                                             acceleration_scaling: (None, float)=None):
+                              seed: (None, JointValues)=None,
+                              velocity_scaling: (None, float)=None,
+                              collision_check: (None, bool)=None,
+                              max_deviation: (None, float)=None,
+                              acceleration_scaling: (None, float)=None):
         """
         Plan collision free trajectory from task space input and create executor
 
@@ -1727,8 +1695,8 @@ class EndEffector(object):
                                                                                         acceleration_scaling)
 
         return self.__m_service.execute_joint_trajectory_supervised(trajectory,
-                                                                    plan_parameters.velocity_scaling,
-                                                                    plan_parameters.collision_check)
+                                                                   plan_parameters.velocity_scaling,
+                                                                   plan_parameters.collision_check)
 
     def plan_poses_linear(self, target, velocity_scaling=None,
                           collision_check=None, max_deviation=None,
@@ -1824,12 +1792,6 @@ class EndEffector(object):
         ServiceError
             If underlying services from motion server are not available
             or finish not successfully
-
-        Returns
-        -------
-        success : bool
-            True if move was executed successful else
-            return False
         """
 
         if not isinstance(target, (Pose, CartesianPath)):
@@ -1842,7 +1804,5 @@ class EndEffector(object):
                                                         max_deviation,
                                                         acceleration_scaling)
 
-        response = await self.__m_service.execute_joint_trajectory(trajectory,
-                                                                   parameters.collision_check)
-
-        return ErrorCodes(response.result) == ErrorCodes.SUCCESS
+        await self.__m_service.execute_joint_trajectory(trajectory,
+                                                        parameters.collision_check)

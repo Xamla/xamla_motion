@@ -83,14 +83,14 @@ class SteppedMotionClient(object):
 
         def on_shutdown(self):
             for key, cancel in self.instances.items():
-                #print('cancel goal_id: {}'.format(key))
+                # print('cancel goal_id: {}'.format(key))
                 cancel()
 
         def register_instance(self, goal_id, cancel_func):
             with self.mutex:
                 self.instances[goal_id] = cancel_func
-                #keys = [key for key in self.instances]
-                #print('instances after add: {}'.format(keys))
+                # keys = [key for key in self.instances]
+                # print('instances after add: {}'.format(keys))
 
         def unregister_instance(self, goal_id):
             with self.mutex:
@@ -98,8 +98,8 @@ class SteppedMotionClient(object):
                     self.instances.pop(goal_id)
                 except KeyError as exc:
                     pass
-                #keys = [key for key in self.instances]
-                #print('instances after pop: {}'.format(keys))
+                # keys = [key for key in self.instances]
+                # print('instances after pop: {}'.format(keys))
 
     __shutdown_manager = None
 
@@ -1434,6 +1434,8 @@ class MotionService(object):
         TypeError
             If trajectory is not of type JointTrajectory
             or if collision_check is not convertable to bool
+        ServiceError
+            If execution ends not successful
         """
 
         if not isinstance(trajectory, JointTrajectory):
@@ -1451,11 +1453,19 @@ class MotionService(object):
         # with LeaseBaseLock(trajectory.joint_set.names) as lock_resources:
         response = await run_action(goal)
 
-        if not response:
-            raise RuntimeError('Unexpected result received by'
-                               ' SimpleActionClient for moveJ action')
+        result = response.result()
 
-        return response.result()
+        try:
+            error_code = ErrorCodes(result.result)
+            if error_code != ErrorCodes.Success:
+                raise ServiceException('execute trajectory ends not successful with'
+                                       ' error code: {}'.format(error_code))
+        except (AttributeError, ValueError) as exc:
+            if isinstance(exc, ValueError):
+                raise ServiceException('execute trajectory ends not successful with unknow'
+                                    ' error code: {}'.format(result.result))
+
+        return result
 
     def execute_joint_trajectory_supervised(self, trajectory: JointTrajectory,
                                             velocity_scaling: float,
@@ -1534,9 +1544,9 @@ class MotionService(object):
         if not isinstance(pose, Pose):
             raise TypeError('pose is not of expected type Pose')
 
-        end_effector_pose = EndEffectorPose(pose, end_effector_link)
+        end_effector_pose=EndEffectorPose(pose, end_effector_link)
 
-        result = self.query_inverse_kinematics_many([end_effector_pose],
+        result=self.query_inverse_kinematics_many([end_effector_pose],
                                                     parameters,
                                                     seed,
                                                     timeout,
@@ -1611,7 +1621,7 @@ class MotionService(object):
             elif seed.joint_set == parameters.joint_set:
                 pass
             elif parameters.joint_set.is_subset(seed.joint_set):
-                seed = seed.reorder(parameters.joint_set)
+                seed=seed.reorder(parameters.joint_set)
             else:
                 raise ValueError('joint set of parameters and seed do not'
                                  ' match and reording is not possible')
@@ -1619,30 +1629,30 @@ class MotionService(object):
         if timeout and not isinstance(timeout, timedelta):
             raise TypeError('timeout is not of expected type timedelta')
         else:
-            timeout = timedelta(milliseconds=200)
+            timeout=timedelta(milliseconds=200)
 
-        attempts = int(attempts)
-        const_seed = bool(const_seed)
+        attempts=int(attempts)
+        const_seed=bool(const_seed)
 
-        duration = self._ros_duration_from_timedelta(timeout)
+        duration=self._ros_duration_from_timedelta(timeout)
 
-        poses_msgs = []
+        poses_msgs=[]
 
         for p in poses:
             poses_msgs.append(p.to_end_effector_pose_msg())
 
-        req = GetIKSolution2Request()
-        req.group_name = parameters.move_group_name
-        req.joint_names = parameters.joint_set.names
-        req.seed = seed.to_joint_values_point_msg()
-        req.const_seed = const_seed
-        req.points = poses_msgs
-        req.collision_check = parameters.collision_check
-        req.attempts = attempts
-        req.timeout = duration
+        req=GetIKSolution2Request()
+        req.group_name=parameters.move_group_name
+        req.joint_names=parameters.joint_set.names
+        req.seed=seed.to_joint_values_point_msg()
+        req.const_seed=const_seed
+        req.points=poses_msgs
+        req.collision_check=parameters.collision_check
+        req.attempts=attempts
+        req.timeout=duration
 
         try:
-            response = self.__ik_service(req)
+            response=self.__ik_service(req)
         except rospy.ServiceException as exc:
             print('service call for query inverse kinematics'
                   ' failed, abort ')
@@ -1650,8 +1660,8 @@ class MotionService(object):
                                    ' inverse kinematics'
                                    ' failed, abort') from exc
 
-        f = JointValues.from_joint_path_point_msg
-        joint_path = JointPath(parameters.joint_set,
+        f=JointValues.from_joint_path_point_msg
+        joint_path=JointPath(parameters.joint_set,
                                [f(parameters.joint_set, p)
                                 for p in response.solutions])
 
@@ -1659,8 +1669,8 @@ class MotionService(object):
 
     @staticmethod
     def _ros_duration_from_timedelta(timedelta):
-        secs = timedelta.days*24*3600+timedelta.seconds
-        nsecs = timedelta.microseconds*1000
+        secs=timedelta.days*24*3600+timedelta.seconds
+        nsecs=timedelta.microseconds*1000
         return rospy.Duration(secs, nsecs)
 
     def plan_cartesian_path(self, path, parameters):
@@ -1697,9 +1707,9 @@ class MotionService(object):
             ends with error
         """
 
-        seed = self.query_joint_states(parameters.joint_set).positions
-        poses = [EndEffectorPose(p, '') for p in path]
-        result = self.query_inverse_kinematics_many(poses,
+        seed=self.query_joint_states(parameters.joint_set).positions
+        poses=[EndEffectorPose(p, '') for p in path]
+        result=self.query_inverse_kinematics_many(poses,
                                                     parameters,
                                                     seed)
 
@@ -1736,16 +1746,16 @@ class MotionService(object):
             If query service is not available
         """
 
-        query_emergency_stop = ('EmergencySTOP/'
+        query_emergency_stop=('EmergencySTOP/'
                                 'query_emergency_stop')
 
-        enable = bool(enable)
+        enable=bool(enable)
 
         try:
-            service = rospy.ServiceProxy(
+            service=rospy.ServiceProxy(
                 query_emergency_stop,
                 SetBool)
-            response = service(enable)
+            response=service(enable)
         except rospy.ServiceException as exc:
             print('service set emergency stop failed')
             raise ServiceException('service call for set emergency'
@@ -1931,24 +1941,24 @@ class MotionService(object):
             If action returns unexpected result
         """
 
-        action_name = str(action_name)
+        action_name=str(action_name)
 
-        action_client = actionlib.SimpleActionClient(action_name,
+        action_client=actionlib.SimpleActionClient(action_name,
                                                      GripperCommandAction)
 
-        g = GripperCommandGoal()
-        g.command.position = float(position)
-        g.command.max_effort = float(max_effort)
+        g=GripperCommandGoal()
+        g.command.position=float(position)
+        g.command.max_effort=float(max_effort)
 
         if not action_client.wait_for_server(rospy.Duration(5)):
             raise ServiceException('connection to grippercommand action'
                                    ' server with name: ' + action_name +
                                    ' could not be established')
 
-        run_action = self._generate_action_executor(action_client)
+        run_action=self._generate_action_executor(action_client)
 
         with LeaseBaseLock([action_name]):
-            response = await run_action(g)
+            response=await run_action(g)
 
         if not response:
             raise RuntimeError('Unexpected result received by'
@@ -1994,12 +2004,12 @@ class MotionService(object):
 
         from wsg_50_common.msg import CommandAction, CommandGoal
 
-        action_name = str(action_name)
+        action_name=str(action_name)
 
         if not isinstance(command, WsgCommand):
             raise TypeError('command is not of expected type WsgCommand')
 
-        action_client = actionlib.SimpleActionClient(action_name,
+        action_client=actionlib.SimpleActionClient(action_name,
                                                      CommandAction)
 
         if not action_client.wait_for_server(rospy.Duration(5)):
@@ -2007,17 +2017,17 @@ class MotionService(object):
                                    ' server with name: ' + action_name +
                                    ' could not be established')
 
-        g = CommandGoal()
-        g.command.command_id = command.value
-        g.command.width = float(width)
-        g.command.speed = float(speed)
-        g.command.force = float(max_effort)
-        g.command.stop_on_block = bool(stop_on_block)
+        g=CommandGoal()
+        g.command.command_id=command.value
+        g.command.width=float(width)
+        g.command.speed=float(speed)
+        g.command.force=float(max_effort)
+        g.command.stop_on_block=bool(stop_on_block)
 
-        run_action = self._generate_action_executor(action_client)
+        run_action=self._generate_action_executor(action_client)
 
         with LeaseBaseLock([action_name]):
-            response = await run_action(g)
+            response=await run_action(g)
 
         if not response:
             raise RuntimeError('Unexpected result received by'
@@ -2029,14 +2039,14 @@ class MotionService(object):
     def _generate_action_executor(self, action):
 
         async def run_action(goal):
-            loop = asyncio.get_event_loop()
-            action_done = loop.create_future()
+            loop=asyncio.get_event_loop()
+            action_done=loop.create_future()
 
             def done_callback(goal_status, result):
-                status = ActionLibGoalStatus(goal_status)
+                status=ActionLibGoalStatus(goal_status)
                 if status != ActionLibGoalStatus.SUCCEEDED:
                     try:
-                        reason = ErrorCodes(result.result)
+                        reason=ErrorCodes(result.result)
                         print('action end unsuccessfully with'
                               ' state: {}, reason: {}'.format(status, reason))
                     except (AttributeError, ValueError):

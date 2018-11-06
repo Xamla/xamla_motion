@@ -95,11 +95,10 @@ def main():
     async def example_moves():
         print('test MoveGroup class')
         print('----------------          move joints                 -------------------')
-        success = await move_group.move_joints(joint_path)
-        print(success)
+        await move_group.move_joints(joint_path)
 
         print('----------------      move joints collision free      -------------------')
-        success = await move_group.move_joints_collision_free(joint_path)
+        await move_group.move_joints_collision_free(joint_path)
 
         print('----------------        move joints supervised        -------------------')
         stepped_motion_client = move_group.move_joints_supervised(
@@ -113,10 +112,10 @@ def main():
 
         print('test EndEffector class')
         print('----------------           move poses                 -------------------')
-        success = await end_effector.move_poses(cartesian_path)
+        await end_effector.move_poses(cartesian_path)
 
         print('----------------        move poses collision free     -------------------')
-        success = await end_effector.move_poses_collision_free(cartesian_path)
+        await end_effector.move_poses_collision_free(cartesian_path)
 
         print('----------------          move poses supervised       -------------------')
         stepped_motion_client = end_effector.move_poses_supervised(
