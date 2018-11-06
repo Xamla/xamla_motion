@@ -18,6 +18,8 @@
 
 #!/usr/bin/env python3
 
+from .ik_results import ErrorCodes
+
 
 class SteppedMotionState(object):
     """
