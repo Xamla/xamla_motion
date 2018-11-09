@@ -347,23 +347,18 @@ class RobotChatSteppedMotion(object):
         task_update = asyncio.ensure_future(
             self._update_progress(channel_name, message_id))
         try:
-            await self.stepped_client.action_done_future
+            result = await self.stepped_client.action_done_future
         finally:
-            self.roboChat.delete_text_message(channel_name, message_id)
+            self.robot_chat.delete_text_message(channel_name, message_id)
             task_update.cancel()
-            if not self.stepped_client.state:
-                raise ServiceException('Robot chat stepped motion ends'
-                                       'not successful')
-
-            elif self.stepped_client.state.error_code != ErrorCodes.SUCCESS:
-                raise ServiceException('Robot chat stepped motion ends'
+            if ErrorCodes(result.result) != ErrorCodes.SUCCESS:
+                raise ServiceException('Robot chat stepped motion ends '
                                        'not successful with error '
-                                       'code: {}'.format(self.stepped_client.state.error_code))
+                                       'code: {}'.format(ErrorCodes(result.result)))
 
     async def _update_progress(self, channel_name: str, message_id: str):
         lastProgress = 0.0
         run = True
-        try:
         while run:
             await asyncio.sleep(0.05)
             if self.stepped_client.state:

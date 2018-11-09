@@ -89,7 +89,6 @@ def generate_action_executor(action):
 
     return run_action
 
-
 class SteppedMotionClient(object):
 
     """
@@ -192,6 +191,7 @@ class SteppedMotionClient(object):
 
         loop = asyncio.get_event_loop()
         self.__action_done = loop.create_future()
+        self.__action_done.add_done_callback(self._done_callback)
 
         def done_callback(goal_status, result):
             status = ActionLibGoalStatus(goal_status)
@@ -323,11 +323,13 @@ class SteppedMotionClient(object):
                                                   trajectory_progress.error_msg,
                                                   trajectory_progress.error_code,
                                                   trajectory_progress.progress)
-                if trajectory_progress.error_code != 0:
-                    self.__feedback_sub.unregister()
-                    self.__step_pub.unregister()
-                    self.__next_pub.unregister()
-                    self.__previous_pub.unregister()
+
+    def _done_callback(self, future):
+        type(self).__shutdown_manager.unregister_instance(self.__goal_id.id)
+        self.__feedback_sub.unregister()
+        self.__step_pub.unregister()
+        self.__next_pub.unregister()
+        self.__previous_pub.unregister()
 
 
 class MotionService(object):
