@@ -56,6 +56,38 @@ class ActionLibGoalStatus(enum.Enum):
     RECALLED = 8
     LOST = 9
 
+def generate_action_executor(action):
+
+    async def run_action(goal):
+        loop=asyncio.get_event_loop()
+        action_done=loop.create_future()
+
+        def done_callback(goal_status, result):
+            status=ActionLibGoalStatus(goal_status)
+            if status != ActionLibGoalStatus.SUCCEEDED:
+                try:
+                    reason=ErrorCodes(result.result)
+                    print('action end unsuccessfully with'
+                            ' state: {}, reason: {}'.format(status, reason))
+                except (AttributeError, ValueError):
+                    print('action end unsuccessfully with'
+                            ' state: {}'.format(status))
+
+            if not loop.is_closed():
+                loop.call_soon_threadsafe(action_done.set_result, result)
+
+        try:
+            action.send_goal(goal, done_cb=done_callback)
+            await action_done
+        except (asyncio.CancelledError, ServiceException) as exc:
+            print('Cancel goal because of: {}'.format(exc))
+            action.cancel_goal()
+            action.wait_for_result()
+
+        return action_done
+
+    return run_action
+
 
 class SteppedMotionClient(object):
 
@@ -1447,7 +1479,7 @@ class MotionService(object):
         goal = moveJGoal(trajectory=trajectory.to_joint_trajectory_msg(),
                          check_collision=collision_check)
 
-        run_action = self._generate_action_executor(self.__m_action)
+        run_action = generate_action_executor(self.__m_action)
 
         # the server itself lock resources
         # with LeaseBaseLock(trajectory.joint_set.names) as lock_resources:
@@ -1955,7 +1987,7 @@ class MotionService(object):
                                    ' server with name: ' + action_name +
                                    ' could not be established')
 
-        run_action=self._generate_action_executor(action_client)
+        run_action=generate_action_executor(action_client)
 
         with LeaseBaseLock([action_name]):
             response=await run_action(g)
@@ -2024,7 +2056,7 @@ class MotionService(object):
         g.command.force=float(max_effort)
         g.command.stop_on_block=bool(stop_on_block)
 
-        run_action=self._generate_action_executor(action_client)
+        run_action=generate_action_executor(action_client)
 
         with LeaseBaseLock([action_name]):
             response=await run_action(g)
@@ -2036,34 +2068,4 @@ class MotionService(object):
 
         return WsgResult.from_wsg_command_action_result(response.result())
 
-    def _generate_action_executor(self, action):
-
-        async def run_action(goal):
-            loop=asyncio.get_event_loop()
-            action_done=loop.create_future()
-
-            def done_callback(goal_status, result):
-                status=ActionLibGoalStatus(goal_status)
-                if status != ActionLibGoalStatus.SUCCEEDED:
-                    try:
-                        reason=ErrorCodes(result.result)
-                        print('action end unsuccessfully with'
-                              ' state: {}, reason: {}'.format(status, reason))
-                    except (AttributeError, ValueError):
-                        print('action end unsuccessfully with'
-                              ' state: {}'.format(status))
-
-                if not loop.is_closed():
-                    loop.call_soon_threadsafe(action_done.set_result, result)
-
-            try:
-                action.send_goal(goal, done_cb=done_callback)
-                await action_done
-            except (asyncio.CancelledError, ServiceException) as exc:
-                print('Cancel goal because of: {}'.format(exc))
-                action.cancel_goal()
-                action.wait_for_result()
-
-            return action_done
-
-        return run_action
+    
