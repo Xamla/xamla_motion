@@ -200,30 +200,6 @@ def main():
         plan_parameters3.joint_set)
     print(positions)
 
-    print('---------- move pose ------------------')
-
-    t1 = [0.502522, 0.2580, 0.3670]
-    q1 = Quaternion(w=0.304389, x=0.5272, y=0.68704, z=0.39666)
-
-    t2 = [0.23795, 0.46845, 0.44505]
-    q2 = Quaternion(w=0.212097, x=0.470916, y=0.720915, z=0.462096)
-
-    pose_l = Pose(t1, q1)
-    pose_r = Pose(t2, q2)
-
-    ioloop = asyncio.get_event_loop()
-
-    try:
-        for i in range(0, 2):
-            ioloop.run_until_complete(motion_service.move_pose(pose_l,
-                                                               '',
-                                                               plan_parameters3))
-            ioloop.run_until_complete(motion_service.move_pose(pose_r,
-                                                               '',
-                                                               plan_parameters3))
-    finally:
-        ioloop.close()
-
 
 if __name__ == '__main__':
     main()

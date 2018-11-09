@@ -69,10 +69,10 @@ def main():
             loop.run_forever()
 
     ioloop = asyncio.get_event_loop()
-    loop.add_signal_handler(signal.SIGTERM,
-                            functools.partial(shutdown, loop, signal.SIGTERM))
-    loop.add_signal_handler(signal.SIGINT,
-                            functools.partial(shutdown, loop, signal.SIGINT))
+    ioloop.add_signal_handler(signal.SIGTERM,
+                              functools.partial(shutdown, ioloop, signal.SIGTERM))
+    ioloop.add_signal_handler(signal.SIGINT,
+                              functools.partial(shutdown, ioloop, signal.SIGINT))
 
     async def print_Hallo():
         print('Hallo')
