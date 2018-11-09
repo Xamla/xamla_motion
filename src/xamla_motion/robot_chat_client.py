@@ -329,6 +329,11 @@ class RobotChatSteppedMotion(object):
     async def handle_stepwise_motions(self):
         """
         Start supervised motion and ROSVITA supervised motion dialog
+
+        Raises
+        ------
+        ServiceException
+            If stepped motion ends not successful
         """
         channel_name = "MotionDialog"
         topic = "SteppedMotions"
@@ -355,13 +360,12 @@ class RobotChatSteppedMotion(object):
                                        'not successful with error '
                                        'code: {}'.format(self.stepped_client.state.error_code))
 
-        return self.client.state.error_code == ErrorCodes.SUCCESS
-
     async def _update_progress(self, channel_name: str, message_id: str):
         lastProgress = 0.0
         run = True
+        try:
         while run:
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.05)
             if self.stepped_client.state:
                 state = self.stepped_client.state
                 if (state.progress != lastProgress):

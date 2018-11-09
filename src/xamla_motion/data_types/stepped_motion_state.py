@@ -49,8 +49,8 @@ class SteppedMotionState(object):
             An instance of SteppedMotionState
         """
         self.__goal_id = goal_id
-        self.__error_message = ErrorCodes(error_message)
-        self.__error_code = error_code
+        self.__error_message = error_message
+        self.__error_code = ErrorCodes(error_code)
         self.__progress = progress
 
     @property
