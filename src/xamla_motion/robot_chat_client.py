@@ -1,3 +1,4 @@
+import asyncio
 from typing import Callable, Dict, List, Tuple
 
 import actionlib
@@ -9,12 +10,30 @@ from xamla_motion.xamla_motion_exceptions import ServiceException
 from xamlamoveit_msgs.msg import *
 from xamlamoveit_msgs.srv import *
 
-from .motion_service import generate_action_executor, SteppedMotionClient
-from .data_types import SteppedMotionState, ErrorCodes
+from .data_types import ErrorCodes, SteppedMotionState
+from .motion_service import SteppedMotionClient, generate_action_executor
 
 
-class RosRoboChatClient(object):
+class RobotChatClient(object):
+    """
+    Client to communicate with ROSVITA RoboChat
+    """
+
     def __init__(self):
+        """
+        Initialize RobotChatClient
+
+        Returns
+        -------
+        RobotChatClient
+            Return an instance of RobotChatClient
+
+        Raises
+        ------
+        ServiceException:
+            If connection to ROSVITA RoboChat could
+            not be established 
+        """
         self.__robochat_channel_service_name = '/robochat/channel_command'
         self.__robochat_message_service_name = '/robochat/message_command'
         self.__robochat_query_action_name = '/robochat/query'
@@ -83,6 +102,11 @@ class RosRoboChatClient(object):
             A topic
         backlog : int
             The size of the backlog
+
+        Raises
+        ------
+        ServiceException:
+            If service call to ROSVITA RoboChat fails 
         """
         self._call_channel_command(name, 'create', [topic, str(backlog)])
 
@@ -94,6 +118,11 @@ class RosRoboChatClient(object):
         ----------
         name : str
             Name of the chat to be deleted
+
+        Raises
+        ------
+        ServiceException:
+            If service call to ROSVITA RoboChat fails 
         """
         self._call_channel_command(name, 'delete')
 
@@ -105,6 +134,11 @@ class RosRoboChatClient(object):
         ----------
         name : str
             Name of the chat to be cleared
+
+        Raises
+        ------
+        ServiceException:
+            If service call to ROSVITA RoboChat fails 
         """
         self._call_channel_command(name, 'clear')
 
@@ -116,6 +150,11 @@ class RosRoboChatClient(object):
         ----------
         name : str
             Name of the chat
+
+        Raises
+        ------
+        ServiceException:
+            If service call to ROSVITA RoboChat fails 
         """
         self._call_channel_command(name, 'list')
 
@@ -129,6 +168,11 @@ class RosRoboChatClient(object):
             Name of the chat
         topic : str
             The topic name
+
+        Raises
+        ------
+        ServiceException:
+            If service call to ROSVITA RoboChat fails 
         """
         self._call_channel_command(name, 'set_topic', [topic])
 
@@ -142,6 +186,11 @@ class RosRoboChatClient(object):
             Name of a channel
         text : str
             The text of the message
+
+        Raises
+        ------
+        ServiceException:
+            If service call to ROSVITA RoboChat fails 
         """
         return self._call_message_command(channel_name, 'add', text, None, [disposition])
 
@@ -155,6 +204,11 @@ class RosRoboChatClient(object):
             Name of a channel
         message_id : str
             The id of the message to be deleted
+
+        Raises
+        ------
+        ServiceException:
+            If service call to ROSVITA RoboChat fails 
         """
         return self._call_message_command(channel_name, 'remove', None, message_id)
 
@@ -170,6 +224,11 @@ class RosRoboChatClient(object):
             The id of the message to be updated
         text : str
             The updated text
+
+        Raises
+        ------
+        ServiceException:
+            If service call to ROSVITA RoboChat fails 
         """
         return self._call_message_command(channel_name, 'update', text, message_id)
 
@@ -194,6 +253,11 @@ class RosRoboChatClient(object):
         -------
         result
             Result of the query as a instance of rosgardener.RobochatQueryResult.
+
+        Raises
+        ------
+        ServiceException:
+            If action call to ROSVITA RoboChat fails 
         """
         query_action = actionlib.SimpleActionClient(self.__robochat_query_action_name,
                                                     RobochatQueryAction)
@@ -218,37 +282,78 @@ class RosRoboChatClient(object):
 
 
 class RobotChatSteppedMotion(object):
-    def __init__(self, roboChat: RosRoboChatClient, client: SteppedMotionClient,
+    """
+    Class to run a supervised motion from python 
+    with interaction dialog in ROSVITA
+    """
+
+    def __init__(self, robot_chat: RobotChatClient, stepped_client: SteppedMotionClient,
                  move_group_name: str):
-        self.roboChat = roboChat
-        self.client = client
-        self.move_group_name = move_group_name
+        """
+        Initialization of RoboChatSteppedMotion
+
+        Parameters
+        ----------
+        robot_chat : RosRoboChatClient
+            RoboChat client to communicate with ROSVITA supervised motion dialog
+        stepped_client : SteppedMotionClient
+            Client which controlles the supervised motion
+        move_group_name : str
+            Name of the move group which executes the motion
+
+        Returns
+        -------
+        RobotChatSteppedMotion
+            Returns an instance of RobotChatSteppedMotion
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If robot chat is not of expected type RobotChatClient
+            If stepped_client is not of expected type SteppedMotionClient
+            If move_group_name is not of exptected type str
+        """
+
+        if not isinstance(robot_chat, RobotChatClient):
+            raise TypeError('robot_chat is not of expected'
+                            ' type RobotChatClient')
+
+        if not isinstance(stepped_client, SteppedMotionClient):
+            raise TypeError('stepped_client is not of expected'
+                            ' type SteppedMotionClient')
+
+        self.robot_chat = robot_chat
+        self.stepped_client = stepped_client
+        self.move_group_name = str(move_group_name)
 
     async def handle_stepwise_motions(self):
+        """
+        Start supervised motion and ROSVITA supervised motion dialog
+        """
         channel_name = "MotionDialog"
         topic = "SteppedMotions"
         disposition = "SteppedMotion"
 
-        self.roboChat.create_chat(channel_name, topic)
-        message_body = self._create_message(str(self.client.goal_id.id),
+        self.robot_chat.create_chat(channel_name, topic)
+        message_body = self._create_message(str(self.stepped_client.goal_id.id),
                                             self.move_group_name, 0.0)
-        message_id = self.roboChat.create_text_message(
+        message_id = self.robot_chat.create_text_message(
             channel_name, message_body, disposition)
         task_update = asyncio.ensure_future(
             self._update_progress(channel_name, message_id))
         try:
-            await self.client.action_done_future
+            await self.stepped_client.action_done_future
         finally:
             self.roboChat.delete_text_message(channel_name, message_id)
             task_update.cancel()
-            if not self.client.state:
+            if not self.stepped_client.state:
                 raise ServiceException('Robot chat stepped motion ends'
                                        'not successful')
 
-            elif self.client.state.error_code != ErrorCodes.SUCCESS:
+            elif self.stepped_client.state.error_code != ErrorCodes.SUCCESS:
                 raise ServiceException('Robot chat stepped motion ends'
                                        'not successful with error '
-                                       'code: {}'.format(self.client.state.error_code))
+                                       'code: {}'.format(self.stepped_client.state.error_code))
 
         return self.client.state.error_code == ErrorCodes.SUCCESS
 
@@ -257,13 +362,13 @@ class RobotChatSteppedMotion(object):
         run = True
         while run:
             await asyncio.sleep(0.1)
-            if self.client.state:
-                state = self.client.state
+            if self.stepped_client.state:
+                state = self.stepped_client.state
                 if (state.progress != lastProgress):
                     lastProgress = state.progress
-                    message_body = self._create_message(str(self.client.goal_id.id),
+                    message_body = self._create_message(str(self.stepped_client.goal_id.id),
                                                         self.move_group_name, lastProgress)
-                    message_id = self.roboChat.update_text_message(
+                    message_id = self.robot_chat.update_text_message(
                         channel_name, message_id, message_body)
                     run = state.error_code == ErrorCodes.PROGRESS
 
