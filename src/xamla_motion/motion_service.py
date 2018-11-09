@@ -325,6 +325,9 @@ class SteppedMotionClient(object):
                                                   trajectory_progress.progress)
                 if trajectory_progress.error_code != 0:
                     self.__feedback_sub.unregister()
+                    self.__step_pub.unregister()
+                    self.__next_pub.unregister()
+                    self.__previous_pub.unregister()
 
 
 class MotionService(object):
