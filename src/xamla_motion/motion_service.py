@@ -323,7 +323,7 @@ class SteppedMotionClient(object):
                                                   trajectory_progress.error_msg,
                                                   trajectory_progress.error_code,
                                                   trajectory_progress.progress)
-                if trajectory_progress.error_code == 1:
+                if trajectory_progress.error_code != 0:
                     self.__feedback_sub.unregister()
 
 
