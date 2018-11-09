@@ -10,7 +10,7 @@ from xamlamoveit_msgs.msg import *
 from xamlamoveit_msgs.srv import *
 
 from .motion_service import generate_action_executor, SteppedMotionClient
-from .data_types import SteppedMotionState
+from .data_types import SteppedMotionState, ErrorCodes
 
 
 class RosRoboChatClient(object):
@@ -218,7 +218,8 @@ class RosRoboChatClient(object):
 
 
 class RobotChatSteppedMotion(object):
-    def __init__(self, roboChat: RosRoboChatClient, client: SteppedMotionClient, move_group_name: str):
+    def __init__(self, roboChat: RosRoboChatClient, client: SteppedMotionClient,
+                 move_group_name: str):
         self.roboChat = roboChat
         self.client = client
         self.move_group_name = move_group_name
@@ -240,12 +241,18 @@ class RobotChatSteppedMotion(object):
         finally:
             print(message_id,  channel_name)
             self.roboChat.delete_text_message(channel_name, message_id)
-            if self.client.state:
-                self.client.state.error_code
             task_update.cancel()
+            if not self.client.state:
+                raise ServiceException('Robot chat stepped motion ends'
+                                       'not successful')
+
+            elif self.client.state.error_code != ErrorCodes.SUCCESS:
+                raise ServiceException('Robot chat stepped motion ends'
+                                       'not successful with error '
+                                       'code: {}'.format(self.client.state.error_code))
 
         print(self.client.state.error_code)
-        return self.client.state.error_code == 0 or self.client.state.error_code == 1
+        return self.client.state.error_code == ErrorCodes.SUCCESS
 
     async def _update_progress(self, channel_name: str, message_id: str):
         lastProgress = 0.0
@@ -260,7 +267,7 @@ class RobotChatSteppedMotion(object):
                                                         self.move_group_name, lastProgress)
                     message_id = self.roboChat.update_text_message(
                         channel_name, message_id, message_body)
-                    run = state.error_code == 0
+                    run = state.error_code == ErrorCodes.PROGRESS
 
     def _create_message(self, goal_id: str, move_group_name: str, progress: float) -> str:
         my_message = '"GoalId" : "{}", "MoveGroupName" : "{}", "Progress" : {}'

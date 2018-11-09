@@ -23,6 +23,7 @@ import enum
 
 @enum.unique
 class ErrorCodes(enum.Enum):
+    PROGRESS = 0
     SUCCESS = 1
     FAILURE = 99999
     SIGNAL_LOST = -9999

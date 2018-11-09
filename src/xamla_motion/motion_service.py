@@ -710,7 +710,7 @@ class MotionService(object):
                                    ' forward kinematics'
                                    ' failed, abort') from exc
 
-        if (response.error_codes == None or response.error_msgs == None
+        if (response.error_codes is None or response.error_msgs is None
                 or len(response.error_codes) != len(response.error_msgs)):
             raise ServiceException('service call for query forward'
                                    'kinematics returns with '

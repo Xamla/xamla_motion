@@ -172,7 +172,7 @@ class JointTrajectory(object):
 
         self.__joint_set = joint_set
 
-        if points == None:
+        if points is None:
             self.__points = None
             return
         else:
@@ -191,13 +191,13 @@ class JointTrajectory(object):
                 raise ValueError('Provided trajectory point ' + str(i) +
                                  ' has values for different joint set')
 
-            if p.velocities == None:
+            if p.velocities is None:
                 self.__flags.has_velocity = False
 
-            if p.accelerations == None:
+            if p.accelerations is None:
                 self.__flags.has_acceleration = False
 
-            if p.efforts == None:
+            if p.efforts is None:
                 self.__flags.has_effort = False
 
     @staticmethod

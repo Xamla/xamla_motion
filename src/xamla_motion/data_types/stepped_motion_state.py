@@ -49,7 +49,7 @@ class SteppedMotionState(object):
             An instance of SteppedMotionState
         """
         self.__goal_id = goal_id
-        self.__error_message = error_message
+        self.__error_message = ErrorCodes(error_message)
         self.__error_code = error_code
         self.__progress = progress
 
@@ -73,7 +73,7 @@ class SteppedMotionState(object):
     @property
     def error_code(self):
         """
-        error_code : int 
+        error_code : xamla_motion.data_types.ErroCodes 
             Numerical representation if the error
         """
         return self.__error_code
