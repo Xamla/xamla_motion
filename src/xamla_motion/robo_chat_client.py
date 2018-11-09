@@ -239,7 +239,6 @@ class RobotChatSteppedMotion(object):
         try:
             await self.client.action_done_future
         finally:
-            print(message_id,  channel_name)
             self.roboChat.delete_text_message(channel_name, message_id)
             task_update.cancel()
             if not self.client.state:
@@ -251,7 +250,6 @@ class RobotChatSteppedMotion(object):
                                        'not successful with error '
                                        'code: {}'.format(self.client.state.error_code))
 
-        print(self.client.state.error_code)
         return self.client.state.error_code == ErrorCodes.SUCCESS
 
     async def _update_progress(self, channel_name: str, message_id: str):
