@@ -9,7 +9,8 @@ from xamla_motion.xamla_motion_exceptions import ServiceException
 from xamlamoveit_msgs.msg import *
 from xamlamoveit_msgs.srv import *
 
-from .motion_service import generate_action_executor
+from .motion_service import generate_action_executor, SteppedMotionClient
+from .data_types import SteppedMotionState
 
 
 class RosRoboChatClient(object):
@@ -214,3 +215,53 @@ class RosRoboChatClient(object):
             goal.command.message_body = message_body
 
         return await query_action(goal)
+
+
+class RobotChatSteppedMotion(object):
+    def __init__(self, roboChat: RosRoboChatClient, client: SteppedMotionClient, move_group_name: str):
+        self.roboChat = roboChat
+        self.client = client
+        self.move_group_name = move_group_name
+
+    async def handle_stepwise_motions(self):
+        channel_name = "MotionDialog"
+        topic = "SteppedMotions"
+        disposition = "SteppedMotion"
+
+        self.roboChat.create_chat(channel_name, topic)
+        message_body = self._create_message(str(self.client.goal_id.id),
+                                            self.move_group_name, 0.0)
+        message_id = self.roboChat.create_text_message(
+            channel_name, message_body, disposition)
+        task_update = asyncio.ensure_future(
+            self._update_progress(channel_name, message_id))
+        try:
+            await self.client.action_done_future
+        finally:
+            print(message_id,  channel_name)
+            self.roboChat.delete_text_message(channel_name, message_id)
+            if self.client.state:
+                self.client.state.error_code
+            task_update.cancel()
+
+        print(self.client.state.error_code)
+        return self.client.state.error_code == 0 or self.client.state.error_code == 1
+
+    async def _update_progress(self, channel_name: str, message_id: str):
+        lastProgress = 0.0
+        run = True
+        while run:
+            await asyncio.sleep(0.1)
+            if self.client.state:
+                state = self.client.state
+                if (state.progress != lastProgress):
+                    lastProgress = state.progress
+                    message_body = self._create_message(str(self.client.goal_id.id),
+                                                        self.move_group_name, lastProgress)
+                    message_id = self.roboChat.update_text_message(
+                        channel_name, message_id, message_body)
+                    run = state.error_code == 0
+
+    def _create_message(self, goal_id: str, move_group_name: str, progress: float) -> str:
+        my_message = '"GoalId" : "{}", "MoveGroupName" : "{}", "Progress" : {}'
+        return '{' + my_message.format(goal_id, move_group_name, progress) + '}'
