@@ -300,7 +300,7 @@ class JointLimits(object):
         if id(other) == id(self):
             return True
 
-        if other.join_set != self.__joint_set:
+        if other.joint_set != self.__joint_set:
             return False
 
         if not np.allclose(self.__max_velocity, other.max_velocity,
