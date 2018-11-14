@@ -89,6 +89,7 @@ def generate_action_executor(action):
 
     return run_action
 
+
 class SteppedMotionClient(object):
 
     """
@@ -114,6 +115,7 @@ class SteppedMotionClient(object):
             rospy.on_shutdown(self.on_shutdown)
 
         def on_shutdown(self):
+            # print('stepped shutdown')
             for key, cancel in self.instances.items():
                 # print('cancel goal_id: {}'.format(key))
                 cancel()
@@ -326,7 +328,8 @@ class SteppedMotionClient(object):
                                                   trajectory_progress.progress)
 
     def _done_callback(self, future):
-        type(self).__shutdown_manager.unregister_instance(self.__goal_id.id)
+        # print('done callback')
+        # type(self).__shutdown_manager.unregister_instance(self.__goal_id.id)
         self.__feedback_sub.unregister()
         self.__step_pub.unregister()
         self.__next_pub.unregister()

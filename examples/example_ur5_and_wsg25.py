@@ -18,15 +18,15 @@
 
 #!/usr/bin/env python3
 
-from xamla_motion.data_types import *
-from xamla_motion.motion_client import MoveGroup, EndEffector
-from xamla_motion.gripper_client import *
-from xamla_motion.motion_service import SteppedMotionClient
-from pyquaternion import Quaternion
-import time
 import asyncio
-import signal
-import functools
+import time
+
+from pyquaternion import Quaternion
+from xamla_motion.data_types import *
+from xamla_motion.gripper_client import *
+from xamla_motion.motion_client import EndEffector, MoveGroup
+from xamla_motion.motion_service import SteppedMotionClient
+from xamla_motion.utility import register_asyncio_shutdown_handler
 
 
 def main():
@@ -55,24 +55,8 @@ def main():
     joint_trajectory, _ = end_effector.move_group.plan_move_joints_collision_free(
         joint_path)
 
-    # function to shutdown asyncio properly
-    def shutdown(loop, reason):
-        print('shutdown asyncio due to : {}'.format(reason), flush=True)
-        tasks = asyncio.gather(*asyncio.Task.all_tasks(loop=loop),
-                               loop=loop, return_exceptions=True)
-        tasks.add_done_callback(lambda t: loop.stop())
-        tasks.cancel()
-
-        # Keep the event loop running until it is either destroyed or all
-        # tasks have really terminated
-        while not tasks.done() and not loop.is_closed():
-            loop.run_forever()
-
     ioloop = asyncio.get_event_loop()
-    ioloop.add_signal_handler(signal.SIGTERM,
-                              functools.partial(shutdown, ioloop, signal.SIGTERM))
-    ioloop.add_signal_handler(signal.SIGINT,
-                              functools.partial(shutdown, ioloop, signal.SIGINT))
+    register_asyncio_shutdown_handler(ioloop)
 
     async def print_Hallo():
         print('Hallo')

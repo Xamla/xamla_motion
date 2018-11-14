@@ -361,6 +361,57 @@ class JointValues(object):
             raise ValueError('name ' + name +
                              ' not exist in joint names') from exc
 
+    def set_values(self, joint_set, values):
+        """
+        Create a new instance of JointValues with modified values
+
+        Parameters
+        ----------
+        joint_set : str, Iterable[str], JointSet
+            joint_set defined by single string List of strings or JointSet
+        values : float, Iterable[float], np.ndarray
+
+        Returns
+        -------
+        JointValues
+            New instance of JointValues with modified values
+
+        Raises
+        ------
+        TypeError
+            If joint_set is not str, Iterable[str] or JointSet 
+            If values is not iterable
+        ValueError
+            If joint_set and values unequal length
+            If joint defined in joint set not exist 
+            in the JointSet of this JointValues instance
+        """
+
+        if not isinstance(values, Iterable):
+            values = [values]
+
+        values = np.fromiter(values, float)
+
+        if not isinstance(joint_set, JointSet):
+            try:
+                joint_set = JointSet(joint_set)
+            except (ValueError, TypeError) as exc:
+                raise TypeError('joint_set is not one of expected types '
+                                'str, Iterable[str] or JointSet') from exc
+
+        if len(joint_set) != len(values):
+            raise ValueError('The number of provided joints and'
+                             ' values is not equal')
+
+        m_values = self.__values.copy()
+
+        for i, joint in enumerate(joint_set):
+            idx = self.__joint_set.get_index_of(joint)
+            m_values[idx] = values[i]
+
+        return JointValues(self.__joint_set,
+                           m_values)
+
     def merge(self, others):
         """
         Merge JointValues instance with others JointValues

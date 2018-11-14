@@ -18,15 +18,20 @@
 
 #!/usr/bin/env python3
 
-from xamla_motion.data_types import MoveGripperResult, WsgCommand, WsgResult
-from xamla_motion.motion_client import MoveGroup
-from xamla_motion.gripper_client import WeissWsgGripperProperties, CommonGripperProperties
-from xamla_motion.gripper_client import WeissWsgGripper, CommonGripper
 import asyncio
+
+from xamla_motion.data_types import MoveGripperResult, WsgCommand, WsgResult
+from xamla_motion.gripper_client import (CommonGripper,
+                                         CommonGripperProperties,
+                                         WeissWsgGripper,
+                                         WeissWsgGripperProperties)
+from xamla_motion.motion_client import MoveGroup
+from xamla_motion.utility import register_asyncio_shutdown_handler
 
 
 def main():
     ioloop = asyncio.get_event_loop()
+    register_asyncio_shutdown_handler(ioloop)
 
     # create instance of movegroup to provide motion services
     move_group = MoveGroup()

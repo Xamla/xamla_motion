@@ -351,10 +351,13 @@ class RobotChatSteppedMotion(object):
         finally:
             self.robot_chat.delete_text_message(channel_name, message_id)
             task_update.cancel()
-            if ErrorCodes(result.result) != ErrorCodes.SUCCESS:
-                raise ServiceException('Robot chat stepped motion ends '
-                                       'not successful with error '
-                                       'code: {}'.format(ErrorCodes(result.result)))
+
+        err_code = ErrorCodes(result.result)
+
+        if err_code != ErrorCodes.SUCCESS and err_code != ErrorCodes.PREEMPTED:
+            raise ServiceException('Robot chat stepped motion ends '
+                                   'not successful with error '
+                                   'code: {}'.format(err_code))
 
     async def _update_progress(self, channel_name: str, message_id: str):
         lastProgress = 0.0

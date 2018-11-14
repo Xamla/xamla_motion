@@ -18,13 +18,17 @@
 
 #!/usr/bin/env python3
 
-from typing import List
+import asyncio
+import functools
+import re
+import signal
 from collections import Iterable
+from typing import List
+
+import rospy
+from xamlamoveit_msgs.srv import QueryLock, QueryLockRequest
 
 from .xamla_motion_exceptions import ServiceException
-from xamlamoveit_msgs.srv import QueryLock, QueryLockRequest
-import rospy
-import re
 
 resource_lock_srv_name = '/xamlaResourceLockService/query_resource_lock'
 
@@ -168,3 +172,38 @@ class ROSNodeSteward(object):
     def __init__(self):
         if (re.sub('[^A-Za-z0-9]+', '', rospy.get_name()) == 'unnamed'):
             rospy.init_node('xamla_motion', anonymous=True)
+
+
+def register_asyncio_shutdown_handler(asyncio_loop):
+    """
+    Register signals SIGTERM and SIGINT at asyncio loop
+
+    If one of both signals is raised shutdown asyncio loop
+    properly
+
+    Parameters
+    ----------
+    asyncio_loop
+        asyncio event loop on which the signals should be registered
+    """
+
+    def _shutdown(loop, reason):
+        print('shutdown asyncio due to : {}'.format(reason), flush=True)
+        tasks = asyncio.gather(*asyncio.Task.all_tasks(loop=loop),
+                               loop=loop, return_exceptions=True)
+        tasks.add_done_callback(lambda t: loop.stop())
+        tasks.cancel()
+
+        # Keep the event loop running until it is either destroyed or all
+        # tasks have really terminated
+        while not tasks.done() and not loop.is_closed():
+            loop.run_forever()
+
+    asyncio_loop.add_signal_handler(signal.SIGTERM,
+                                    functools.partial(_shutdown,
+                                                      asyncio_loop,
+                                                      signal.SIGTERM))
+    asyncio_loop.add_signal_handler(signal.SIGINT,
+                                    functools.partial(_shutdown,
+                                                      asyncio_loop,
+                                                      signal.SIGINT))

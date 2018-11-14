@@ -18,29 +18,16 @@
 
 #!/usr/bin/env python3
 
-from xamla_motion.data_types import Pose, CartesianPath, JointPath
-from xamla_motion.motion_client import MoveGroup, EndEffector
-from pyquaternion import Quaternion
-import signal
-import functools
 import asyncio
 
-
-# function to shutdown asyncio properly
-def shutdown(loop, reason):
-    print('shutdown asyncio due to : {}'.format(reason), flush=True)
-    tasks = asyncio.gather(*asyncio.Task.all_tasks(loop=loop),
-                           loop=loop, return_exceptions=True)
-    tasks.add_done_callback(lambda t: loop.stop())
-    tasks.cancel()
-
-    # Keep the event loop running until it is either destroyed or all
-    # tasks have really terminated
-    while not tasks.done() and not loop.is_closed():
-        loop.run_forever()
-
+from pyquaternion import Quaternion
+from xamla_motion.data_types import CartesianPath, JointPath, Pose
+from xamla_motion.motion_client import EndEffector, MoveGroup
+from xamla_motion.utility import register_asyncio_shutdown_handler
 
 # functions for supervised executation
+
+
 async def next(stepped_motion_client):
     while True:
         await asyncio.sleep(0.1)
@@ -87,10 +74,7 @@ def main():
                                                       False).path
 
     loop = asyncio.get_event_loop()
-    loop.add_signal_handler(signal.SIGTERM,
-                            functools.partial(shutdown, loop, signal.SIGTERM))
-    loop.add_signal_handler(signal.SIGINT,
-                            functools.partial(shutdown, loop, signal.SIGINT))
+    register_asyncio_shutdown_handler(loop)
 
     async def example_moves():
         print('test MoveGroup class')
