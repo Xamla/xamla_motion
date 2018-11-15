@@ -19,6 +19,7 @@
 #!/usr/bin/env python3
 
 from functools import total_ordering
+from typing import Iterable
 
 
 @total_ordering
@@ -428,7 +429,7 @@ class JointSet(object):
             raise ValueError('This JointSet not contains a'
                              ' joint with name: ' + name) from exc
 
-    def contains(self, names):
+    def __contains__(self, names):
         """
         Checks if this JointSet contains a specific joint names
 
@@ -454,16 +455,15 @@ class JointSet(object):
 
         >>> from xamla_motion.data_types import JointSet
         >>> joint_set1 = JointSet('joint0')
-        >>> joint_set1.contains('joint0')
+        >>> 'joint0' in joint_set1
         True
-        >>> joint_set1.contains('joint1')
+        >>> 'joint1' in joint_set1
         False
 
         """
+
         if isinstance(names, str):
             return names in self.__names_set
-        elif all(isinstance(n, str) for n in names):
-            return list(map(lambda x: x in self.__names_set, names))
         else:
             raise TypeError('name expected type is str')
 
