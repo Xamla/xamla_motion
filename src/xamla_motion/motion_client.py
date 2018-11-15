@@ -288,16 +288,13 @@ class MoveGroup(object):
 
         Parameters
         ----------
-        value : bool convertable
+        value : bool
             activate collision check or deactivate it
         """
 
-        if np.isclose(value, self.__plan_parameters.collision_check):
-            return
-
-        self.__plan_parameters.collision_check = value
+        self.__plan_parameters.with_collision_check(value)
         if self.__task_space_plan_parameters:
-            self.__task_space_plan_parameters.collision_check = value
+            self.__task_space_plan_parameters.with_collision_check(value)
 
     @property
     def sample_resolution(self):
@@ -321,12 +318,9 @@ class MoveGroup(object):
             seconds else in Hz
         """
 
-        if np.isclose(value, self.__plan_parameters.sample_resolution):
-            return
-
-        self.__plan_parameters.sample_resolution = value
+        self.__plan_parameters.with_sample_resolution(value)
         if self.__task_space_plan_parameters:
-            self.__task_space_plan_parameters.sample_resolution = value
+            self.__task_space_plan_parameters.with_sample_resolution(value)
 
     @property
     def max_deviation(self):
@@ -349,12 +343,9 @@ class MoveGroup(object):
             maximal deviation
         """
 
-        if np.isclose(value, self.__plan_parameters.max_deviation):
-            return
-
-        self.__plan_parameters.max_deviation = value
+        self.__plan_parameters.with_max_deviation(value)
         if self.__task_space_plan_parameters:
-            self.__task_space_plan_parameters.max_deviation = value
+            self.__task_space_plan_parameters.with_max_deviation(value)
 
     @property
     def ik_jump_threshold(self):
@@ -379,58 +370,10 @@ class MoveGroup(object):
             new maximal allowed inverse kinematics jump threshold
         """
         if not self.__task_space_plan_parameters:
-            return
+            raise RuntimeError('task space plan parameters not defined'
+                               ' because move group has no end effector')
 
-        if not np.isclose(value, self.__task_space_plan_parameters.ik_jump_threshold):
-            self.__task_space_plan_parameters.ik_jump_threshold = value
-
-    @property
-    def velocity_scaling(self):
-        """
-        Current velocity scaling value
-
-        velocity_scaling : float convertable
-            The velocity scaling value is the value which was applied
-            to the default velocities to get the current velocity limits.
-            The default velocities are maximal velocities.
-            The maximal velocities are provided by the motion server
-            and queried from it during the initialization process.
-        """
-        return self.__plan_parameters.velocity_scaling
-
-    @velocity_scaling.setter
-    def velocity_scaling(self, value):
-
-        value = float(value)
-
-        if not np.isclose(value, self.velocity_scaling):
-            self.__plan_parameters.velocity_scaling = value
-            if self.__task_space_plan_parameters:
-                self.__task_space_plan_parameters.velocity_scaling = value
-
-    @property
-    def acceleration_scaling(self):
-        """
-        Current acceleration scaling value
-
-        acceleration_scaling : float convertable
-            The acceleration scaling value is the value which was applied
-            to the default accelerations to get the current accelerations
-            limits. The default accelerations are maximal accelerations.
-            The maximal accelerations are provided by the motion server
-            and queried from it during the initialization process.
-        """
-        return self.__plan_parameters.acceleration_scaling
-
-    @acceleration_scaling.setter
-    def acceleration_scaling(self, value):
-
-        value = float(value)
-
-        if not np.isclose(value, self.acceleration_scaling):
-            self.__plan_parameters.acceleration_scaling = value
-            if self.__task_space_plan_parameters:
-                self.__task_space_plan_parameters.acceleration_scaling = value
+        self.__task_space_plan_parameters.with_ik_jump_threshold(value)
 
     def set_default_end_effector(self, end_effector_name):
         """
@@ -575,21 +518,21 @@ class MoveGroup(object):
             If scaling inputs are not between 0.0 and 1.0
         """
 
-        parameters = deepcopy(self.__plan_parameters)
+        builder = self.__plan_parameters.to_builder()
 
         if velocity_scaling:
-            parameters.velocity_scaling = velocity_scaling
+            builder.scale_velocity(velocity_scaling)
 
         if collision_check:
-            parameters.collision_check = collision_check
+            builder.collision_check = collision_check
 
         if max_deviation:
-            parameters.max_deviation = max_deviation
+            builder.max_deviation = max_deviation
 
         if acceleration_scaling:
-            parameters.acceleration_scaling = acceleration_scaling
+            builder.scale_acceleration(acceleration_scaling)
 
-        return parameters
+        return builder.build()
 
     def _build_task_space_plan_parameters(self, velocity_scaling=None,
                                           collision_check=None,
@@ -636,56 +579,38 @@ class MoveGroup(object):
             If scaling inputs are not between 0.0 and 1.0
         """
 
-        if not end_effector_name:
-            parameters = deepcopy(self.__task_space_plan_parameters)
-
-            if velocity_scaling:
-                parameters.velocity_scaling = velocity_scaling
-
-            if collision_check:
-                parameters.collision_check = collision_check
-
-            if max_deviation:
-                parameters.max_deviation = max_deviation
-
-            if acceleration_scaling:
-                parameters.acceleration_scaling = acceleration_scaling
-
-            return parameters
-
         end_effector_name = str(end_effector_name)
 
-        try:
-            self.__end_effectors[end_effector_name]
-        except KeyError as exc:
-            raise RuntimeError('move group' + self.__name +
-                               ' has no end effector with name: ' +
-                               end_effector_name) from exc
+        if (end_effector_name is not None and
+                end_effector_name != self.__selected_end_effector):
+            try:
+                self.__end_effectors[end_effector_name]
+            except KeyError as exc:
+                raise RuntimeError('move group' + self.__name +
+                                   ' has no end effector with name: ' +
+                                   end_effector_name) from exc
 
-        if not velocity_scaling:
-            velocity_scaling = self.__task_space_plan_parameters.velocity_scaling
+            p = self.__m_service.create_task_space_plan_parameters(
+                end_effector_name)
 
-        if not collision_check:
-            collision_check = self.__task_space_plan_parameters.collision_check
+        else:
+            p = self.__task_space_plan_parameters
 
-        if not max_deviation:
-            max_deviation = self.__task_space_plan_parameters.max_deviation
+        builder = p.to_builder()
 
-        if not acceleration_scaling:
-            acceleration_scaling = self.__task_space_plan_parameters.acceleration_scaling
+        if velocity_scaling:
+            builder.scale_velocity(velocity_scaling)
 
-        sample_resolution = self.__task_space_plan_parameters.sample_resolution
-        return self.__m_service.create_task_space_plan_parameters(
-            end_effector_name,
-            self.__task_space_plan_parameters.max_xyz_velocity,
-            self.__task_space_plan_parameters.max_xyz_acceleration,
-            self.__task_space_plan_parameters.max_angular_velocity,
-            self.__task_space_plan_parameters.max_angular_acceleration,
-            sample_resolution=sample_resolution,
-            collision_check=collision_check,
-            max_deviation=max_deviation,
-            velocity_scaling=velocity_scaling,
-            acceleration_scaling=acceleration_scaling)
+        if collision_check:
+            builder.collision_check = collision_check
+
+        if max_deviation:
+            builder.max_deviation = max_deviation
+
+        if acceleration_scaling:
+            builder.scale_acceleration(acceleration_scaling)
+
+        return builder.build()
 
     def plan_move_joints(self, target, velocity_scaling=None,
                          collision_check=None,
@@ -903,7 +828,7 @@ class MoveGroup(object):
                                                                       acceleration_scaling)
 
         return self.__m_service.execute_joint_trajectory_supervised(trajectory,
-                                                                    parameters.velocity_scaling,
+                                                                    1.0,
                                                                     False)
 
     async def move_joints(self, target, velocity_scaling=None,
@@ -1010,7 +935,7 @@ class MoveGroup(object):
                                                        acceleration_scaling)
 
         return self.__m_service.execute_joint_trajectory_supervised(trajectory,
-                                                                    parameters.velocity_scaling,
+                                                                    1.0,
                                                                     parameters.collision_check)
 
 
@@ -1268,10 +1193,10 @@ class EndEffector(object):
                                                               collision_check)
 
         path = self.__m_service.query_inverse_kinematics(pose,
-                                                       parameters,
-                                                       seed,
-                                                       self.__link_name,
-                                                       timeout)
+                                                         parameters,
+                                                         seed,
+                                                         self.__link_name,
+                                                         timeout)
 
         return path
 
@@ -1322,16 +1247,16 @@ class EndEffector(object):
         if not seed:
             seed = self.__move_group.get_current_joint_positions()
 
-        parameters=self.__move_group._build_plan_parameters(1.0,
+        parameters = self.__move_group._build_plan_parameters(1.0,
                                                               collision_check)
 
-        ik=self.__m_service.query_inverse_kinematics_many(poses,
-                                                        parameters,
-                                                        seed,
-                                                        timeout)
+        ik = self.__m_service.query_inverse_kinematics_many(poses,
+                                                            parameters,
+                                                            seed,
+                                                            timeout)
 
         if not ik.succeeded:
-            print('computation of inverse kinematic fails' 
+            print('computation of inverse kinematic fails'
                   ' for one or more request in batch: ' + str(ik))
 
         return ik
@@ -1539,15 +1464,15 @@ class EndEffector(object):
                                                                          acceleration_scaling)
 
         return self.__m_service.execute_joint_trajectory_supervised(trajectory,
-                                                                    plan_parameters.velocity_scaling,
+                                                                    1.0,
                                                                     plan_parameters.collision_check)
 
     async def move_poses_collision_free(self, target: (Pose, CartesianPath),
-                              seed: (None, JointValues)=None,
-                              velocity_scaling: (None, float)=None,
-                              collision_check: (None, bool)=None,
-                              max_deviation: (None, float)=None,
-                              acceleration_scaling: (None, float)=None):
+                                        seed: (None, JointValues)=None,
+                                        velocity_scaling: (None, float)=None,
+                                        collision_check: (None, bool)=None,
+                                        max_deviation: (None, float)=None,
+                                        acceleration_scaling: (None, float)=None):
         """
         Asynchronous plan and execute collision free trajectory from task space input
 
@@ -1618,11 +1543,11 @@ class EndEffector(object):
                                                         plan_parameters.collision_check)
 
     def move_poses_collision_free_supervised(self, target: (Pose, CartesianPath),
-                              seed: (None, JointValues)=None,
-                              velocity_scaling: (None, float)=None,
-                              collision_check: (None, bool)=None,
-                              max_deviation: (None, float)=None,
-                              acceleration_scaling: (None, float)=None):
+                                             seed: (None, JointValues)=None,
+                                             velocity_scaling: (None, float)=None,
+                                             collision_check: (None, bool)=None,
+                                             max_deviation: (None, float)=None,
+                                             acceleration_scaling: (None, float)=None):
         """
         Plan collision free trajectory from task space input and create executor
 
@@ -1695,8 +1620,8 @@ class EndEffector(object):
                                                                                         acceleration_scaling)
 
         return self.__m_service.execute_joint_trajectory_supervised(trajectory,
-                                                                   plan_parameters.velocity_scaling,
-                                                                   plan_parameters.collision_check)
+                                                                    1.0,
+                                                                    plan_parameters.collision_check)
 
     def plan_poses_linear(self, target, velocity_scaling=None,
                           collision_check=None, max_deviation=None,

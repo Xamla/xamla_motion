@@ -51,9 +51,7 @@ class PlanParameters(object):
         argv : dict
             The argv dict is used to set parameters which have default values
             this are sample_resolution (default = 0.008 / 125 hz),
-            collision_check (default = True), max_deviation (default = 0.2),
-            velocity_scaling (default = 1.0) and acceleration_scaling (
-            default = 1.0)
+            collision_check (default = True), max_deviation (default = 0.2)
 
         Returns
         ------
@@ -96,35 +94,8 @@ class PlanParameters(object):
         except TypeError as exc:
             raise TypeError('max_deviation can not be converted to float')
 
-        try:
-            self.__velocity_scaling = float(kwargs.get("velocity_scaling",
-                                                       1.0))
-        except TypeError as exc:
-            raise TypeError('velocity_scaling can not be converted to float')
-        if self.__velocity_scaling < 0.0 or self.__velocity_scaling > 1.0:
-            raise ValueError('velocity_scaling is not in expected range'
-                             'between 0.0 and 1.0')
-
-        try:
-            self.__acceleration_scaling = float(kwargs.get(
-                "acceleration_scaling",
-                1.0))
-        except TypeError as exc:
-            raise TypeError('acceleration_scaling can not'
-                            ' be converted to float')
-        if self.__acceleration_scaling < 0.0 or self.__acceleration_scaling > 1.0:
-            raise ValueError('acceleration_scaling is not in expected range'
-                             'between 0.0 and 1.0')
-
         if isinstance(joint_limits, JointLimits):
-            max_s_velocity = joint_limits.max_velocity * self.__velocity_scaling
-            max_s_acceleration = (joint_limits.max_acceleration
-                                  * self.__acceleration_scaling)
-            self.__joint_limits = JointLimits(joint_limits.joint_set,
-                                              max_s_velocity,
-                                              max_s_acceleration,
-                                              joint_limits.min_position,
-                                              joint_limits.max_position)
+            self.__joint_limits = joint_limits
         else:
             raise TypeError('joint_limits is not'
                             ' of expected type JointLimits')
@@ -162,9 +133,7 @@ class PlanParameters(object):
         kwargs : dict
             The argv dict is used to set parameters which have default values
             this are sample_resolution (default = 0.008),
-            collision_check (default = True), max_deviation (default = 0.2),
-            velocity_scaling (default = 1.0) and acceleration_scaling (
-            default = 1.0)
+            collision_check (default = True), max_deviation (default = 0.2)
 
         Returns
         ------
@@ -210,9 +179,7 @@ class PlanParameters(object):
         return PlanParameters(builder.move_group_name, builder.joint_limits,
                               sample_resolution=builder.sample_resolution,
                               collision_check=builder.collision_check,
-                              max_deviation=builder.max_deviation,
-                              velocity_scaling=builder.velocity_scaling,
-                              acceleration_scaling=builder.acceleration_scaling)
+                              max_deviation=builder.max_deviation)
 
     class _Builder(object):
 
@@ -222,8 +189,14 @@ class PlanParameters(object):
             self.__sample_resolution = instance.sample_resolution
             self.__max_deviation = instance.max_deviation
             self.__collision_check = instance.collision_check
-            self.__velocity_scaling = instance.velocity_scaling
-            self.__acceleration_scaling = instance.acceleration_scaling
+
+        @property
+        def move_group_name(self):
+            return self.__move_group_name
+
+        @property
+        def joint_limits(self):
+            return self.__joint_limits
 
         @property
         def sample_resolution(self):
@@ -255,12 +228,7 @@ class PlanParameters(object):
 
             self.__max_deviation = value
 
-        @property
-        def velocity_scaling(self):
-            return self.__velocity_scaling
-
-        @velocity_scaling.setter
-        def velocity_scaling(self, value):
+        def scale_velocity(self, value):
             value = float(value)
 
             if value > 1.0 or value < 0.0:
@@ -268,7 +236,7 @@ class PlanParameters(object):
                                  ' between 0.0 and 1.0')
 
             max_s_velocity = self.__joint_limits.max_velocity.copy()
-            max_s_velocity *= (value / self.__velocity_scaling)
+            max_s_velocity *= value
 
             self.__joint_limits = JointLimits(self.__joint_limits.joint_set,
                                               max_s_velocity,
@@ -276,14 +244,7 @@ class PlanParameters(object):
                                               self.__joint_limits.min_position,
                                               self.__joint_limits.max_position)
 
-            self.__velocity_scaling = value
-
-        @property
-        def acceleration_scaling(self):
-            return self.__acceleration_scaling
-
-        @acceleration_scaling.setter
-        def acceleration_scaling(self, value):
+        def scale_acceleration(self, value):
             value = float(value)
 
             if value > 1.0 or value < 0.0:
@@ -291,7 +252,7 @@ class PlanParameters(object):
                                  ' between 0.0 and 1.0')
 
             max_s_acceleration = self.__joint_limits.max_acceleration.copy()
-            max_s_acceleration *= (value / self.__acceleration_scaling)
+            max_s_acceleration *= value
 
             self.__joint_limits = JointLimits(self.__joint_limits.joint_set,
                                               self.__joint_limits.max_velocity,
@@ -299,15 +260,11 @@ class PlanParameters(object):
                                               self.__joint_limits.min_position,
                                               self.__joint_limits.max_position)
 
-            self.__acceleration_scaling = value
-
         def build(self):
             return PlanParameters(self.__move_group_name, self.__joint_limits,
                                   sample_resolution=self.__sample_resolution,
                                   collision_check=self.__collision_check,
-                                  max_deviation=self.__max_deviation,
-                                  velocity_scaling=self.__velocity_scaling,
-                                  acceleration_scaling=self.__acceleration_scaling)
+                                  max_deviation=self.__max_deviation)
 
     @property
     def move_group_name(self):
@@ -390,24 +347,6 @@ class PlanParameters(object):
         """
         return self.__max_deviation
 
-    @property
-    def velocity_scaling(self):
-        """
-        velocity_scaling: float
-            scaling factor which was applied to input velocity limits
-            range between 0.0 and 1.0
-        """
-        return self.__velocity_scaling
-
-    @property
-    def acceleration_scaling(self):
-        """
-        acceleration_scaling: float
-            scaling factor which was applied to input acceleration limits
-            range between 0.0 and 1.0
-        """
-        return self.__acceleration_scaling
-
     def with_collision_check(self, value):
         """
         Create an instance of PlanParameters with collision check value
@@ -455,7 +394,7 @@ class PlanParameters(object):
         Raises
         ------
         TypeError
-            If value convertable to float
+            If value is not convertable to float
         """
 
         value = float(value)
@@ -484,7 +423,7 @@ class PlanParameters(object):
         Raises
         ------
         TypeError
-            If value convertable to float
+            If value is not convertable to float
         """
 
         value = float(value)
@@ -494,68 +433,6 @@ class PlanParameters(object):
         else:
             builder = self._Builder(self)
             builder.max_deviation = value
-            return builder.build()
-
-    def with_velocity_scaling(self, value):
-        """
-        Create an instance of PlanParameters with velocity scaling value
-
-        Parameters
-        ----------
-        value : bool
-            New value of velocity scaling
-
-        Returns
-        -------
-        PlanParameters
-            Instance of PlanParameters with new velocity scaling value
-
-        Raises
-        ------
-        TypeError
-            If value convertable to float
-        ValueError 
-            If value is not between 0.0 and 1.0
-        """
-
-        value = float(value)
-
-        if np.isclose(self.__velocity_scaling, value):
-            return self
-        else:
-            builder = self._Builder(self)
-            builder.velocity_scaling = value
-            return builder.build()
-
-    def with_acceleration_scaling(self, value):
-        """
-        Create an instance of PlanParameters with acceleration scaling value
-
-        Parameters
-        ----------
-        value : bool
-            New value of acceleration scaling
-
-        Returns
-        -------
-        PlanParameters
-            Instance of PlanParameters with new acceleration scaling value
-
-        Raises
-        ------
-        TypeError
-            If value convertable to float
-        ValueError 
-            If value is not between 0.0 and 1.0
-        """
-
-        value = float(value)
-
-        if np.isclose(self.__acceleration_scaling, value):
-            return self
-        else:
-            builder = self._Builder(self)
-            builder.acceleration_scaling = value
             return builder.build()
 
     def to_builder(self):
