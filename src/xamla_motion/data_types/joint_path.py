@@ -21,9 +21,7 @@
 from .joint_set import JointSet
 from .joint_values import JointValues
 
-from collections import Iterable, deque
-from copy import deepcopy
-import pdb
+from typing import Iterable
 
 
 class JointPath(object):
@@ -80,7 +78,7 @@ class JointPath(object):
                             ' type Iterable of JointValues')
 
         self.__joints = joints
-        self.__points = deque(self._align_values(j) for j in points)
+        self.__points = tuple(self._align_values(j) for j in points)
 
     def _align_values(self, joint_values):
         if joint_values.joint_set == self.__joints:
@@ -188,10 +186,8 @@ class JointPath(object):
             JointValues or Iterable of JointValues
         """
 
-        new_points = deepcopy(self.__points)
         if isinstance(points, JointValues):
-            new_points.appendleft(points)
-            return self.__class__(self.__joints, new_points)
+            return self.__class__(self.__joints, (points,) + self.__points)
 
         if (not isinstance(points, Iterable) or
                 any(not isinstance(j, JointValues)
@@ -199,9 +195,7 @@ class JointPath(object):
             raise TypeError('points is not of expected'
                             ' type JointValues or Iterable of JointValues')
 
-        new_points.extendleft(list(reversed(points)))
-        return self.__class__(self.__joints,
-                              new_points)
+        return self.__class__(self.__joints, (points) + self.__points)
 
     def append(self, points):
         """
@@ -224,10 +218,8 @@ class JointPath(object):
             JointValues or Iterable of JointValues
         """
 
-        new_points = deepcopy(self.__points)
         if isinstance(points, JointValues):
-            new_points.append(points)
-            return self.__class__(self.__joints, new_points)
+            return self.__class__(self.__joints, self.__points + (points,))
 
         if (not isinstance(points, Iterable) or
                 any(not isinstance(j, JointValues)
@@ -235,8 +227,7 @@ class JointPath(object):
             raise TypeError('points is not of expected'
                             ' type JointValues or Iterable of JointValues')
 
-        new_points.extend(points)
-        return self.__class__(self.__joints, new_points)
+        return self.__class__(self.__joints, self.__points + (points))
 
     def concat(self, other):
         """
@@ -254,9 +245,7 @@ class JointPath(object):
         if not isinstance(other, JointPath):
             raise TypeError('other is not of expected type JointPath')
 
-        new_points = deepcopy(self.__points)
-        new_points.extend(other.points)
-        return self.__class__(self.__joints, new_points)
+        return self.__class__(self.__joints, self.__points+other.points)
 
     def transform(self, transform_function):
         """
