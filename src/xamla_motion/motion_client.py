@@ -481,7 +481,8 @@ class MoveGroup(object):
         return self.get_current_joint_states().positions
 
     def _build_plan_parameters(self, velocity_scaling=None, collision_check=None,
-                               max_deviation=None, acceleration_scaling=None):
+                               max_deviation=None, acceleration_scaling=None,
+                               sample_resolution=None):
         """
         Build an instance of PlanParameters from input and default values
 
@@ -503,6 +504,8 @@ class MoveGroup(object):
         acceleration_scaling : None or float convertable
             Scaling factor which is applied on the maximal
             possible joint accelerations
+        sample_resolution : None or float
+            target sample frequency in Hz
 
         Returns
         -------
@@ -532,12 +535,17 @@ class MoveGroup(object):
         if acceleration_scaling:
             builder.scale_acceleration(acceleration_scaling)
 
+        if sample_resolution:
+            builder.sample_resolution = sample_resolution
+
         return builder.build()
 
     def _build_task_space_plan_parameters(self, velocity_scaling=None,
                                           collision_check=None,
                                           max_deviation=None,
                                           acceleration_scaling=None,
+                                          sample_resolution=None,
+                                          ik_jump_threshold=None,
                                           end_effector_name=None):
         """
         Build an instance of TaskSpacePlanParameters from input
@@ -562,6 +570,11 @@ class MoveGroup(object):
         acceleration_scaling : None or float convertable
             Scaling factor which is applied on the maximal
             possible joint accelerations
+        sample_resolution : None or float
+            target sample frequency in Hz
+        ik_jump_threshold : None or float
+            Maximal joint value jump between two consecutively
+            following trajectory points
         end_effector_name : None or str convertable
             Name of end effector which should be used
 
@@ -609,6 +622,12 @@ class MoveGroup(object):
 
         if acceleration_scaling:
             builder.scale_acceleration(acceleration_scaling)
+
+        if sample_resolution:
+            builder.sample_resolution = sample_resolution
+
+        if ik_jump_threshold:
+            builder.ik_jump_threshold = ik_jump_threshold
 
         return builder.build()
 
@@ -1113,6 +1132,66 @@ class EndEffector(object):
                                         self.__link_name)
 
         return p
+
+    def _build_task_space_plan_parameters(self, velocity_scaling=None,
+                                          collision_check=None,
+                                          max_deviation=None,
+                                          acceleration_scaling=None,
+                                          sample_resolution=None,
+                                          ik_jump_threshold=None,
+                                          end_effector_name=None):
+        """
+        Build an instance of TaskSpacePlanParameters from input
+        and default values
+
+        All attributes with value None are ignored and instead the default
+        values are used defined in default_task_space_plan_parameters
+        are used
+
+        Parameters
+        ----------
+        velocity_scaling : None or float convertable
+            Scaling factor which is applied on the maximal
+            possible joint velocities
+        collision_check : None or bool convertable
+            If true the trajectory planing try to plan a
+            collision free trajectory and before executing
+            a trajectory a collision check is performed
+        max_deviation : None or float convertable
+            Defines the maximal deviation from trajectory points
+            when it is a fly-by-point in joint space
+        acceleration_scaling : None or float convertable
+            Scaling factor which is applied on the maximal
+            possible joint accelerations
+        sample_resolution : None or float
+            target sample frequency in Hz
+        ik_jump_threshold : None or float
+            Maximal joint value jump between two consecutively
+            following trajectory points
+        end_effector_name : None or str convertable
+            Name of end effector which should be used
+
+        Returns
+        -------
+        task_space_plan_parameters
+            New instance of PlanParameters with requested changes
+            from the default instance
+
+        Raises
+        ------
+        TypeError
+            If input values are not convertable to specified types
+        ValueError
+            If scaling inputs are not between 0.0 and 1.0
+        """
+
+        return self.__move_group._build_task_space_plan_parameters(velocity_scaling,
+                                                                   collision_check,
+                                                                   max_deviation,
+                                                                   acceleration_scaling,
+                                                                   sample_resolution,
+                                                                   ik_jump_threshold,
+                                                                   self.__name)
 
     def compute_pose(self, joint_values):
         """

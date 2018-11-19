@@ -586,9 +586,7 @@ class JointValues(object):
         return self.__class__(self.__joint_set, values)
 
     def __radd__(self, other):
-
-        values = other + self.__values
-        return self.__class__(self.__joint_set, values)
+        return other + self.__values
 
     def __sub__(self, other):
         if isinstance(other, self.__class__):
@@ -611,8 +609,7 @@ class JointValues(object):
         return self.__class__(self.__joint_set, values)
 
     def __rsub__(self, other):
-        values = other - self.__values
-        return self.__class__(self.__joint_set, values)
+        return other - self.__values
 
     def __mul__(self, other):
         if isinstance(other, self.__class__):
