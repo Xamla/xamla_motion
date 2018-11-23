@@ -53,7 +53,7 @@ class Pose(object):
         Creates an instance which contains the inverse of this pose
     translate(translation)
         Translate pose
-    translate(rotation)
+    rotate(rotation)
         Rotate pose
     to_posestamped_msg()
         Creates an instance of the ROS message PoseStamped from Pose

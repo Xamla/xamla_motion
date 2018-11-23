@@ -19,13 +19,15 @@
 #!/usr/bin/env python3
 
 
-import rospy
-from .xamla_motion_exceptions import *
-from xamlamoveit_msgs.srv import *
-import moveit_msgs.msg as moveit_msgs
-from .data_types import JointValues, Pose, CartesianPath, CollisionObject
+import pathlib
+from typing import List, Dict
 
-from typing import List
+import moveit_msgs.msg as moveit_msgs
+import rospy
+from xamlamoveit_msgs.srv import *
+
+from .data_types import CartesianPath, CollisionObject, JointValues, Pose
+from .xamla_motion_exceptions import *
 
 add_joint_values_srv_name = '/rosvita/world_view/add_joint_posture'
 get_joint_values_srv_name = '/rosvita/world_view/get_joint_posture'
@@ -306,7 +308,7 @@ class WorldViewClient(object):
         return JointValues.from_joint_values_point_msg(response.point)
 
     def query_joint_values(self, folder_path: str, prefix: str ='',
-                           recursive: bool = False) -> List[JointValues]:
+                           recursive: bool = False) -> Dict[pathlib.PurePath, JointValues]:
         """
         Query all existing joint values elements under folder_path which start with prefix
 
@@ -360,9 +362,16 @@ class WorldViewClient(object):
                                                     response.error))
 
         if response.points:
-            return [JointValues.from_joint_values_point_msg(p) for p in response.points]
+            result = {}
+            for n, e, p in zip(response.names,
+                               response.element_paths,
+                               response.points):
+
+                path = pathlib.PurePath(e) / n
+                result[path] = JointValues.from_joint_values_point_msg(p)
+            return result
         else:
-            return []
+            return {}
 
     def update_joint_values(self, element_name: str, folder_path: str,
                             joint_values: JointValues, transient: bool = False):
@@ -594,9 +603,16 @@ class WorldViewClient(object):
                                                     response.error))
 
         if response.points:
-            return [Pose.from_posestamped_msg(p) for p in response.points]
+            result = {}
+            for n, e, p in zip(response.names,
+                               response.element_paths,
+                               response.points):
+
+                path = pathlib.PurePath(e) / n
+                result[path] = Pose.from_posestamped_msg(p)
+            return result
         else:
-            return []
+            return {}
 
     def update_pose(self, element_name: str, folder_path: str,
                     pose: Pose, transient: bool = False):
@@ -830,9 +846,16 @@ class WorldViewClient(object):
                                                     response.error))
 
         if response.paths:
-            return [CartesianPath.from_cartesian_path_msg(p) for p in response.paths]
+            result = {}
+            for n, e, p in zip(response.names,
+                               response.element_paths,
+                               response.points):
+
+                path = pathlib.PurePath(e) / n
+                result[path] = CartesianPath.from_cartesian_path_msg(p)
+            return result
         else:
-            return []
+            return {}
 
     def update_cartesian_path(self, element_name: str, folder_path: str,
                               cartesian_path: CartesianPath, transient: bool = False):
@@ -1068,9 +1091,16 @@ class WorldViewClient(object):
                                                     response.error))
 
         if response.collision_objects:
-            return [CollisionObject.from_collision_object_msg(p) for p in response.collision_objects]
+            result = {}
+            for n, e, p in zip(response.names,
+                               response.element_paths,
+                               response.points):
+
+                path = pathlib.PurePath(e) / n
+                result[path] = CollisionObject.from_collision_object_msg(p)
+            return result
         else:
-            return []
+            return {}
 
     def update_collision_object(self, element_name: str, folder_path: str,
                                 collision_object: CollisionObject, transient: bool = False):
