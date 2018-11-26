@@ -18,7 +18,6 @@
 
 #!/usr/bin/env python3
 
-from copy import deepcopy
 from pyquaternion import Quaternion
 import geometry_msgs.msg as geometry_msgs
 import numpy as np
@@ -409,9 +408,8 @@ class Pose(object):
         except (TypeError, ValueError) as exc:
             raise exc
 
-        new_pose = deepcopy(self)
-        new_pose._Pose__translation += translation
-        return new_pose
+        new_t = self.__translation + translation
+        return type(self)(new_t, self.__quaternion)
 
     def rotate(self, rotation):
         """
@@ -451,9 +449,7 @@ class Pose(object):
             raise TypeError('rotation is not one of expected types '
                             'Quaternion or np.ndarray (3x3)')
 
-        new_pose = deepcopy(self)
-        new_pose._Pose__quaternion = new_q
-        return new_pose
+        return type(self)(self.__translation, new_q)
 
     def to_posestamped_msg(self):
         """
@@ -530,7 +526,7 @@ class Pose(object):
         if id(other) == id(self):
             return True
 
-        if not np.allclose(self.__translation, other.tranlation,
+        if not np.allclose(self.__translation, other.translation,
                            rtol=r_tol, atol=a_tol):
             return False
 
