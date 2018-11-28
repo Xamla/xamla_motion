@@ -24,10 +24,40 @@ from typing import List, Dict
 
 import moveit_msgs.msg as moveit_msgs
 import rospy
-from xamlamoveit_msgs.srv import *
+from xamlamoveit_msgs.srv import (SetJointPostureWorldView,
+                                  SetJointPostureRequest,
+                                  GetJointPostureWorldView,
+                                  GetJointPostureWorldViewRequest,
+                                  UpdateJointPostureWorldView,
+                                  UpdateJointPostureWorldViewRequest,
+                                  QueryJointValuesWorldView,
+                                  QueryJointValuesWorldViewRequest)
+
+from xamlamoveit_msgs.srv import (SetPoseWorldView,
+                                  SetPoseWorldViewRequest,
+                                  GetPoseWorldView,
+                                  GetPoseWorldViewRequest,
+                                  UpdatePoseWorldView,
+                                  UpdatePoseWorldViewRequest,
+                                  QueryPosesWorldView,
+                                  QueryPosesWorldViewRequest)
+
+from xamlamoveit_msgs.srv import (SetCartesianPathWorldView,
+                                  SetCartesianPathWorldViewRequest,
+                                  GetCartesianPath,
+                                  GetCartesianPathRequest,
+                                  QueryCartesianPathWorldView,
+                                  QueryCartesianPathWorldViewRequest)
+
+from xamlamoveit_msgs.srv import (SetCollisionObjectWorldView,
+                                  SetCollisionObjectWorldViewRequest,
+                                  GetCollisionObjectWorldView,
+                                  GetCollisionObjectWorldViewRequest,
+                                  QueryCollisionObjectWorldView,
+                                  QueryCollisionObjectWorldViewRequest)
 
 from .data_types import CartesianPath, CollisionObject, JointValues, Pose
-from .xamla_motion_exceptions import *
+from .xamla_motion_exceptions import ServiceException, ArgumentError
 
 add_joint_values_srv_name = '/rosvita/world_view/add_joint_posture'
 get_joint_values_srv_name = '/rosvita/world_view/get_joint_posture'
@@ -60,7 +90,7 @@ class WorldViewClient(object):
 
     With help of this client class it is possible to add, get,
     query and remove different kinds of elements to or from
-    the Rosvita world view. 
+    the Rosvita world view.
 
     Methods
     -------
@@ -109,7 +139,7 @@ class WorldViewClient(object):
         Raises
         ------
         ServiceError
-            If connection to world view services 
+            If connection to world view services
             could not be established
         """
 
@@ -192,7 +222,7 @@ class WorldViewClient(object):
             RemoveElementWorldView)
 
     def add_joint_values(self, element_name: str, folder_path: str,
-                         joint_values: JointValues, transient: bool = False):
+                         joint_values: JointValues, transient: bool=False):
         """
         Add / store joint values element in world view tree
 
@@ -201,7 +231,7 @@ class WorldViewClient(object):
         element_name : str
             Name of the new added joint values element
         folder_path : str
-            Path in world view tree where the new joint values element 
+            Path in world view tree where the new joint values element
             should be added / stored
         joint_values : JointValues
             Instance of joint values which is added / stored
@@ -214,7 +244,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to add joint values 
+            If it was not possible to add joint values
             due to wrong path or element already exists
 
         """
@@ -262,14 +292,14 @@ class WorldViewClient(object):
         element_name : str
             Name of the requested element
         folder_path : str
-            Full path to folder where the requested element is located 
+            Full path to folder where the requested element is located
             from world view tree root
 
         Returns
         -------
         joint_values : JointValues
             Instance of JointValues with
-            the values which are defined in the 
+            the values which are defined in the
             requested joint values element
 
         Raises
@@ -277,7 +307,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to get joint values 
+            If it was not possible to get joint values
             due to wrong path or element not exists
         """
 
@@ -307,14 +337,14 @@ class WorldViewClient(object):
 
         return JointValues.from_joint_values_point_msg(response.point)
 
-    def query_joint_values(self, folder_path: str, prefix: str ='',
-                           recursive: bool = False) -> Dict[pathlib.PurePath, JointValues]:
+    def query_joint_values(self, folder_path: str, prefix: str='',
+                           recursive: bool=False) -> Dict[pathlib.PurePath, JointValues]:
         """
         Query all existing joint values elements under folder_path which start with prefix
 
         Parameters
         ----------
-        folder_path : str 
+        folder_path : str
             Path to folder in which the search should be performed
         prefix : str (default empty string)
             Query elements which start with this prefix
@@ -331,7 +361,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to query joint values 
+            If it was not possible to query joint values
             due to not existing path
         """
 
@@ -374,7 +404,7 @@ class WorldViewClient(object):
             return {}
 
     def update_joint_values(self, element_name: str, folder_path: str,
-                            joint_values: JointValues, transient: bool = False):
+                            joint_values: JointValues, transient: bool=False):
         """
         Update already existing joint values element in world view tree
 
@@ -383,7 +413,7 @@ class WorldViewClient(object):
         element_name : str
             Name of the element which should be updated
         folder_path : str
-            Path in world view tree where the joint values element 
+            Path in world view tree where the joint values element
             is located
         joint_values : JointValues
             Instance of joint values which contains the new values
@@ -395,7 +425,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to update joint values 
+            If it was not possible to update joint values
             due to element not exists
         """
 
@@ -433,7 +463,7 @@ class WorldViewClient(object):
                                                     response.error))
 
     def add_pose(self, element_name: str, folder_path: str,
-                 pose: Pose, transient: bool =False):
+                 pose: Pose, transient: bool=False):
         """
         Add / store pose element in world view tree
 
@@ -442,7 +472,7 @@ class WorldViewClient(object):
         element_name : str
             Name of the new added pose element
         folder_path : str
-            Path in world view tree where the new pose element 
+            Path in world view tree where the new pose element
             should be added / stored
         pose : Pose
             Instance of pose which is added / stored
@@ -455,7 +485,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to add pose 
+            If it was not possible to add pose
             due to wrong path or element already exists
 
         """
@@ -503,14 +533,14 @@ class WorldViewClient(object):
         element_name : str
             Name of the requested element
         folder_path : str
-            Full path to folder where the requested element is located 
+            Full path to folder where the requested element is located
             from world view tree root
 
         Returns
         -------
         pose : Pose
             Instance of Pose with
-            the values which are defined in the 
+            the values which are defined in the
             requested pose element
 
         Raises
@@ -518,7 +548,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to get pose 
+            If it was not possible to get pose
             due to wrong path or element not exists
         """
 
@@ -548,14 +578,14 @@ class WorldViewClient(object):
 
         return Pose.from_posestamped_msg(response.point)
 
-    def query_poses(self, folder_path: str, prefix: str ='',
-                    recursive: bool = False) -> List[Pose]:
+    def query_poses(self, folder_path: str, prefix: str='',
+                    recursive: bool=False) -> List[Pose]:
         """
         Query all existing pose elements under folder_path which start with prefix
 
         Parameters
         ----------
-        folder_path : str 
+        folder_path : str
             Path to folder in which the search should be performed
         prefix : str (default empty string)
             Query elements which start with this prefix
@@ -572,7 +602,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to query pose 
+            If it was not possible to query pose
             due to not existing path
         """
 
@@ -615,7 +645,7 @@ class WorldViewClient(object):
             return {}
 
     def update_pose(self, element_name: str, folder_path: str,
-                    pose: Pose, transient: bool = False):
+                    pose: Pose, transient: bool=False):
         """
         Update already existing pose element in world view tree
 
@@ -624,7 +654,7 @@ class WorldViewClient(object):
         element_name : str
             Name of the element which should be updated
         folder_path : str
-            Path in world view tree where the pose element 
+            Path in world view tree where the pose element
             is located
         pose : Pose
             Instance of pose which contains the new values
@@ -637,7 +667,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to update pose 
+            If it was not possible to update pose
             due to element not exists
         """
 
@@ -675,7 +705,7 @@ class WorldViewClient(object):
                                                     response.error))
 
     def add_cartesian_path(self, element_name: str, folder_path: str,
-                           cartesian_path: CartesianPath, transient: bool = False):
+                           cartesian_path: CartesianPath, transient: bool=False):
         """
         Add / store cartesian path element in world view tree
 
@@ -684,7 +714,7 @@ class WorldViewClient(object):
         element_name : str
             Name of the new added cartesian path element
         folder_path : str
-            Path in world view tree where the new cartesian path element 
+            Path in world view tree where the new cartesian path element
             should be added / stored
         cartesian_path : CartesianPath
             Instance of cartesian path which is added / stored
@@ -697,7 +727,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to add cartesian path 
+            If it was not possible to add cartesian path
             due to wrong path or element already exists
 
         """
@@ -746,14 +776,14 @@ class WorldViewClient(object):
         element_name : str
             Name of the requested element
         folder_path : str
-            Full path to folder where the requested element is located 
+            Full path to folder where the requested element is located
             from world view tree root
 
         Returns
         -------
         cartesian_path : CartesianPath
             Instance of CartesianPath with
-            the values which are defined in the 
+            the values which are defined in the
             requested cartesian path element
 
         Raises
@@ -761,7 +791,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to get cartesian path 
+            If it was not possible to get cartesian path
             due to wrong path or element not exists
         """
 
@@ -791,14 +821,14 @@ class WorldViewClient(object):
 
         return CartesianPath.from_cartesian_path_msg(response.path)
 
-    def query_cartesian_paths(self, folder_path: str, prefix: str ='',
-                              recursive: bool = False) -> List[CartesianPath]:
+    def query_cartesian_paths(self, folder_path: str, prefix: str='',
+                              recursive: bool=False) -> List[CartesianPath]:
         """
         Query all existing cartesian path elements under folder_path which start with prefix
 
         Parameters
         ----------
-        folder_path : str 
+        folder_path : str
             Path to folder in which the search should be performed
         prefix : str (default empty string)
             Query elements which start with this prefix
@@ -815,7 +845,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to query cartesian path 
+            If it was not possible to query cartesian path
             due to not existing path
         """
 
@@ -858,7 +888,7 @@ class WorldViewClient(object):
             return {}
 
     def update_cartesian_path(self, element_name: str, folder_path: str,
-                              cartesian_path: CartesianPath, transient: bool = False):
+                              cartesian_path: CartesianPath, transient: bool=False):
         """
         Update already existing cartesian path element in world view tree
 
@@ -867,7 +897,7 @@ class WorldViewClient(object):
         element_name : str
             Name of the element which should be updated
         folder_path : str
-            Path in world view tree where the cartesian path element 
+            Path in world view tree where the cartesian path element
             is located
         cartesian_path : CartesianPath
             Instance of cartesian path which contains the new values
@@ -880,7 +910,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to update cartesian path 
+            If it was not possible to update cartesian path
             due to element not exists
         """
 
@@ -919,7 +949,7 @@ class WorldViewClient(object):
                                                     response.error))
 
     def add_collision_object(self, element_name: str, folder_path: str,
-                             collision_object: CollisionObject, transient: bool =False):
+                             collision_object: CollisionObject, transient: bool=False):
         """
         Add / store collision object element in world view tree
 
@@ -928,7 +958,7 @@ class WorldViewClient(object):
         element_name : str
             Name of the new added collision object element
         folder_path : str
-            Path in world view tree where the new collision object element 
+            Path in world view tree where the new collision object element
             should be added / stored
         collision_object : CollisionObject
             Instance of collision object which is added / stored
@@ -941,7 +971,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to add collision object 
+            If it was not possible to add collision object
             due to wrong path or element already exists
 
         """
@@ -991,14 +1021,14 @@ class WorldViewClient(object):
         element_name : str
             Name of the requested element
         folder_path : str
-            Full path to folder where the requested element is located 
+            Full path to folder where the requested element is located
             from world view tree root
 
         Returns
         -------
         collision_object : CollisionObject
             Instance of CollisionObject with
-            the values which are defined in the 
+            the values which are defined in the
             requested collision object element
 
         Raises
@@ -1006,7 +1036,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to get collision object 
+            If it was not possible to get collision object
             due to wrong path or element not exists
         """
 
@@ -1036,14 +1066,14 @@ class WorldViewClient(object):
 
         return CollisionObject.from_collision_object_msg(response.collision_object)
 
-    def query_collision_objects(self, folder_path: str, prefix: str ='',
-                                recursive: bool = False) -> List[CollisionObject]:
+    def query_collision_objects(self, folder_path: str, prefix: str='',
+                                recursive: bool=False) -> List[CollisionObject]:
         """
         Query all existing collision objet elements under folder_path which start with prefix
 
         Parameters
         ----------
-        folder_path : str 
+        folder_path : str
             Path to folder in which the search should be performed
         prefix : str (default empty string)
             Query elements which start with this prefix
@@ -1060,7 +1090,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to query collision object 
+            If it was not possible to query collision object
             due to not existing path
         """
 
@@ -1103,7 +1133,7 @@ class WorldViewClient(object):
             return {}
 
     def update_collision_object(self, element_name: str, folder_path: str,
-                                collision_object: CollisionObject, transient: bool = False):
+                                collision_object: CollisionObject, transient: bool=False):
         """
         Update already existing collision object element in world view tree
 
@@ -1112,7 +1142,7 @@ class WorldViewClient(object):
         element_name : str
             Name of the element which should be updated
         folder_path : str
-            Path in world view tree where the collision object element 
+            Path in world view tree where the collision object element
             is located
         collision_object : CollisionObject
             Instance of collision object which contains the new values
@@ -1125,7 +1155,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to update collision object 
+            If it was not possible to update collision object
             due to element not exists
         """
 
@@ -1180,7 +1210,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to add folder 
+            If it was not possible to add folder
             input path not exists
         """
 
@@ -1218,7 +1248,7 @@ class WorldViewClient(object):
         element_name : str
             Name of the element which should be removed
         folder_path : str
-            Path in world view tree where the element 
+            Path in world view tree where the element
             is located
 
         Raises
@@ -1226,7 +1256,7 @@ class WorldViewClient(object):
         ServiceError
             If necessary service is not available
         ArgumentError
-            If it was not possible to update collision object 
+            If it was not possible to update collision object
             due to element not exists
         """
 
