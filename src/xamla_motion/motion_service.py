@@ -1501,10 +1501,10 @@ class MotionService(object):
 
         try:
             error_code = ErrorCodes(result.result)
-            if error_code != ErrorCodes.Success:
+            if error_code != ErrorCodes.SUCCESS:
                 raise ServiceException('execute trajectory ends not successful with'
                                        ' error code: {}'.format(error_code))
-        except (AttributeError, ValueError) as exc:
+        except (ValueError) as exc:
             if isinstance(exc, ValueError):
                 raise ServiceException('execute trajectory ends not successful with unknow'
                                        ' error code: {}'.format(result.result))
