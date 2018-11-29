@@ -24,6 +24,12 @@ from typing import List, Dict
 
 import moveit_msgs.msg as moveit_msgs
 import rospy
+
+from xamlamoveit_msgs.srv import (CreateFolderWorldView,
+                                  CreateFolderWorldViewRequest,
+                                  RemoveElementWorldView,
+                                  RemoveElementWorldViewRequest)
+
 from xamlamoveit_msgs.srv import (SetJointPostureWorldView,
                                   SetJointPostureRequest,
                                   GetJointPostureWorldView,
@@ -44,8 +50,8 @@ from xamlamoveit_msgs.srv import (SetPoseWorldView,
 
 from xamlamoveit_msgs.srv import (SetCartesianPathWorldView,
                                   SetCartesianPathWorldViewRequest,
-                                  GetCartesianPath,
-                                  GetCartesianPathRequest,
+                                  GetCartesianPathWorldView,
+                                  GetCartesianPathWorldViewRequest,
                                   QueryCartesianPathWorldView,
                                   QueryCartesianPathWorldViewRequest)
 
