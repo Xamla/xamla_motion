@@ -65,24 +65,32 @@ def generate_action_executor(action):
 
         def done_callback(goal_status, result):
             status = ActionLibGoalStatus(goal_status)
-            if status != ActionLibGoalStatus.SUCCEEDED:
-                try:
-                    reason = ErrorCodes(result.result)
-                    print('action end unsuccessfully with'
-                          ' state: {}, reason: {}'.format(status, reason))
-                except (AttributeError, ValueError):
-                    print('action end unsuccessfully with'
-                          ' state: {}'.format(status))
 
             if not loop.is_closed():
-                loop.call_soon_threadsafe(action_done.set_result, result)
+                if status != ActionLibGoalStatus.SUCCEEDED:
+                    try:
+                        reason = ErrorCodes(result.result)
+                        exc = ServiceException('action end unsuccessfully with'
+                                               ' state: {}, reason: {}'.format(status,
+                                                                               reason),
+                                               error_code=reason)
+                    except ValueError:
+                        exc = ServiceException('action end unsuccessfully with'
+                                               ' state: {}'.format(status))
+
+                    loop.call_soon_threadsafe(action_done.set_exception,
+                                              exc)
+                else:
+                    loop.call_soon_threadsafe(action_done.set_result,
+                                              result)
 
         try:
             action.send_goal(goal, done_cb=done_callback)
             await action_done
-        except (asyncio.CancelledError, ServiceException) as exc:
-            print('Cancel goal because of: {}'.format(exc))
+        except asyncio.CancelledError as exc:
             action.cancel_goal()
+            raise exc
+        finally:
             action.wait_for_result()
 
         return action_done
@@ -198,20 +206,25 @@ class SteppedMotionClient(object):
         def done_callback(goal_status, result):
             status = ActionLibGoalStatus(goal_status)
 
-            if status != ActionLibGoalStatus.SUCCEEDED:
-                try:
-                    reason = ErrorCodes(result.result)
-                    print('action end unsuccessfully with'
-                          ' state: {}, reason: {}'.format(status, reason))
-                except (AttributeError, ValueError):
-                    print('action end unsuccessfully with'
-                          ' state: {}'.format(status))
-
             type(self).__shutdown_manager.unregister_instance(self.__goal_id.id)
 
             if not loop.is_closed():
-                loop.call_soon_threadsafe(self.__action_done.set_result,
-                                          result)
+                if status != ActionLibGoalStatus.SUCCEEDED:
+                    try:
+                        reason = ErrorCodes(result.result)
+                        exc = ServiceException('action end unsuccessfully with'
+                                               ' state: {}, reason: {}'.format(status,
+                                                                               reason),
+                                               error_code=reason)
+                    except ValueError:
+                        exc = ServiceException('action end unsuccessfully with'
+                                               ' state: {}'.format(status))
+
+                    loop.call_soon_threadsafe(self.__action_done.set_exception,
+                                              exc)
+                else:
+                    loop.call_soon_threadsafe(self.__action_done.set_result,
+                                              result)
 
         self.__m_action.send_goal(goal, done_cb=done_callback)
 
@@ -1468,11 +1481,6 @@ class MotionService(object):
         collision_check : bool convertable
             If True check for collision while executing
 
-        Returns
-        -------
-        result : int
-            Result of the trajectory execution
-
         Raises
         ------
         TypeError
@@ -1495,21 +1503,7 @@ class MotionService(object):
 
         # the server itself lock resources
         # with LeaseBaseLock(trajectory.joint_set.names) as lock_resources:
-        response = await run_action(goal)
-
-        result = response.result()
-
-        try:
-            error_code = ErrorCodes(result.result)
-            if error_code != ErrorCodes.SUCCESS:
-                raise ServiceException('execute trajectory ends not successful with'
-                                       ' error code: {}'.format(error_code))
-        except (ValueError) as exc:
-            if isinstance(exc, ValueError):
-                raise ServiceException('execute trajectory ends not successful with unknow'
-                                       ' error code: {}'.format(result.result))
-
-        return result
+        await run_action(goal)
 
     def execute_joint_trajectory_supervised(self, trajectory: JointTrajectory,
                                             velocity_scaling: float,
