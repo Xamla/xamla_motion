@@ -1663,7 +1663,7 @@ class MotionService(object):
             elif seed.joint_set == parameters.joint_set:
                 pass
             elif parameters.joint_set.is_subset(seed.joint_set):
-                seed = seed.reorder(parameters.joint_set)
+                pass
             else:
                 raise ValueError('joint set of parameters and seed do not'
                                  ' match and reording is not possible')
@@ -1704,7 +1704,7 @@ class MotionService(object):
 
         f = JointValues.from_joint_path_point_msg
         joint_path = JointPath(parameters.joint_set,
-                               [f(parameters.joint_set, p)
+                               [f(seed.joint_set, p).select(parameters.joint_set)
                                 for p in response.solutions])
 
         return IkResults(joint_path, response.error_codes)
