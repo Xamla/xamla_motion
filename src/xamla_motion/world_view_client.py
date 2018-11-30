@@ -31,7 +31,7 @@ from xamlamoveit_msgs.srv import (CreateFolderWorldView,
                                   RemoveElementWorldViewRequest)
 
 from xamlamoveit_msgs.srv import (SetJointPostureWorldView,
-                                  SetJointPostureRequest,
+                                  SetJointPostureWorldViewRequest,
                                   GetJointPostureWorldView,
                                   GetJointPostureWorldViewRequest,
                                   UpdateJointPostureWorldView,

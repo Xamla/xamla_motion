@@ -259,8 +259,12 @@ class SteppedMotionClient(object):
 
     def cancel(self):
         type(self).__shutdown_manager.unregister_instance(self.__goal_id.id)
-        self.__m_action.cancel_goal()
-        self.__m_action.wait_for_result()
+        try:
+            self.__m_action.cancel_goal()
+        except ServiceException:
+            pass
+        finally:
+            self.__m_action.wait_for_result()
 
     @property
     def state(self):
