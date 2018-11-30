@@ -1685,7 +1685,7 @@ class MotionService(object):
 
         req = GetIKSolution2Request()
         req.group_name = parameters.move_group_name
-        req.joint_names = parameters.joint_set.names
+        req.joint_names = seed.joint_set.names
         req.seed = seed.to_joint_values_point_msg()
         req.const_seed = const_seed
         req.points = poses_msgs
