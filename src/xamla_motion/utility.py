@@ -25,9 +25,13 @@ import signal
 from collections import Iterable
 from typing import List
 
+import matplotlib.cm as cmx
+import matplotlib.colors as colors
+import matplotlib.pyplot as plt
 import rospy
 from xamlamoveit_msgs.srv import QueryLock, QueryLockRequest
 
+from .data_types import JointSet, JointTrajectory, JointTrajectoryPoint
 from .xamla_motion_exceptions import ServiceException
 
 resource_lock_srv_name = '/xamlaResourceLockService/query_resource_lock'
@@ -207,3 +211,68 @@ def register_asyncio_shutdown_handler(asyncio_loop):
                                     functools.partial(_shutdown,
                                                       asyncio_loop,
                                                       signal.SIGINT))
+
+
+def plot_joint_trajectory(trajectory: JointTrajectory):
+    joint_names = trajectory.joint_set.names
+    jet = plt.get_cmap('jet')
+    cNorm = colors.Normalize(vmin=0, vmax=len(joint_names))
+    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+
+    time_from_start = [t.total_seconds() for t in trajectory.time_from_start]
+
+    def plot(ax, x, values, labels):
+        print('now iam ploting')
+        plt_lines = []
+        for i, label in enumerate(labels):
+            y = [v[i] for v in values]
+            plt_line, = ax.plot(x,
+                                y,
+                                lw=2,
+                                color=scalarMap.to_rgba(i),
+                                label=label)
+            plt_lines.append(plt_line)
+        leg = ax.legend(loc='upper left', fancybox=True, shadow=True)
+        leg.get_frame().set_alpha(0.4)
+
+        lined = {}
+        for i, leg_line in enumerate(leg.get_lines()):
+            leg_line.set_picker(5)
+            lined[leg_line] = plt_lines[i]
+        return lined
+
+    lined = {}
+    fig, ax = plt.subplots(4, 1)
+    lined.update(plot(ax[0], time_from_start,
+                      trajectory.positions,
+                      joint_names))
+
+    if trajectory.has_velocity:
+        lined.update(plot(ax[1], time_from_start,
+                          trajectory.velocities,
+                          joint_names))
+
+    if trajectory.has_acceleration:
+        lined.update(plot(ax[2], time_from_start,
+                          trajectory.accelerations,
+                          joint_names))
+
+    if trajectory.has_effort:
+        lined.update(plot(ax[3], time_from_start,
+                          trajectory.efforts,
+                          joint_names))
+
+    def onpick(event):
+        legline = event.artist
+        origline = lined[legline]
+        vis = not origline.get_visible()
+        origline.set_visible(vis)
+        if vis:
+            legline.set_alpha(1.0)
+        else:
+            legline.set_alpha(0.2)
+        fig.canvas.draw()
+
+    fig.canvas.mpl_connect('pick_event', onpick)
+
+    plt.show()

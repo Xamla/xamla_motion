@@ -176,7 +176,7 @@ class JointTrajectory(object):
             self.__points = None
             return
         else:
-            self.__points = list(points)
+            self.__points = tuple(points)
 
         last_time = timedelta(days=0, seconds=0, microseconds=0)
         for i, p in enumerate(points):
@@ -353,14 +353,7 @@ class JointTrajectory(object):
             If index is out of range
 
         """
-        if isinstance(key, (int, slice)):
-            try:
-                return self.__points[key]
-            except IndexError:
-                raise IndexError('index out of range')
-        else:
-            raise TypeError(
-                'key is not one of expected types int or slice ')
+        return self.__points[key]
 
     def __len__(self):
         return len(self.__points)
