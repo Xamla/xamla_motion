@@ -213,64 +213,87 @@ def register_asyncio_shutdown_handler(asyncio_loop):
                                                       signal.SIGINT))
 
 
-def plot_joint_trajectory(trajectory: JointTrajectory):
+def plot_joint_trajectory(trajectory: JointTrajectory, title: str):
     joint_names = trajectory.joint_set.names
     jet = plt.get_cmap('jet')
     cNorm = colors.Normalize(vmin=0, vmax=len(joint_names))
     scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 
     time_from_start = [t.total_seconds() for t in trajectory.time_from_start]
+    print('last_velocities: {}'.format(trajectory.velocities[-1]))
 
-    def plot(ax, x, values, labels):
+    def plot(ax, x, values, labels, title, ylabel):
         print('now iam ploting')
         plt_lines = []
         for i, label in enumerate(labels):
             y = [v[i] for v in values]
             plt_line, = ax.plot(x,
                                 y,
-                                lw=2,
+                                lw=1.5,
                                 color=scalarMap.to_rgba(i),
                                 label=label)
             plt_lines.append(plt_line)
-        leg = ax.legend(loc='upper left', fancybox=True, shadow=True)
-        leg.get_frame().set_alpha(0.4)
+        ax.set_title(title)
+        ax.set_ylabel(ylabel)
+        ax.set_xlabel('time from start [s]')
+        return plt_lines
 
-        lined = {}
-        for i, leg_line in enumerate(leg.get_lines()):
-            leg_line.set_picker(5)
-            lined[leg_line] = plt_lines[i]
-        return lined
+    plots = 1
+    if trajectory.has_velocity:
+        plots += 1
+    if trajectory.has_acceleration:
+        plots += 1
+    if trajectory.has_effort:
+        plots += 1
 
-    lined = {}
-    fig, ax = plt.subplots(4, 1)
-    lined.update(plot(ax[0], time_from_start,
-                      trajectory.positions,
-                      joint_names))
+    plt_lines = []
+    fig, ax = plt.subplots(plots, 1)
+    fig.suptitle(title, fontsize=14)
+    plt_lines.append(plot(ax[0], time_from_start,
+                          trajectory.positions,
+                          joint_names,
+                          'joint positions',
+                          'joint positions [rad]'))
 
     if trajectory.has_velocity:
-        lined.update(plot(ax[1], time_from_start,
-                          trajectory.velocities,
-                          joint_names))
+        plt_lines.append(plot(ax[1], time_from_start,
+                              trajectory.velocities,
+                              joint_names,
+                              'joint velocities',
+                              'joint velocities [rad/s]'))
 
     if trajectory.has_acceleration:
-        lined.update(plot(ax[2], time_from_start,
-                          trajectory.accelerations,
-                          joint_names))
+        plt_lines.append(plot(ax[2], time_from_start,
+                              trajectory.accelerations,
+                              joint_names,
+                              'joint accelerations',
+                              'joint accelerations [rad/s^2]'))
 
     if trajectory.has_effort:
-        lined.update(plot(ax[3], time_from_start,
-                          trajectory.efforts,
-                          joint_names))
+        plt_lines.append(plot(ax[3], time_from_start,
+                              trajectory.efforts,
+                              joint_names,
+                              'joint efforts',
+                              'joint efforts [N]'))
+
+    legend = fig.legend(plt_lines[0], joint_names,
+                        loc='center right', fancybox=True, shadow=True)
+
+    lined = {}
+    for i, leg_line in enumerate(legend.get_lines()):
+        leg_line.set_picker(5)
+        lined[leg_line] = [l[i] for l in plt_lines]
 
     def onpick(event):
         legline = event.artist
-        origline = lined[legline]
-        vis = not origline.get_visible()
-        origline.set_visible(vis)
-        if vis:
-            legline.set_alpha(1.0)
-        else:
-            legline.set_alpha(0.2)
+        origlines = lined[legline]
+        for origline in origlines:
+            vis = not origline.get_visible()
+            origline.set_visible(vis)
+            if vis:
+                legline.set_alpha(1.0)
+            else:
+                legline.set_alpha(0.2)
         fig.canvas.draw()
 
     fig.canvas.mpl_connect('pick_event', onpick)
