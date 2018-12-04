@@ -220,7 +220,6 @@ def plot_joint_trajectory(trajectory: JointTrajectory, title: str):
     scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 
     time_from_start = [t.total_seconds() for t in trajectory.time_from_start]
-    print('last_velocities: {}'.format(trajectory.velocities[-1]))
 
     def plot(ax, x, values, labels, title, ylabel):
         print('now iam ploting')
