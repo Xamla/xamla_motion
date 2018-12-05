@@ -74,7 +74,7 @@ def generate_action_executor(action):
                                                ' state: {}, reason: {}'.format(status,
                                                                                reason),
                                                error_code=reason)
-                    except ValueError:
+                    except (AttributeError, ValueError):
                         exc = ServiceException('action end unsuccessfully with'
                                                ' state: {}'.format(status))
 
