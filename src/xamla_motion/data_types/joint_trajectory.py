@@ -18,17 +18,18 @@
 
 #!/usr/bin/env python3
 
+import bisect
+from collections import Iterable
 from datetime import timedelta
+from typing import Callable, Union
+
 import numpy as np
 import rospy
-from std_msgs.msg import Header
 import trajectory_msgs
+from std_msgs.msg import Header
 
 from .joint_set import JointSet
 from .joint_trajectory_point import JointTrajectoryPoint
-from collections import Iterable
-
-from typing import Callable
 
 
 class JointTrajectoryFlags(object):
@@ -311,7 +312,7 @@ class JointTrajectory(object):
 
         return self.__points[-1].time_from_start
 
-    def append(self, other: JointTrajectory, delay: timedelta=timedelta(0)):
+    def append(self, other: 'JointTrajectory', delay: timedelta=timedelta(0)):
         """
         Append a JointTrajectory to current trajectory
 
@@ -333,7 +334,7 @@ class JointTrajectory(object):
         return type(self)(self.__joint_set,
                           self.__points+(p.add_time_offset(duration) for p in other.points))
 
-    def prepend(self, other, delay: timedelta=timedelta(0)):
+    def prepend(self, other: 'JointTrajectory', delay: timedelta=timedelta(0)):
         """
         Prepend a JointTrajectory to current trajectory
 
@@ -373,6 +374,115 @@ class JointTrajectory(object):
 
         return type(self)(self.__joint_set, list(map(transform_function, self.__points)), self.is_valid)
 
+    def get_point_before(self, time: timedelta, return_index: bool=False):
+        """
+        Find and return JointTrajectoryPoint nearest and before defined time
+
+        Parameters
+        ----------
+        time : timedelta
+            defines time for which the nearest and before point is required
+        return_index: bool (default False)
+            If True return index instead of JointTrajectoryPoint
+
+        Returns
+        -------
+        JointTrajectoryPoint or int
+            If return_index True returns index instead of JointTrajectoryPoint 
+        """
+
+        idx = bisect.bisect_left(self.time_from_start, time)-1
+
+        if idx < 0:
+            idx = 0
+
+        if return_index:
+            return idx
+
+        return self.__points[idx]
+
+    def evaluate_at(self, time: timedelta):
+        """
+        Evaluates the trajectory at a given time
+
+        Parameters
+        ----------
+        time : timedetla
+            The time at which the trajectory should be evaluated
+        """
+        start_t = self.__points[0].time_from_start
+        end_t = self.__points[-1].time_from_start
+
+        if time < start_t or time > end_t:
+            raise ValueError('time: {} is out of bounds (min: {}, '
+                             'max: {}'.format(time, start_t, end_t))
+
+        idx = self.get_point_before(time, return_index=True)
+
+        next_idx = min(idx+1, len(self))
+
+        return self.__points[idx].interpolate_cubic(self.__points[next_idx])
+
+    def merge(self, other: 'JointTrajectory', delay_self: Union[timedelta, None]=None,
+              delay_other: Union[timedelta, None]=None):
+        """
+        Merge self and other joint trajectory
+
+        Parameters
+        ----------
+        other: JointTrajectory
+            Other trajectory to merge
+        delay_self: Union[timedelta,None] (default=None)
+            If defined delay which is applied to self trajectory
+        delay_other: Union[timedelta,None] (default=None)
+            If defined delay which is applied to other trajectory
+
+        Returns
+        -------
+        JointTrajectory
+            Merged joint trajectory
+        """
+
+        union_joint_set = self.joint_set.union(other.joint_set)
+
+        num_points_self = len(self)
+        num_points_other = len(other)
+
+        duration_self = self.__points[-1].time_from_start
+        duration_other = other.points.time_from_start
+
+        if delay_self is not None:
+            duration_self += delay_self
+
+        if delay_other is not None:
+            duration_other += delay_other
+
+        if duration_self > duration_other:
+            duration = duration_self
+        else:
+            duration = duration_other
+
+        max_points = max(num_points_self, num_points_other)
+
+        dt = duration / (max_points-1)
+        target_time = [dt*i for i in range(max_points)]
+
+        merged_points = []
+        for t in target_time:
+            if delay_self is not None:
+                p_s = self.evaluate_at(t-delay_self).with_time_from_start(t)
+            else:
+                p_s = self.evaluate_at(t)
+
+            if delay_other is not None:
+                p_o = self.evaluate_at(t-delay_other).with_time_from_start(t)
+            else:
+                p_o = self.evaluate_at(t)
+
+            merged_points.append(p_s.merge(p_o))
+
+        return type(self)(union_joint_set, merged_points)
+
     def to_joint_trajectory_msg(self, seq=0, frame_id=''):
         """
         Converts JointTrajectory to JointTrajectory ros message
@@ -381,9 +491,9 @@ class JointTrajectory(object):
 
         Parameters
         ----------
-        seq : int (default 0)
+        seq: int(default 0)
             set seq field of message header
-        frame_id : int (default 0)
+        frame_id: int(default 0)
             set frame_id field of message header
 
         Returns
@@ -410,7 +520,7 @@ class JointTrajectory(object):
 
         Parameters
         ----------
-        key : int  or slice
+        key: int or slice
             index of joint or slice for which the values are requested
 
         Returns
@@ -420,9 +530,9 @@ class JointTrajectory(object):
 
         Raises
         ------
-        TypeError : type mismatch
+        TypeError: type mismatch
             If key is not int or slice
-        IndexError :
+        IndexError:
             If index is out of range
 
         """

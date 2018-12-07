@@ -222,7 +222,6 @@ def plot_joint_trajectory(trajectory: JointTrajectory, title: str):
     time_from_start = [t.total_seconds() for t in trajectory.time_from_start]
 
     def plot(ax, x, values, labels, title, ylabel):
-        print('now iam ploting')
         plt_lines = []
         for i, label in enumerate(labels):
             y = [v[i] for v in values]

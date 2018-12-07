@@ -246,6 +246,26 @@ class JointTrajectoryPoint(object):
                               self.__accelerations,
                               self.__efforts)
 
+    def with_time_from_start(self, time: timedelta):
+        """
+        Set time from start
+
+        Parameters
+        ----------
+        time : timedelta
+            time form start to set
+
+        Returns
+        -------
+        JointTrajectoryPoint
+        """
+
+        return type(self)(time,
+                          self.__positions,
+                          self.__velocities,
+                          self.__accelerations,
+                          self.__efforts)
+
     def merge(self, others):
         """
         Creates a new instance of JointTrajectoryPoint as a result of the merge operation
@@ -339,6 +359,72 @@ class JointTrajectoryPoint(object):
 
         return self.__class__(self.__time_from_start, positions,
                               velocites, accelerations, efforts)
+
+    def interpolate_cubic(self, other: 'JointTrajectoryPoint', time: timedelta):
+        """
+        Interpolate cubic between self and other trajectory point
+
+        Parameters
+        ----------
+        other: JointTrajectoryPoint
+            Second trajectory point for interpolation
+        time: timedelta
+            time for which interpolation is performed
+
+        Returns
+        -------
+        JointTrajectoryPoint
+
+        Raises
+        ------
+        ValueError
+            If time from start of point is smaller than time from start of self
+            If joint sets of point and self are not equal
+        """
+        if self.joint_set != other.joint_set:
+            raise ValueError('joint set of self: {} and other: {}'
+                             ' are not equal'.format(self.joint_set,
+                                                     other.joint_set))
+
+        t0 = self.time_from_start
+        t1 = other.time_from_start
+
+        if t1 <= t0:
+            raise ValueError('interpolation error: other time from start {} is'
+                             ' smaller than self time from start {}'.format(t1,
+                                                                            t0))
+
+        delta_t = t1 - t0
+
+        if delta_t < 1e-6:
+            return type(self)(t0+delta_t,
+                              other.positions,
+                              other.velocities,
+                              other.accelerations,
+                              other.efforts)
+
+        t = max((time - t0).total_seconds(), 0.0)
+        t = min(delta_t.total_seconds(), t)
+
+        if self.velocities is None or other.velocities is None:
+            raise ValueError
+
+        dt = delta_t.total_seconds()
+
+        pos = np.zeros(len(self.positions), dtype=float)
+        vel = np.zeros(len(self.velocities), dtype=float)
+        for i, p0, p1, v0, v1 in enumerate(zip(self.positions,
+                                               other.positions,
+                                               self.velocities,
+                                               other.velocities)):
+            c = (-3.0*p0 + 3.0*p1 - 2.0*dt*v0 - dt*v1) / dt**2.0
+            d = (2.0*p0 - 2.0*p1 + dt*v0 + dt*v1) / dt**3.0
+            pos[i] = p0 + v0*t + c*t**2.0 + d*t**3.0
+            vel[i] = v0 + 2.0*c*t + 3.0*d*t**2.0
+
+        return type(self)(time,
+                          JointValues(self.joint_set, pos),
+                          JointValues(self.joint_set, vel))
 
     def to_joint_trajectory_point_msg(self):
         """
