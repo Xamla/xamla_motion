@@ -302,6 +302,59 @@ class JointTrajectory(object):
         """
         return [p.time_from_start for p in self.__points]
 
+    @property
+    def duration(self):
+        """
+        duration : timedelta
+            duration of trajectory
+        """
+
+        return self.__points[-1].time_from_start
+
+    def append(self, other: JointTrajectory, delay: timedelta=timedelta(0)):
+        """
+        Append a JointTrajectory to current trajectory
+
+        Parameters
+        ----------
+        other : JointTrajectory
+            joint trajectory to append
+        delay : timedelta
+            time between last point of current
+            trajectory and first point of other trajectory
+
+        Returns
+        -------
+        JointTrajectory
+        """
+
+        duration = self.duration + delay
+
+        return type(self)(self.__joint_set,
+                          self.__points+(p.add_time_offset(duration) for p in other.points))
+
+    def prepend(self, other, delay: timedelta=timedelta(0)):
+        """
+        Prepend a JointTrajectory to current trajectory
+
+        Parameters
+        ----------
+        other : JointTrajectory
+            joint trajectory to prepend
+        delay : timedelta
+            time between last point of other
+            trajectory and first point of current trajectory
+
+        Returns
+        -------
+        JointTrajectory
+        """
+
+        duration = other.duration + delay
+
+        return type(self)(other.joint_set,
+                          other.points+(p.add_time_offset(duration) for p in self.__points))
+
     def transform(self, transform_function: Callable[[JointTrajectoryPoint], JointTrajectoryPoint]):
         """
         Apply transformation to trajectory points

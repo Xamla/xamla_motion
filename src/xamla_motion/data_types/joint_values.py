@@ -45,6 +45,10 @@ class JointValues(object):
         Creates a transformed version of JointValues
     select(names)
         Creates a JointValue instance which only contains selected joints
+    set_values(joint_set, values)
+        Create a new instance of JointValues with modified values
+    merge(others)
+        Merge JointValues instance with others JointValues
     from_joint_path_point_msg(joint_set, msg)
         Creates an instance of JointValues from a JointPathPoint ros message
     to_joint_path_point_msg()

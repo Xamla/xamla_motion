@@ -248,7 +248,7 @@ class JointTrajectoryPoint(object):
 
     def merge(self, others):
         """
-        Creates a new instance of JointTrajectory as a result of the merge operation
+        Creates a new instance of JointTrajectoryPoint as a result of the merge operation
 
         Parameters
         ----------
