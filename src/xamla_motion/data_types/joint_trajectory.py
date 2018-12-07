@@ -28,6 +28,8 @@ from .joint_set import JointSet
 from .joint_trajectory_point import JointTrajectoryPoint
 from collections import Iterable
 
+from typing import Callable
+
 
 class JointTrajectoryFlags(object):
     __is_valid = 1 << 0
@@ -148,8 +150,8 @@ class JointTrajectory(object):
         Raises
         ------
         TypeError
-            If joint_set is not of type JointSet or 
-            if points is not of type iterable of 
+            If joint_set is not of type JointSet or
+            if points is not of type iterable of
             JointTrajectoryPoints or None
         ValueError
             If time from start is no ascending between points or
@@ -300,6 +302,24 @@ class JointTrajectory(object):
         """
         return [p.time_from_start for p in self.__points]
 
+    def transform(self, transform_function: Callable[[JointTrajectoryPoint], JointTrajectoryPoint]):
+        """
+        Apply transformation to trajectory points
+
+        Parameters
+        ----------
+        transform_function : Callable[[JointTrajectoryPoint], JointTrajectoryPoint]
+            Function which defines the transformation which is applied on each
+            joint trajectory point
+
+        Returns
+        -------
+        JointTrajectory
+            Joint Trajectory with transformed points
+        """
+
+        return type(self)(self.__joint_set, list(map(transform_function, self.__points)), self.is_valid)
+
     def to_joint_trajectory_msg(self, seq=0, frame_id=''):
         """
         Converts JointTrajectory to JointTrajectory ros message
@@ -311,7 +331,7 @@ class JointTrajectory(object):
         seq : int (default 0)
             set seq field of message header
         frame_id : int (default 0)
-            set frame_id field of message header 
+            set frame_id field of message header
 
         Returns
         -------
@@ -343,7 +363,7 @@ class JointTrajectory(object):
         Returns
         -------
         JointValues or List[JointValues]
-            Returns a instance of JointValues or list of JointValues 
+            Returns a instance of JointValues or list of JointValues
 
         Raises
         ------
