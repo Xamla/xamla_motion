@@ -363,7 +363,7 @@ class WeissWsgGripper(object):
             If action returns with unexpected result
         """
         r = await self.__m_service.wsg_gripper_command(self.__properties.control_action_name,
-                                                       WsgCommand.grasp,
+                                                       WsgCommand.release,
                                                        float(position),
                                                        float(speed),
                                                        0.0,
