@@ -434,16 +434,16 @@ class MoveJointsOperation(MoveOperation):
         except TypeError:
             path = JointPath.from_start_stop_point(start, self.__target)
         joint_path = JointPath(self.__move_group.joint_set, path)
-        t = self.move_group.motion_service.plan_move_joints(joint_path,
-                                                            self.__plan_parameters)
+        t = self.__move_group.motion_service.plan_move_joints(joint_path,
+                                                              self.__plan_parameters)
 
-        return Plan(self.move_group, t, self.__plan_parameters)
+        return Plan(self.__move_group, t, self.__plan_parameters)
 
     def _build(self, args: MoveJointsArgs):
         """
         Build a new instance of MoveJointsOperations
         """
-        return self.__class__(args)
+        return type(self)(args)
 
     def _with_parameters(self, func):
         return self._build(func(self.to_args))
@@ -654,7 +654,7 @@ class MoveJointsOperation(MoveOperation):
         """
 
         args = MoveJointsArgs()
-        args.move_group = self.move_group
+        args.move_group = self.__move_group
         args.start = self.__start
         args.target = self.__target
         args.velocity_scaling = self.__velocity_scaling
@@ -664,6 +664,56 @@ class MoveJointsOperation(MoveOperation):
         args.max_deviation = self.__plan_parameters.max_deviation
 
         return args
+
+
+class MoveJointsCollisionFreeOperation(MoveJointsOperation):
+
+    def __init__(self, args: MoveJointsArgs):
+        """
+        Initialization of MoveJointsCollisionFreeOperation
+
+        Parameters
+        ----------
+        args : MoveJointsArgs
+            move joint args which define the move operation
+
+        Returns
+        -------
+        MoveJointsCollisionFreeOperation
+            Instance of MoveJointsCollisionFreeOperation
+        """
+
+        super(MoveJointsCollisionFreeOperation, self).__init__(args)
+
+    def plan(self):
+        """
+        Planes a collision free trajectory with defined properties
+
+        Returns
+        -------
+        Plan
+            Instance of Plan which holds the planned
+            trajectory and methods to creates executors for it
+
+        Raises
+        ------
+        ServiceError
+            If trajectory planning service is not available or finish
+            unsuccessfully
+        """
+
+        start = self.__start or self.__move_group.get_current_joint_positions()
+        try:
+            path = self.__target.prepend(start)
+        except TypeError:
+            path = JointPath.from_start_stop_point(start, self.__target)
+        joint_path = JointPath(self.__move_group.joint_set, path)
+        p = self.__move_group.motion_service.plan_collision_free_joint_path(joint_path,
+                                                                            self.__plan_parameters)
+        t = self.__move_group.motion_service.plan_move_joints(p,
+                                                              self.__plan_parameters)
+
+        return Plan(self.__move_group, t, self.__plan_parameters)
 
 
 class MoveCartesianOperation(MoveOperation):
@@ -740,16 +790,16 @@ class MoveCartesianOperation(MoveOperation):
                                                                   i,
                                                                   ik_jump_threshold))
 
-        t = self.move_group.motion_service.plan_move_joints(path,
-                                                            self.__plan_parameters)
+        t = self.__move_group.motion_service.plan_move_joints(path,
+                                                              self.__plan_parameters)
 
-        return Plan(self.move_group, t, self.__plan_parameters)
+        return Plan(self.__move_group, t, self.__plan_parameters)
 
     def _build(self, args: MoveCartesianArgs):
         """
-        Build a new instance of MoveJointsOperations
+        Build a new instance of MoveCartesianOperations
         """
-        return self.__class__(args)
+        return type(self)(args)
 
     def _with_parameters(self, func):
         return self._build(func(self.to_args))
@@ -1026,7 +1076,7 @@ class MoveCartesianOperation(MoveOperation):
         """
 
         args = MoveCartesianArgs()
-        args.move_group = self.move_group
+        args.move_group = self.__move_group
         args.seed = self.__seed
         args.start = self.__start
         args.target = self.__target
@@ -1038,3 +1088,123 @@ class MoveCartesianOperation(MoveOperation):
         args.ik_jump_threshold = self.__ik_jump_threshold
 
         return args
+
+
+class MoveCartesianCollisionFreeOperation(MoveCartesianOperation):
+
+    def __init__(self, args: MoveCartesianArgs):
+        """
+        Initialization of MoveCartesianCollisionFreeOperation
+
+        Parameters
+        ----------
+        args : MoveCartesianArgs
+            move joint args which define the move operation
+
+        Returns
+        -------
+        MoveCartesianCollisionFreeOperation
+            Instance of MoveCartesianCollisionFreeOperation
+        """
+
+        super(MoveCartesianCollisionFreeOperation, self).__init__(args)
+
+    def plan(self):
+        """
+        Planes a collision free trajectory with defined properties
+
+        Returns
+        -------
+        Plan
+            Instance of Plan which holds the planned
+            trajectory and methods to creates executors for it
+
+        Raises
+        ------
+        ServiceError
+            If trajectory planning service is not available or finish
+            unsuccessfully
+        """
+        seed = self.__seed or self.__move_group.get_current_joint_positions()
+
+        start = self.__start or self.__move_group.get_current_joint_positions()
+
+        if isinstance(start, Pose):
+            start = self.__end_effector.inverse_kinematics(start,
+                                                           self.__plan_parameters.collision_check,
+                                                           seed)
+
+        path = self.__end_effector.inverse_kinematics_many(self.__target,
+                                                           self.__plan_parameters.collision_check,
+                                                           seed).path
+
+        path = path.prepend(start)
+
+        ik_jump_threshold = self.__task_space_plan_parameters.ik_jump_threshold
+        p_p = path[0].values
+        for i, p in enumerate(path[1:]):
+            delta = np.max(np.abs(p.values - p_p))
+            if delta > ik_jump_threshold:
+                raise RuntimeError('The difference {} of two consecutive IK solutions'
+                                   ' for the given cartesian path at index {} exceeds the'
+                                   ' ik jump threshold {}'.format(delta,
+                                                                  i,
+                                                                  ik_jump_threshold))
+
+        p = self.__move_group.motion_service.plan_collision_free_joint_path(path,
+                                                                            self.__plan_parameters)
+
+        t = self.__move_group.motion_service.plan_move_joints(p,
+                                                              self.__plan_parameters)
+
+        return Plan(self.__move_group, t, self.__plan_parameters)
+
+
+class MoveCartesianLinearOperation(MoveCartesianOperation):
+
+    def __init__(self, args: MoveCartesianArgs):
+        """
+        Initialization of MoveCartesianLinearOperation
+
+        Parameters
+        ----------
+        args : MoveCartesianArgs
+            move cartesian args which define the move operation
+
+        Returns
+        -------
+        MoveCartesianLinearOperation
+            Instance of MoveCartesianLinearOperation
+        """
+
+        super(MoveCartesianLinearOperation, self).__init__(args)
+
+    def plan(self):
+        """
+        Planes a linear trajectory with defined properties
+
+        Returns
+        -------
+        Plan
+            Instance of Plan which holds the planned
+            trajectory and methods to creates executors for it
+
+        Raises
+        ------
+        ServiceError
+            If trajectory planning service is not available or finish
+            unsuccessfully
+        """
+        seed = self.__seed or self.__move_group.get_current_joint_positions()
+
+        start = self.__start
+
+        path = self.__target
+
+        if isinstance(start, Pose):
+            path = path.prepend(start)
+
+        t = self.__move_group.motion_service.plan_move_pose_linear(path, seed,
+                                                                   self.__task_space_plan_parameters)
+
+        return Plan(self.__move_group, t, self.__plan_parameters)
