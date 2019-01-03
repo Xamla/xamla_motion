@@ -78,24 +78,24 @@ def main():
     register_asyncio_shutdown_handler(loop)
 
     async def example_moves():
-        # print('test MoveGroup class')
-        # print('----------------          move joints                 -------------------')
-        # move_joints = move_group.move_joints(joint_path)
-        # move_joints = move_joints.with_velocity_scaling(0.1)
+        print('test MoveGroup class')
+        print('----------------          move joints                 -------------------')
+        move_joints = move_group.move_joints(joint_path)
+        move_joints = move_joints.with_velocity_scaling(0.1)
 
-        # move_joints_plan = move_joints.plan()
+        move_joints_plan = move_joints.plan()
 
-        # await move_joints_plan.execute_async()
+        await move_joints_plan.execute_async()
 
-        # print('----------------        move joints supervised        -------------------')
-        # stepped_motion_client = move_joints_plan.execute_supervised()
-        # await run_supervised(stepped_motion_client)
+        print('----------------        move joints supervised        -------------------')
+        stepped_motion_client = move_joints_plan.execute_supervised()
+        await run_supervised(stepped_motion_client)
 
-        # print('----------------      move joints collision free      -------------------')
-        # move_joints_cf = MoveJointsCollisionFreeOperation(
-        #     move_joints.to_args())
+        print('----------------      move joints collision free      -------------------')
+        move_joints_cf = MoveJointsCollisionFreeOperation(
+            move_joints.to_args())
 
-        # await move_joints_cf.plan().execute_async()
+        await move_joints_cf.plan().execute_async()
 
         print('test EndEffector class')
         print('----------------          move cartesian               -------------------')
