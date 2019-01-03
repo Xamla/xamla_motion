@@ -748,6 +748,7 @@ class MoveGroup(object):
                                     self.__plan_parameters.collision_check)
         args.max_deviation = float(max_deviation or
                                    self.__plan_parameters.max_deviation)
+        args.sample_resolution = self.__plan_parameters.sample_resolution
 
         return MoveJointsOperation(args)
 
@@ -808,6 +809,7 @@ class MoveGroup(object):
                                     self.__plan_parameters.collision_check)
         args.max_deviation = float(max_deviation or
                                    self.__plan_parameters.max_deviation)
+        args.sample_resolution = self.__plan_parameters.sample_resolution
 
         return MoveJointsCollisionFreeOperation(args)
 
@@ -995,8 +997,7 @@ class EndEffector(object):
                                           max_deviation=None,
                                           acceleration_scaling=None,
                                           sample_resolution=None,
-                                          ik_jump_threshold=None,
-                                          end_effector_name=None):
+                                          ik_jump_threshold=None):
         """
         Build an instance of TaskSpacePlanParameters from input
         and default values
@@ -1025,8 +1026,6 @@ class EndEffector(object):
         ik_jump_threshold : None or float
             Maximal joint value jump between two consecutively
             following trajectory points
-        end_effector_name : None or str convertable
-            Name of end effector which should be used
 
         Returns
         -------
@@ -1246,7 +1245,7 @@ class EndEffector(object):
             raise TypeError('target is not one of expected types'
                             ' Pose, CartesianPath')
 
-        if not isinstance(seed, (None, JointValues)):
+        if not isinstance(seed, (type(None), JointValues)):
             raise TypeError('seed is not of expected type JointValues')
 
         args = MoveCartesianArgs()
@@ -1262,6 +1261,8 @@ class EndEffector(object):
                                     self.__move_group.collision_check)
         args.max_deviation = float(max_deviation or
                                    self.__move_group.max_deviation)
+        args.sample_resolution = self.__move_group.sample_resolution
+        args.ik_jump_threshold = self.__move_group.ik_jump_threshold
 
         return MoveCartesianOperation(args)
 
@@ -1314,7 +1315,7 @@ class EndEffector(object):
             raise TypeError('target is not one of expected types'
                             ' Pose, CartesianPath')
 
-        if not isinstance(seed, (None, JointValues)):
+        if not isinstance(seed, (type(None), JointValues)):
             raise TypeError('seed is not of expected type JointValues')
 
         args = MoveCartesianArgs()
@@ -1330,6 +1331,8 @@ class EndEffector(object):
                                     self.__move_group.collision_check)
         args.max_deviation = float(max_deviation or
                                    self.__move_group.max_deviation)
+        args.sample_resolution = self.__move_group.sample_resolution
+        args.ik_jump_threshold = self.__move_group.ik_jump_threshold
 
         return MoveCartesianCollisionFreeOperation(args)
 
@@ -1382,7 +1385,7 @@ class EndEffector(object):
             raise TypeError('target is not one of expected types'
                             ' Pose, CartesianPath')
 
-        if not isinstance(seed, (None, JointValues)):
+        if not isinstance(seed, (type(None), JointValues)):
             raise TypeError('seed is not of expected type JointValues')
 
         args = MoveCartesianArgs()

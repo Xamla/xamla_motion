@@ -21,15 +21,18 @@
 # later replace with dataclass in python3.6 > available
 
 import asyncio
-import numpy as np
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Union
+from typing import TYPE_CHECKING, Any, Callable, Union
+
+import numpy as np
 
 from .data_types import (CartesianPath, JointPath, JointTrajectory,
                          JointValues, PlanParameters, Pose)
-from .motion_client import EndEffector, MoveGroup
 from .motion_service import SteppedMotionClient
 from .xamla_motion_exceptions import ServiceException
+
+if TYPE_CHECKING:
+    from .motion_client import EndEffector, MoveGroup
 
 
 class MoveArgs(object):
@@ -40,60 +43,60 @@ class MoveArgs(object):
     """
 
     def __init__(self):
-        self.__move_group = None
-        self.__velocity_scaling = None
-        self.__acceleration_scaling = None
-        self.__collision_check = None
-        self.__sample_resolution = None
-        self.__max_deviation = None
+        self._move_group = None
+        self._velocity_scaling = None
+        self._acceleration_scaling = None
+        self._collision_check = None
+        self._sample_resolution = None
+        self._max_deviation = None
 
     @property
-    def move_group(self) -> MoveGroup:
-        return self.__move_group
+    def move_group(self) -> 'MoveGroup':
+        return self._move_group
 
     @move_group.setter
-    def move_group(self, move_group: MoveGroup):
-        self.__move_group = move_group
+    def move_group(self, move_group: 'MoveGroup'):
+        self._move_group = move_group
 
     @property
     def velocity_scaling(self) -> float:
-        return self.__velocity_scaling
+        return self._velocity_scaling
 
     @velocity_scaling.setter
     def velocity_scaling(self, velocity_scaling: float):
-        self.__velocity_scaling = velocity_scaling
+        self._velocity_scaling = velocity_scaling
 
     @property
     def acceleration_scaling(self) -> float:
-        return self.__acceleration_scaling
+        return self._acceleration_scaling
 
     @acceleration_scaling.setter
     def acceleration_scaling(self, acceleration_scaling: float):
-        self.__acceleration_scaling = acceleration_scaling
+        self._acceleration_scaling = acceleration_scaling
 
     @property
     def collision_check(self) -> bool:
-        return self.__collision_check
+        return self._collision_check
 
     @collision_check.setter
     def collision_check(self, collision_check: bool):
-        self.__collision_check = collision_check
+        self._collision_check = collision_check
 
     @property
     def sample_resolution(self) -> float:
-        return self.__sample_resolution
+        return self._sample_resolution
 
     @sample_resolution.setter
     def sample_resolution(self, sample_resolution: float):
-        self.__sample_resolution = sample_resolution
+        self._sample_resolution = sample_resolution
 
     @property
     def max_deviation(self) -> float:
-        return self.__max_deviation
+        return self._max_deviation
 
     @max_deviation.setter
     def max_deviation(self, max_deviation: float):
-        self.__max_deviation = max_deviation
+        self._max_deviation = max_deviation
 
 
 class MoveJointsArgs(MoveArgs):
@@ -106,24 +109,24 @@ class MoveJointsArgs(MoveArgs):
     def __init__(self):
         super(MoveJointsArgs, self).__init__()
 
-        self.__start = None
-        self.__target = None
+        self._start = None
+        self._target = None
 
     @property
     def start(self) -> Union[None, JointValues]:
-        return self.__start
+        return self._start
 
     @start.setter
     def start(self, start: Union[None, JointValues]):
-        self.__start = start
+        self._start = start
 
     @property
     def target(self) -> Union[None, JointValues, JointPath]:
-        return self.__target
+        return self._target
 
     @target.setter
     def target(self, target: Union[None, JointValues, JointPath]):
-        self.__target = target
+        self._target = target
 
 
 class MoveCartesianArgs(MoveJointsArgs):
@@ -136,49 +139,49 @@ class MoveCartesianArgs(MoveJointsArgs):
     def __init__(self):
         super(MoveCartesianArgs, self).__init__()
 
-        self.__end_effector = None
-        self.__seed = None
-        self.__ik_jump_threshold = None
+        self._end_effector = None
+        self._seed = None
+        self._ik_jump_threshold = None
 
     @property
-    def end_effector(self) -> EndEffector:
-        return self.__end_effector
+    def end_effector(self) -> 'EndEffector':
+        return self._end_effector
 
     @end_effector.setter
-    def end_effector(self, end_effector: EndEffector):
-        self.__end_effector = end_effector
+    def end_effector(self, end_effector: 'EndEffector'):
+        self._end_effector = end_effector
 
     @property
     def start(self) -> Union[None, JointValues, Pose]:
-        return self.__start
+        return self._start
 
     @start.setter
     def start(self, start: Union[None, JointValues, Pose]):
-        self.__start = start
+        self._start = start
 
     @property
     def target(self) -> Union[None, Pose, CartesianPath]:
-        return self.__target
+        return self._target
 
     @target.setter
     def target(self, target: Union[None, JointValues, JointPath]):
-        self.__target = target
+        self._target = target
 
     @property
     def seed(self) -> JointValues:
-        return self.__seed
+        return self._seed
 
     @seed.setter
     def seed(self, seed: JointValues):
-        self.__seed = seed
+        self._seed = seed
 
     @property
     def ik_jump_threshold(self) -> float:
-        return self.__ik_jump_threshold
+        return self._ik_jump_threshold
 
     @ik_jump_threshold.setter
     def ik_jump_threshold(self, ik_jump_threshold: float):
-        self.__ik_jump_threshold = ik_jump_threshold
+        self._ik_jump_threshold = ik_jump_threshold
 
 
 class Plan(object):
@@ -186,7 +189,9 @@ class Plan(object):
     Plan holds a planned trajectory and offer possibilies for path execution
     """
 
-    def __init__(self, move_group: MoveGroup, trajectory: JointTrajectory, parameters):
+    def __init__(self, move_group: 'MoveGroup',
+                 trajectory: JointTrajectory,
+                 parameters: PlanParameters):
         """
         Initialization of Plan
 
@@ -205,9 +210,9 @@ class Plan(object):
         Plan
             Instance of Plan
         """
-        self.__move_group = move_group
-        self.__trajectory = trajectory
-        self.__parameters = parameters
+        self._move_group = move_group
+        self._trajectory = trajectory
+        self._parameters = parameters
 
     @property
     def move_group(self):
@@ -215,7 +220,7 @@ class Plan(object):
         move_group : MoveGroup (read only)
             Move group which executes the trajectory
         """
-        return self.__move_group
+        return self._move_group
 
     @property
     def trajectory(self):
@@ -223,7 +228,7 @@ class Plan(object):
         trajectory : JointTrajectory
             Trajectory which is the execution target
         """
-        return self.__trajectory
+        return self._trajectory
 
     @property
     def parameters(self):
@@ -231,9 +236,9 @@ class Plan(object):
         parameters : PlanParameters
             PlanParameters with which the trajectory was planned
         """
-        return self.__parameters
+        return self._parameters
 
-    async def execute_async(self) -> asyncio.Task:
+    def execute_async(self) -> asyncio.Task:
         """
         Executes trajectory asynchronously
 
@@ -250,9 +255,9 @@ class Plan(object):
         ServiceError
             If execution ends not successful
         """
-        services = self.__move_group.motion_service
-        return asyncio.ensure_future(services.execute_joint_trajectory(self.__trajectory,
-                                                                       self.__parameters.collision_check))
+        services = self._move_group.motion_service
+        return asyncio.ensure_future(services.execute_joint_trajectory(self._trajectory,
+                                                                       self._parameters.collision_check))
 
     def execute_supervised(self):
         """
@@ -263,10 +268,10 @@ class Plan(object):
         SteppedMotionClient
             Executor client for supervised trajectory execution
         """
-        services = self.__move_group.motion_service
-        return services.execute_joint_trajectory_supervised(self.__trajectory,
+        services = self._move_group.motion_service
+        return services.execute_joint_trajectory_supervised(self._trajectory,
                                                             1.0,
-                                                            self.__parameters.collision_check)
+                                                            self._parameters.collision_check)
 
 
 class MoveOperation(ABC):
@@ -275,25 +280,25 @@ class MoveOperation(ABC):
         """
         Initialize common move operation args
         """
-        self.__start = args.start
-        self.__target = args.target
-        self.__move_group = args.move_group
-        self.__velocity_scaling = args.velocity_scaling
-        self.__acceleration_scaling = args.acceleration_scaling
-        p = self.__move_group._build_plan_parameters(self.__velocity_scaling,
-                                                     args.collision_check,
-                                                     args.max_deviation,
-                                                     self.__acceleration_scaling,
-                                                     args.sample_resolution)
-        self.__plan_parameters = p
+        self._start = args.start
+        self._target = args.target
+        self._move_group = args.move_group
+        self._velocity_scaling = args.velocity_scaling
+        self._acceleration_scaling = args.acceleration_scaling
+        p = self._move_group._build_plan_parameters(self._velocity_scaling,
+                                                    args.collision_check,
+                                                    args.max_deviation,
+                                                    self._acceleration_scaling,
+                                                    args.sample_resolution)
+        self._plan_parameters = p
 
     @property
-    def move_group(self) -> MoveGroup:
+    def move_group(self) -> 'MoveGroup':
         """
         move_group : MoveGroup (read only)
             selected move group for move operation
         """
-        return self.__move_group
+        return self._move_group
 
     @property
     def velocity_scaling(self) -> float:
@@ -301,7 +306,7 @@ class MoveOperation(ABC):
         velocity_scaling : float (read only)
             current velocity_scaling
         """
-        return self.__velocity_scaling
+        return self._velocity_scaling
 
     @property
     def acceleration_scaling(self) -> float:
@@ -309,7 +314,7 @@ class MoveOperation(ABC):
         acceleration_scaling : float
             current acceleration scaling
         """
-        return self.__acceleration_scaling
+        return self._acceleration_scaling
 
     @property
     def plan_parameters(self) -> PlanParameters:
@@ -317,7 +322,7 @@ class MoveOperation(ABC):
         plan_parameters : PlanParameters
             current plan parameters
         """
-        return self.__plan_parameters
+        return self._plan_parameters
 
     @abstractmethod
     def plan(self):
@@ -333,52 +338,58 @@ class MoveOperation(ABC):
 
     @abstractmethod
     def with_start(self, value):
-        if value != self.__start:
+        if value != self._start:
             def f(x):
                 x.start = value
+                return x
             return self._with_parameters(f)
         else:
             return self
 
     @abstractmethod
     def with_collision_check(self, value: bool=True):
-        if value != self.__plan_parameters.collision_check:
+        if value != self._plan_parameters.collision_check:
             def f(x):
                 x.collision_check = value
+                return x
             return self._with_parameters(f)
 
     @abstractmethod
     def with_velocity_scaling(self, value: float):
-        if value != self.__velocity_scaling:
+        if value != self._velocity_scaling:
             def f(x):
                 x.velocity_scaling = value
+                return x
             return self._with_parameters(f)
         else:
             return self
 
     @abstractmethod
     def with_acceleration_scaling(self, value: float):
-        if value != self.__acceleration_scaling:
+        if value != self._acceleration_scaling:
             def f(x):
                 x.acceleration_scaling = value
+                return x
             return self._with_parameters(f)
         else:
             return self
 
     @abstractmethod
     def with_sample_resolution(self, value: float):
-        if value != self.__plan_parameters.sample_resolution:
+        if value != self._plan_parameters.sample_resolution:
             def f(x):
                 x.sample_resolution = value
+                return x
             return self._with_parameters(f)
         else:
             return self
 
     @abstractmethod
     def with_max_deviation(self, value: float):
-        if value != self.__plan_parameters.max_deviation:
+        if value != self._plan_parameters.max_deviation:
             def f(x):
                 x.max_deviation = value
+                return x
             return self._with_parameters(f)
         else:
             return self
@@ -428,16 +439,16 @@ class MoveJointsOperation(MoveOperation):
             unsuccessfully
         """
 
-        start = self.__start or self.__move_group.get_current_joint_positions()
+        start = self._start or self._move_group.get_current_joint_positions()
         try:
-            path = self.__target.prepend(start)
+            path = self._target.prepend(start)
         except TypeError:
-            path = JointPath.from_start_stop_point(start, self.__target)
-        joint_path = JointPath(self.__move_group.joint_set, path)
-        t = self.__move_group.motion_service.plan_move_joints(joint_path,
-                                                              self.__plan_parameters)
+            path = JointPath.from_start_stop_point(start, self._target)
+        joint_path = JointPath(self._move_group.joint_set, path)
+        t = self._move_group.motion_service.plan_move_joints(joint_path,
+                                                             self._plan_parameters)
 
-        return Plan(self.__move_group, t, self.__plan_parameters)
+        return Plan(self._move_group, t, self._plan_parameters)
 
     def _build(self, args: MoveJointsArgs):
         """
@@ -446,7 +457,7 @@ class MoveJointsOperation(MoveOperation):
         return type(self)(args)
 
     def _with_parameters(self, func):
-        return self._build(func(self.to_args))
+        return self._build(func(self.to_args()))
 
     def with_start(self, joint_value: Union[None, JointValues]):
         """
@@ -495,7 +506,7 @@ class MoveJointsOperation(MoveOperation):
             If velocity_scaling is not in range 0.0, 1.0
         """
 
-        return super(MoveJointsOperation, self).with_acceleration_scaling(velocity_scaling)
+        return super(MoveJointsOperation, self).with_velocity_scaling(velocity_scaling)
 
     def with_acceleration_scaling(self, acceleration_scaling: float):
         """
@@ -654,14 +665,14 @@ class MoveJointsOperation(MoveOperation):
         """
 
         args = MoveJointsArgs()
-        args.move_group = self.__move_group
-        args.start = self.__start
-        args.target = self.__target
-        args.velocity_scaling = self.__velocity_scaling
-        args.acceleration_scaling = self.__acceleration_scaling
-        args.collision_check = self.__plan_parameters.collision_check
-        args.sample_resolution = self.__plan_parameters.sample_resolution
-        args.max_deviation = self.__plan_parameters.max_deviation
+        args.move_group = self._move_group
+        args.start = self._start
+        args.target = self._target
+        args.velocity_scaling = self._velocity_scaling
+        args.acceleration_scaling = self._acceleration_scaling
+        args.collision_check = self._plan_parameters.collision_check
+        args.sample_resolution = self._plan_parameters.sample_resolution
+        args.max_deviation = self._plan_parameters.max_deviation
 
         return args
 
@@ -702,18 +713,18 @@ class MoveJointsCollisionFreeOperation(MoveJointsOperation):
             unsuccessfully
         """
 
-        start = self.__start or self.__move_group.get_current_joint_positions()
+        start = self._start or self._move_group.get_current_joint_positions()
         try:
-            path = self.__target.prepend(start)
+            path = self._target.prepend(start)
         except TypeError:
-            path = JointPath.from_start_stop_point(start, self.__target)
-        joint_path = JointPath(self.__move_group.joint_set, path)
-        p = self.__move_group.motion_service.plan_collision_free_joint_path(joint_path,
-                                                                            self.__plan_parameters)
-        t = self.__move_group.motion_service.plan_move_joints(p,
-                                                              self.__plan_parameters)
+            path = JointPath.from_start_stop_point(start, self._target)
+        joint_path = JointPath(self._move_group.joint_set, path)
+        p = self._move_group.motion_service.plan_collision_free_joint_path(joint_path,
+                                                                           self._plan_parameters)
+        t = self._move_group.motion_service.plan_move_joints(p,
+                                                             self._plan_parameters)
 
-        return Plan(self.__move_group, t, self.__plan_parameters)
+        return Plan(self._move_group, t, self._plan_parameters)
 
 
 class MoveCartesianOperation(MoveOperation):
@@ -733,20 +744,20 @@ class MoveCartesianOperation(MoveOperation):
             Instance of MoveCartesianOperation
         """
 
-        self.__end_effector = args.end_effector
-        self.__seed = args.seed
-        self.__ik_jump_threshold = args.ik_jump_threshold
-
-        p = self.__end_effector._build_task_space_plan_parameters(args.velocity_scaling,
-                                                                  args.collision_check,
-                                                                  args.max_deviation,
-                                                                  args.acceleration_scaling,
-                                                                  args.sample_resolution,
-                                                                  args.ik_jump_threshold)
-
-        self.__task_space_plan_parameters = p
-
         super(MoveCartesianOperation, self).__init__(args)
+
+        self._end_effector = args.end_effector
+        self._seed = args.seed
+        self._ik_jump_threshold = args.ik_jump_threshold
+
+        p = self._end_effector._build_task_space_plan_parameters(args.velocity_scaling,
+                                                                 args.collision_check,
+                                                                 args.max_deviation,
+                                                                 args.acceleration_scaling,
+                                                                 args.sample_resolution,
+                                                                 args.ik_jump_threshold)
+
+        self._task_space_plan_parameters = p
 
     def plan(self):
         """
@@ -764,22 +775,22 @@ class MoveCartesianOperation(MoveOperation):
             If trajectory planning service is not available or finish
             unsuccessfully
         """
-        seed = self.__seed or self.__move_group.get_current_joint_positions()
+        seed = self._seed or self._move_group.get_current_joint_positions()
 
-        start = self.__start or self.__move_group.get_current_joint_positions()
+        start = self._start or self._move_group.get_current_joint_positions()
 
         if isinstance(start, Pose):
-            start = self.__end_effector.inverse_kinematics(start,
-                                                           self.__plan_parameters.collision_check,
-                                                           seed)
+            start = self._end_effector.inverse_kinematics(start,
+                                                          self._plan_parameters.collision_check,
+                                                          seed)
 
-        path = self.__end_effector.inverse_kinematics_many(self.__target,
-                                                           self.__plan_parameters.collision_check,
-                                                           seed).path
+        path = self._end_effector.inverse_kinematics_many(self._target,
+                                                          self._plan_parameters.collision_check,
+                                                          seed).path
 
         path = path.prepend(start)
 
-        ik_jump_threshold = self.__task_space_plan_parameters.ik_jump_threshold
+        ik_jump_threshold = self._task_space_plan_parameters.ik_jump_threshold
         p_p = path[0].values
         for i, p in enumerate(path[1:]):
             delta = np.max(np.abs(p.values - p_p))
@@ -790,10 +801,10 @@ class MoveCartesianOperation(MoveOperation):
                                                                   i,
                                                                   ik_jump_threshold))
 
-        t = self.__move_group.motion_service.plan_move_joints(path,
-                                                              self.__plan_parameters)
+        t = self._move_group.motion_service.plan_move_joints(path,
+                                                             self._plan_parameters)
 
-        return Plan(self.__move_group, t, self.__plan_parameters)
+        return Plan(self._move_group, t, self._plan_parameters)
 
     def _build(self, args: MoveCartesianArgs):
         """
@@ -802,7 +813,7 @@ class MoveCartesianOperation(MoveOperation):
         return type(self)(args)
 
     def _with_parameters(self, func):
-        return self._build(func(self.to_args))
+        return self._build(func(self.to_args()))
 
     def with_start(self, start: Union[None, JointValues, Pose]):
         """
@@ -854,7 +865,7 @@ class MoveCartesianOperation(MoveOperation):
             raise TypeError('value is not one of expected types Pose,'
                             ' None, JointValues')
 
-        if joint_value != self.__seed:
+        if joint_value != self._seed:
             def f(x):
                 x.seed = joint_value
             return self._with_parameters(f)
@@ -998,7 +1009,7 @@ class MoveCartesianOperation(MoveOperation):
             If ik_jump_threshold is not float convertable
         """
 
-        if ik_jump_threshold != self.__task_space_plan_parameters.ik_jump_threshold:
+        if ik_jump_threshold != self._task_space_plan_parameters.ik_jump_threshold:
             def f(x):
                 x.ik_jump_threshold = ik_jump_threshold
             return self._with_parameters(f)
@@ -1076,16 +1087,17 @@ class MoveCartesianOperation(MoveOperation):
         """
 
         args = MoveCartesianArgs()
-        args.move_group = self.__move_group
-        args.seed = self.__seed
-        args.start = self.__start
-        args.target = self.__target
-        args.velocity_scaling = self.__velocity_scaling
-        args.acceleration_scaling = self.__acceleration_scaling
-        args.collision_check = self.__plan_parameters.collision_check
-        args.sample_resolution = self.__plan_parameters.sample_resolution
-        args.max_deviation = self.__plan_parameters.max_deviation
-        args.ik_jump_threshold = self.__ik_jump_threshold
+        args.move_group = self._move_group
+        args.end_effector = self._end_effector
+        args.seed = self._seed
+        args.start = self._start
+        args.target = self._target
+        args.velocity_scaling = self._velocity_scaling
+        args.acceleration_scaling = self._acceleration_scaling
+        args.collision_check = self._plan_parameters.collision_check
+        args.sample_resolution = self._plan_parameters.sample_resolution
+        args.max_deviation = self._plan_parameters.max_deviation
+        args.ik_jump_threshold = self._ik_jump_threshold
 
         return args
 
@@ -1125,22 +1137,22 @@ class MoveCartesianCollisionFreeOperation(MoveCartesianOperation):
             If trajectory planning service is not available or finish
             unsuccessfully
         """
-        seed = self.__seed or self.__move_group.get_current_joint_positions()
+        seed = self._seed or self._move_group.get_current_joint_positions()
 
-        start = self.__start or self.__move_group.get_current_joint_positions()
+        start = self._start or self._move_group.get_current_joint_positions()
 
         if isinstance(start, Pose):
-            start = self.__end_effector.inverse_kinematics(start,
-                                                           self.__plan_parameters.collision_check,
-                                                           seed)
+            start = self._end_effector.inverse_kinematics(start,
+                                                          self._plan_parameters.collision_check,
+                                                          seed)
 
-        path = self.__end_effector.inverse_kinematics_many(self.__target,
-                                                           self.__plan_parameters.collision_check,
-                                                           seed).path
+        path = self._end_effector.inverse_kinematics_many(self._target,
+                                                          self._plan_parameters.collision_check,
+                                                          seed).path
 
         path = path.prepend(start)
 
-        ik_jump_threshold = self.__task_space_plan_parameters.ik_jump_threshold
+        ik_jump_threshold = self._task_space_plan_parameters.ik_jump_threshold
         p_p = path[0].values
         for i, p in enumerate(path[1:]):
             delta = np.max(np.abs(p.values - p_p))
@@ -1151,13 +1163,13 @@ class MoveCartesianCollisionFreeOperation(MoveCartesianOperation):
                                                                   i,
                                                                   ik_jump_threshold))
 
-        p = self.__move_group.motion_service.plan_collision_free_joint_path(path,
-                                                                            self.__plan_parameters)
+        p = self._move_group.motion_service.plan_collision_free_joint_path(path,
+                                                                           self._plan_parameters)
 
-        t = self.__move_group.motion_service.plan_move_joints(p,
-                                                              self.__plan_parameters)
+        t = self._move_group.motion_service.plan_move_joints(p,
+                                                             self._plan_parameters)
 
-        return Plan(self.__move_group, t, self.__plan_parameters)
+        return Plan(self._move_group, t, self._plan_parameters)
 
 
 class MoveCartesianLinearOperation(MoveCartesianOperation):
@@ -1195,16 +1207,16 @@ class MoveCartesianLinearOperation(MoveCartesianOperation):
             If trajectory planning service is not available or finish
             unsuccessfully
         """
-        seed = self.__seed or self.__move_group.get_current_joint_positions()
+        seed = self._seed or self._move_group.get_current_joint_positions()
 
-        start = self.__start
+        start = self._start
 
-        path = self.__target
+        path = self._target
 
         if isinstance(start, Pose):
             path = path.prepend(start)
 
-        t = self.__move_group.motion_service.plan_move_pose_linear(path, seed,
-                                                                   self.__task_space_plan_parameters)
+        t = self._move_group.motion_service.plan_move_pose_linear(path, seed,
+                                                                  self._task_space_plan_parameters)
 
-        return Plan(self.__move_group, t, self.__plan_parameters)
+        return Plan(self._move_group, t, self._plan_parameters)
