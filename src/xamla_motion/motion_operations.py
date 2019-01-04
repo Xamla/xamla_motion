@@ -442,7 +442,7 @@ class MoveJointsOperation(MoveOperation):
         start = self._start or self._move_group.get_current_joint_positions()
         try:
             path = self._target.prepend(start)
-        except TypeError:
+        except AttributeError:
             path = JointPath.from_start_stop_point(start, self._target)
         joint_path = JointPath(self._move_group.joint_set, path)
         t = self._move_group.motion_service.plan_move_joints(joint_path,
@@ -716,7 +716,7 @@ class MoveJointsCollisionFreeOperation(MoveJointsOperation):
         start = self._start or self._move_group.get_current_joint_positions()
         try:
             path = self._target.prepend(start)
-        except TypeError:
+        except AttributeError:
             path = JointPath.from_start_stop_point(start, self._target)
         joint_path = JointPath(self._move_group.joint_set, path)
         p = self._move_group.motion_service.plan_collision_free_joint_path(joint_path,
