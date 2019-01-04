@@ -479,7 +479,7 @@ class MoveJointsOperation(MoveOperation):
         TypeError
             If joint_value is not of expected type JointValue
         """
-        if not isinstance(joint_value, (None, JointValues)):
+        if not isinstance(joint_value, (type(None), JointValues)):
             raise TypeError('value is not of expected type JointValues')
 
         return super(MoveJointsOperation, self).with_start(joint_value)
@@ -835,7 +835,7 @@ class MoveCartesianOperation(MoveOperation):
         TypeError
             If start is not one of expected types JointValue, Pose, None
         """
-        if not isinstance(start, (None, JointValues, Pose)):
+        if not isinstance(start, (type(None), JointValues, Pose)):
             raise TypeError('start is not one of expected types'
                             ' None, JointValues')
 
@@ -861,7 +861,7 @@ class MoveCartesianOperation(MoveOperation):
         TypeError
             If joint_value is not one of expected types JointValue, Pose, None
         """
-        if not isinstance(joint_value, (None, JointValues, Pose)):
+        if not isinstance(joint_value, (type(None), JointValues, Pose)):
             raise TypeError('value is not one of expected types Pose,'
                             ' None, JointValues')
 
