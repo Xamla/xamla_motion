@@ -1541,7 +1541,8 @@ class MotionService(object):
                                  seed=[],
                                  end_effector_link='',
                                  timeout=None,
-                                 attempts=1):
+                                 attempts=1,
+                                 const_seed=False):
         """
         Query inverse kinematic solutions one pose
 
@@ -1556,10 +1557,13 @@ class MotionService(object):
             Numerical seed to control joint configuration
         end_effector_link : str convertable (optinal)
             necessary if poses are defined for end effector link
-        timeout : datatime.timedelta
+        timeout : datatime.timedelta (optional)
             timeout
-        attempts : int convertable
+        attempts : int convertable (optional default 1)
             Attempts to find a solution or each pose
+        const_seed : bool convertable (optional default False)
+            use constant seed instead of consecutive seeds
+
 
         Returns
         -------
@@ -1592,7 +1596,8 @@ class MotionService(object):
                                                     parameters,
                                                     seed,
                                                     timeout,
-                                                    attempts)
+                                                    attempts,
+                                                    const_seed)
 
         if not result.succeeded:
             raise ServiceException('ik service call failed with error'
@@ -1619,10 +1624,10 @@ class MotionService(object):
             Numerical seed to control joint configuration
         timeout : datatime.timedelta
             timeout
-        attempts : int convertable
-            Attempts to find a solution or each pose
-        const_seed : bool convertable
-            todo
+        attempts : int convertable (optional default 1)
+            attempts to find a solution for each pose
+        const_seed : bool convertable (optional default False)
+            use constant seed instead of consecutive seeds
 
         Returns
         -------
