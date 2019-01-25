@@ -11,9 +11,14 @@ import enum
 
 
 class SampleArea(ABC):
+
+    """
+    This class defines a sample area.
+    """
+
     def __init__(self, origin: Pose, size: Iterable[float],
                  resolution: Iterable[float],
-                 quaternions: Iterable[np.ndarray]):
+                 quaternions: Iterable[Quaternion]):
         self._origin = origin
         self._size = size
         self._resolution = resolution
@@ -45,8 +50,29 @@ class SampleArea(ABC):
 
 class SampleRectangle(SampleArea):
 
+    """
+    This class defines an area where positions are sampled 
+    defined by the parameters.
+    """
+
     def __init__(self, origin: Pose, size: Iterable[float],
-                 resolution: Iterable[float], quaternions: Iterable[Quaternion]):
+                 resolution: Iterable[float], quaternions: Iterable[Quaternion]) -> np.ndarray:
+        """
+        Sample poses 
+
+        Parameters
+        ----------
+        origin : Pose
+            The origin of the rectangle as a midpoint
+        size : Iterable[float]
+            The size if the rectangle
+            Must be 3-dimensional
+        resolution : Iterable[float]
+            The 
+        quaternions: Iterable[Quaternion]
+            A set of quaternions
+
+        """
 
         super(SampleRectangle, self).__init__(
             origin, size, resolution, quaternions)
@@ -71,7 +97,7 @@ class SampleRectangle(SampleArea):
                                              xyz[2].ravel(),
                                              np.ones(xyz[0].size)))
                                   )[0:3, :]
-
+    
         return sample_positions
 
 
@@ -84,6 +110,11 @@ class TrajectoryCacheType(enum.Enum):
 
 
 class TaskTrajectoryCache(object):
+
+    """
+    The TaskTrajectoryCache manages a set of trajectories.
+
+    """
 
     def __init__(self, start: Union[Pose, Iterable],
                  target: Union[Pose, Iterable],
@@ -148,7 +179,7 @@ class TaskTrajectoryCache(object):
             index = int(index)
 
             if float(dist) > max_position_diff_radius:
-                raise RuntimeError('distance {} between nearst cached trajectory'
+                raise RuntimeError('distance {} between nearest cached trajectory'
                                    ' end point and requested target is greater than'
                                    ' defined max difference {}'.format(float(dist),
                                                                        max_position_diff_radius))
@@ -168,7 +199,7 @@ class TaskTrajectoryCache(object):
             index = int(index)
 
             if float(dist) > max_position_diff_radius:
-                raise RuntimeError('distance {} between nearst cached trajectory'
+                raise RuntimeError('distance {} between nearest cached trajectory'
                                    ' start point and requested start is greater than'
                                    ' defined max difference {}'.format(float(dist),
                                                                        max_position_diff_radius))
@@ -215,12 +246,33 @@ def _generate_trajectory(start: Pose, target: Pose,
 def create_trajectory_cache(end_effector: EndEffector,
                             seed: JointValues,
                             start: Union[Pose, SampleArea],
-                            target: Union[Pose, SampleArea]):
+                            target: Union[Pose, SampleArea]) -> TaskTrajectoryCache:
+
+    """
+    Factory function to create a TaskTrajectoryCache instance
+
+    Parameters
+    ----------
+    end_effector : EndEffector
+        The end effector being used
+    seed : JointValues
+        A seed being a template for the trajectories
+    start : Union[Pose, SampleArea]
+        A Pose or a SampleArea, defining the start of the trajectory(/ies)
+    target: Union[Pose, SampleArea]
+        A Pose or a SampleArea, defining the end of the trajectory(/ies)
+
+    Returns
+        -------
+    TaskTrajectoryCache:
+        The trajectory cache created.
+    """
 
     if isinstance(start, SampleArea) and isinstance(start, SampleArea):
         raise NotImplementedError('start and target as areas is'
                                   ' currently not supported')
     elif isinstance(start, SampleArea) and isinstance(target, Pose):
+        #MANYTOONE
         starts = []
         executables = []
         excludes = []
@@ -257,6 +309,7 @@ def create_trajectory_cache(end_effector: EndEffector,
                                    cache_type=TrajectoryCacheType.MANYTOONE)
 
     elif isinstance(target, SampleArea) and isinstance(start, Pose):
+        # ONETOMANY
         targets = []
         executables = []
         excludes = []
@@ -274,7 +327,7 @@ def create_trajectory_cache(end_effector: EndEffector,
                                                              seed))
                     poses.append(pose)
             except Exception as exc:
-                print('remove start position: {} because of {}'.format(pose.translation,
+                print('remove target position: {} because of {}'.format(pose.translation,
                                                                        exc))
                 excludes.append(i)
                 continue
