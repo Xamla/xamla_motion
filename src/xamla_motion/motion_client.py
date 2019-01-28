@@ -1085,7 +1085,8 @@ class EndEffector(object):
                            collision_check: bool,
                            seed: JointValues=None,
                            timeout: timedelta=None,
-                           const_seed: bool=False) -> IkResults:
+                           const_seed: bool=False,
+                           attempts: int=1) -> IkResults:
         """
         inverse kinematic solutions for one pose
 
@@ -1101,8 +1102,10 @@ class EndEffector(object):
             Numerical seed to control joint configuration
         timeout : datatime.timedelta (optional)
             timeout
-        const_seed : boolean (optional)
+        const_seed : boolean (optional default False)
             Determines if for each pose in poses the same seed should be used
+        attempts : int (optional default 1)
+            number of attempts to find solution
 
         Returns
         -------
@@ -1133,13 +1136,15 @@ class EndEffector(object):
                                                          self.__link_name,
                                                          timeout)
 
+
         return path
 
     def inverse_kinematics_many(self, poses: (Pose, CartesianPath),
                                 collision_check: bool,
                                 seed: JointValues=None,
                                 timeout: timedelta=None,
-                                const_seed: bool=False) -> IkResults:
+                                const_seed: bool=False,
+                                attempts: int=1) -> IkResults:
         """
         inverse kinematic solutions for many poses
 
@@ -1155,8 +1160,10 @@ class EndEffector(object):
             Numerical seed to control joint configuration
         timeout : datatime.timedelta (optional)
             timeout
-        const_seed : boolean (optional)
+        const_seed : boolean (optional default False)
             Determines if for each pose in poses the same seed should be used
+        attempts : int (optional default 1)
+            number of attempts to find solution
 
         Returns
         -------
@@ -1239,11 +1246,13 @@ class EndEffector(object):
         TypeError
             If target is not one of types Pose, CartesianPath
             If all other inputs are not convertable to specified types
+
         """
 
         if not isinstance(target, (Pose, CartesianPath)):
             raise TypeError('target is not one of expected types'
                             ' Pose, CartesianPath')
+
 
         if not isinstance(seed, (type(None), JointValues)):
             raise TypeError('seed is not of expected type JointValues')
@@ -1275,6 +1284,7 @@ class EndEffector(object):
         """
         Create MoveCartesianCollisionFreeOperation for target joint positions
 
+
         Parameters
         ----------
         target : Pose or CartesianPath
@@ -1301,6 +1311,7 @@ class EndEffector(object):
 
         Returns
         -------
+
         move_joint_operations : MoveCartesianCollisionFreeOperation
             Instance of MoveCartesianCollisionFreeOperation
 

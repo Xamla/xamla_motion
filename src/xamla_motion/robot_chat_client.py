@@ -32,7 +32,7 @@ class RobotChatClient(object):
         ------
         ServiceException:
             If connection to ROSVITA RoboChat could
-            not be established 
+            not be established
         """
         self.__robochat_channel_service_name = '/robochat/channel_command'
         self.__robochat_message_service_name = '/robochat/message_command'
@@ -106,7 +106,7 @@ class RobotChatClient(object):
         Raises
         ------
         ServiceException:
-            If service call to ROSVITA RoboChat fails 
+            If service call to ROSVITA RoboChat fails
         """
         self._call_channel_command(name, 'create', [topic, str(backlog)])
 
@@ -122,7 +122,7 @@ class RobotChatClient(object):
         Raises
         ------
         ServiceException:
-            If service call to ROSVITA RoboChat fails 
+            If service call to ROSVITA RoboChat fails
         """
         self._call_channel_command(name, 'delete')
 
@@ -138,7 +138,7 @@ class RobotChatClient(object):
         Raises
         ------
         ServiceException:
-            If service call to ROSVITA RoboChat fails 
+            If service call to ROSVITA RoboChat fails
         """
         self._call_channel_command(name, 'clear')
 
@@ -154,7 +154,7 @@ class RobotChatClient(object):
         Raises
         ------
         ServiceException:
-            If service call to ROSVITA RoboChat fails 
+            If service call to ROSVITA RoboChat fails
         """
         self._call_channel_command(name, 'list')
 
@@ -172,7 +172,7 @@ class RobotChatClient(object):
         Raises
         ------
         ServiceException:
-            If service call to ROSVITA RoboChat fails 
+            If service call to ROSVITA RoboChat fails
         """
         self._call_channel_command(name, 'set_topic', [topic])
 
@@ -190,7 +190,7 @@ class RobotChatClient(object):
         Raises
         ------
         ServiceException:
-            If service call to ROSVITA RoboChat fails 
+            If service call to ROSVITA RoboChat fails
         """
         return self._call_message_command(channel_name, 'add', text, None, [disposition])
 
@@ -208,7 +208,7 @@ class RobotChatClient(object):
         Raises
         ------
         ServiceException:
-            If service call to ROSVITA RoboChat fails 
+            If service call to ROSVITA RoboChat fails
         """
         return self._call_message_command(channel_name, 'remove', None, message_id)
 
@@ -228,7 +228,7 @@ class RobotChatClient(object):
         Raises
         ------
         ServiceException:
-            If service call to ROSVITA RoboChat fails 
+            If service call to ROSVITA RoboChat fails
         """
         return self._call_message_command(channel_name, 'update', text, message_id)
 
@@ -257,7 +257,7 @@ class RobotChatClient(object):
         Raises
         ------
         ServiceException:
-            If action call to ROSVITA RoboChat fails 
+            If action call to ROSVITA RoboChat fails
         """
         query_action = actionlib.SimpleActionClient(self.__robochat_query_action_name,
                                                     RobochatQueryAction)
@@ -283,7 +283,7 @@ class RobotChatClient(object):
 
 class RobotChatSteppedMotion(object):
     """
-    Class to run a supervised motion from python 
+    Class to run a supervised motion from python
     with interaction dialog in ROSVITA
     """
 
@@ -350,8 +350,7 @@ class RobotChatSteppedMotion(object):
                 self._update_progress(channel_name, message_id))
             await self.stepped_client.action_done_future
         except ServiceException as exc:
-            if (exc.error_code != ErrorCodes.SUCCESS and
-                    exc.error_code != ErrorCodes.PREEMPTED):
+            if exc.error_code != ErrorCodes.SUCCESS:
                 raise ServiceException('Robot chat stepped motion ends '
                                        'not successful') from exc
         finally:

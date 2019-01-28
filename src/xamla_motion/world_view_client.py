@@ -403,7 +403,7 @@ class WorldViewClient(object):
                                response.element_paths,
                                response.points):
 
-                path = pathlib.PurePath(e) / n
+                path = pathlib.PurePath(e)
                 result[path] = JointValues.from_joint_values_point_msg(p)
             return result
         else:
@@ -644,7 +644,7 @@ class WorldViewClient(object):
                                response.element_paths,
                                response.points):
 
-                path = pathlib.PurePath(e) / n
+                path = pathlib.PurePath(e)
                 result[path] = Pose.from_posestamped_msg(p)
             return result
         else:
@@ -887,7 +887,7 @@ class WorldViewClient(object):
                                response.element_paths,
                                response.points):
 
-                path = pathlib.PurePath(e) / n
+                path = pathlib.PurePath(e)
                 result[path] = CartesianPath.from_cartesian_path_msg(p)
             return result
         else:
@@ -1132,7 +1132,7 @@ class WorldViewClient(object):
                                response.element_paths,
                                response.points):
 
-                path = pathlib.PurePath(e) / n
+                path = pathlib.PurePath(e)
                 result[path] = CollisionObject.from_collision_object_msg(p)
             return result
         else:

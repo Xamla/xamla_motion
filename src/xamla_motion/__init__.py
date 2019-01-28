@@ -12,3 +12,6 @@ from .motion_operations import (MoveCartesianArgs,
 from .motion_service import MotionService, SteppedMotionClient
 from .robot_chat_client import RobotChatClient, RobotChatSteppedMotion
 from .world_view_client import WorldViewClient
+
+from .cache import Cache
+
