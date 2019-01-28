@@ -7,6 +7,7 @@ from sklearn.neighbors import BallTree
 from . import EndEffector, MoveGroup
 from .data_types import CartesianPath, JointValues, Pose, JointTrajectory
 
+
 import enum
 
 
