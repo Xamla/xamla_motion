@@ -726,7 +726,7 @@ class MoveGroup(object):
             or finish not successfully
         """
 
-        return self.move_joints_operation(target=target, 
+        await self.move_joints_operation(target=target, 
                                           collision_check=velocity_scaling,
                                           max_deviation=max_deviation,
                                           acceleration_scaling=acceleration_scaling)\
@@ -836,6 +836,45 @@ class MoveGroup(object):
                                                          acceleration_scaling=acceleration_scaling)\
             .plan()\
             .execute_supervised()
+
+
+    async def move_joints_collision_free(self, target, 
+                                         velocity_scaling=None,
+                                         max_deviation=None,
+                                         acceleration_scaling=None):
+        """
+        Asynchronous plan and execute collision free joint trajectory from joint space input
+        Parameters
+        ----------
+        target : JointValues or JointPath
+            Target joint positions or joint path
+        velocity_scaling : None or float convertable
+            Scaling factor which is applied on the maximal
+            possible joint velocities
+        max_deviation : None or float convertable
+            Defines the maximal deviation from trajectory points
+            when it is a fly-by-point in joint space
+        acceleration_scaling : None or float convertable
+            Scaling factor which is applied on the maximal
+            possible joint accelerations
+        Raises
+        ------
+        TypeError
+            If target is not one of types JointValues, JointPath
+            If all other inputs are not convertable to specified types
+        ValueError
+            If scaling inputs are not between 0.0 and 1.0
+        ServiceError
+            If underlying services from motion server are not available
+            or finish not successfully
+        """
+
+        await self.move_joints_collision_free_operation(target=target, 
+                                                         velocity_scaling=velocity_scaling,
+                                                         max_deviation=max_deviation,
+                                                         acceleration_scaling=acceleration_scaling)\
+            .plan()\
+            .execute_async()
 
     def move_joints_collision_free_operation(self, target: Union[JointValues, JointPath],
                                    velocity_scaling: Union[None, float]=None,
@@ -1432,7 +1471,33 @@ class EndEffector(object):
 
         return MoveCartesianCollisionFreeOperation(args)
 
-    def move_cartesian_linear(self, target: Union[Pose, CartesianPath],
+
+    async def move_poses_linear(self, target, velocity_scaling=None,
+                                collision_check=None, max_deviation=None,
+                                acceleration_scaling=None):
+        print("Deprecated! Please use move_cartesian_linear")
+        await self.move_cartesian_linear(target=target, 
+                                     velocity_scaling=velocity_scaling,
+                                     collision_check=collision_check, 
+                                     max_deviation=max_deviation,
+                                     acceleration_scaling=acceleration_scaling)
+
+    async def move_cartesian_linear(self, target: Union[Pose, CartesianPath], 
+                                    seed: Union[None, JointValues]=None,
+                                    velocity_scaling: Union[None, float]=None,
+                                    collision_check: Union[None, bool]=None,
+                                    max_deviation: Union[None, float]=None,
+                                    acceleration_scaling: Union[None, float]=None):
+        await self.move_cartesian_linear_operation(target=target, 
+                                     seed=seed,
+                                     velocity_scaling=velocity_scaling,
+                                     collision_check=collision_check, 
+                                     max_deviation=max_deviation,
+                                     acceleration_scaling=acceleration_scaling)\
+            .plan()\
+            .execute_async()
+
+    def move_cartesian_linear_operation(self, target: Union[Pose, CartesianPath],
                               seed: Union[None, JointValues]=None,
                               velocity_scaling: Union[None, float]=None,
                               collision_check: Union[None, bool]=None,
