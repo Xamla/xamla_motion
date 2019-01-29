@@ -98,7 +98,7 @@ class SampleRectangle(SampleArea):
                                              xyz[2].ravel(),
                                              np.ones(xyz[0].size)))
                                   )[0:3, :]
-    
+
         return sample_positions
 
 
@@ -218,6 +218,9 @@ class TaskTrajectoryCache(object):
             raise NotImplementedError('many to many cached trajectories are '
                                       'currently not supported')
 
+    def to_dict(self):
+        return vars(self)
+
 
 def _generate_trajectory(start: Pose, target: Pose,
                          end_effector: EndEffector,
@@ -248,7 +251,6 @@ def create_trajectory_cache(end_effector: EndEffector,
                             seed: JointValues,
                             start: Union[Pose, SampleArea],
                             target: Union[Pose, SampleArea]) -> TaskTrajectoryCache:
-
     """
     Factory function to create a TaskTrajectoryCache instance
 
@@ -273,7 +275,7 @@ def create_trajectory_cache(end_effector: EndEffector,
         raise NotImplementedError('start and target as areas is'
                                   ' currently not supported')
     elif isinstance(start, SampleArea) and isinstance(target, Pose):
-        #MANYTOONE
+        # MANYTOONE
         starts = []
         executables = []
         excludes = []
@@ -329,7 +331,7 @@ def create_trajectory_cache(end_effector: EndEffector,
                     poses.append(pose)
             except Exception as exc:
                 print('remove target position: {} because of {}'.format(pose.translation,
-                                                                       exc))
+                                                                        exc))
                 excludes.append(i)
                 continue
             targets.append(tuple(poses))
