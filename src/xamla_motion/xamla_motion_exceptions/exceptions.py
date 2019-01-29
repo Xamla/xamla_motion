@@ -37,7 +37,7 @@ class ServiceException(XamlaMotionException):
     """
 
     def __init__(self, msg, error_code=None, original_exception=None):
-        super(XamlaMotionException, self).__init__(msg)
+        super(ServiceException, self).__init__(msg)
         self.original_exception = original_exception
         self.error_code = error_code
 
@@ -48,5 +48,5 @@ class ArgumentError(XamlaMotionException):
     """
 
     def __init__(self, msg, original_exception=None):
-        super(XamlaMotionException, self).__init__(msg)
+        super(ArgumentError, self).__init__(msg)
         self.original_exception = original_exception
