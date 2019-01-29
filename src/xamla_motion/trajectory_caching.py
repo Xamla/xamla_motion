@@ -52,14 +52,14 @@ class SampleArea(ABC):
 class SampleRectangle(SampleArea):
 
     """
-    This class defines an area where positions are sampled 
+    This class defines an area where positions are sampled
     defined by the parameters.
     """
 
     def __init__(self, origin: Pose, size: Iterable[float],
                  resolution: Iterable[float], quaternions: Iterable[Quaternion]) -> np.ndarray:
         """
-        Sample poses 
+        Sample poses
 
         Parameters
         ----------
@@ -69,7 +69,7 @@ class SampleRectangle(SampleArea):
             The size if the rectangle
             Must be 3-dimensional
         resolution : Iterable[float]
-            The 
+            The
         quaternions: Iterable[Quaternion]
             A set of quaternions
 
@@ -125,7 +125,11 @@ class TaskTrajectoryCache(object):
                  end_effector_name: str,
                  cache_type: TrajectoryCacheType):
 
-        self._start = start
+        if isinstance(start, Iterable):
+            self._start = tuple(start)
+        else:
+            self._start = start
+
         if isinstance(target, Iterable):
             self._target = tuple(target)
         else:
@@ -175,6 +179,11 @@ class TaskTrajectoryCache(object):
             return self._trajectory, start, target
 
         elif self._cache_type == TrajectoryCacheType.ONETOMANY:
+            if start != self._start:
+                raise RuntimeError('requested start {} and cached start {}'
+                                   ' are not equal'.format(start,
+                                                           self._start))
+
             qv = np.expand_dims(target.translation, 0)
             dist, index = self._target_ball_tree.query(qv)
             index = int(index)
@@ -195,6 +204,11 @@ class TaskTrajectoryCache(object):
             return cached_trajectory, start, cached_target
 
         elif self._cache_type == TrajectoryCacheType.MANYTOONE:
+            if target != self._target:
+                raise RuntimeError('requested target {} and cached target {}'
+                                   ' are not equal'.format(target,
+                                                           self._target))
+
             qv = np.expand_dims(start.translation, 0)
             dist, index = self._start_ball_tree.query(qv)
             index = int(index)
