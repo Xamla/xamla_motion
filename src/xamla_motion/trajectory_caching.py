@@ -52,14 +52,14 @@ class SampleArea(ABC):
 class SampleRectangle(SampleArea):
 
     """
-    This class defines an area where positions are sampled 
+    This class defines an area where positions are sampled
     defined by the parameters.
     """
 
     def __init__(self, origin: Pose, size: Iterable[float],
                  resolution: Iterable[float], quaternions: Iterable[Quaternion]) -> np.ndarray:
         """
-        Sample poses 
+        Sample poses
 
         Parameters
         ----------
@@ -69,7 +69,7 @@ class SampleRectangle(SampleArea):
             The size if the rectangle
             Must be 3-dimensional
         resolution : Iterable[float]
-            The 
+            The
         quaternions: Iterable[Quaternion]
             A set of quaternions
 
@@ -98,7 +98,7 @@ class SampleRectangle(SampleArea):
                                              xyz[2].ravel(),
                                              np.ones(xyz[0].size)))
                                   )[0:3, :]
-    
+
         return sample_positions
 
 
@@ -125,7 +125,11 @@ class TaskTrajectoryCache(object):
                  end_effector_name: str,
                  cache_type: TrajectoryCacheType):
 
-        self._start = start
+        if isinstance(start, Iterable):
+            self._start = tuple(start)
+        else:
+            self._start = start
+
         if isinstance(target, Iterable):
             self._target = tuple(target)
         else:
@@ -175,6 +179,11 @@ class TaskTrajectoryCache(object):
             return self._trajectory, start, target
 
         elif self._cache_type == TrajectoryCacheType.ONETOMANY:
+            if start != self._start:
+                raise RuntimeError('requested start {} and cached start {}'
+                                   ' are not equal'.format(start,
+                                                           self._start))
+
             qv = np.expand_dims(target.translation, 0)
             dist, index = self._target_ball_tree.query(qv)
             index = int(index)
@@ -195,6 +204,11 @@ class TaskTrajectoryCache(object):
             return cached_trajectory, start, cached_target
 
         elif self._cache_type == TrajectoryCacheType.MANYTOONE:
+            if target != self._target:
+                raise RuntimeError('requested target {} and cached target {}'
+                                   ' are not equal'.format(target,
+                                                           self._target))
+
             qv = np.expand_dims(start.translation, 0)
             dist, index = self._start_ball_tree.query(qv)
             index = int(index)
@@ -217,6 +231,9 @@ class TaskTrajectoryCache(object):
         else:
             raise NotImplementedError('many to many cached trajectories are '
                                       'currently not supported')
+
+    def to_dict(self):
+        return vars(self)
 
 
 def _generate_trajectory(start: Pose, target: Pose,
@@ -248,7 +265,6 @@ def create_trajectory_cache(end_effector: EndEffector,
                             seed: JointValues,
                             start: Union[Pose, SampleArea],
                             target: Union[Pose, SampleArea]) -> TaskTrajectoryCache:
-
     """
     Factory function to create a TaskTrajectoryCache instance
 
@@ -273,7 +289,7 @@ def create_trajectory_cache(end_effector: EndEffector,
         raise NotImplementedError('start and target as areas is'
                                   ' currently not supported')
     elif isinstance(start, SampleArea) and isinstance(target, Pose):
-        #MANYTOONE
+        # MANYTOONE
         starts = []
         executables = []
         excludes = []
@@ -329,7 +345,7 @@ def create_trajectory_cache(end_effector: EndEffector,
                     poses.append(pose)
             except Exception as exc:
                 print('remove target position: {} because of {}'.format(pose.translation,
-                                                                       exc))
+                                                                        exc))
                 excludes.append(i)
                 continue
             targets.append(tuple(poses))
