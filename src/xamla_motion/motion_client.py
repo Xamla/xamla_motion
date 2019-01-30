@@ -24,7 +24,7 @@ from typing import Union
 import numpy as np
 
 from .data_types import (CartesianPath, EndEffectorPose, IkResults, JointPath,
-                         JointSet, JointValues, Pose)
+                         JointSet, JointValues, JointStates, Pose)
 from .motion_operations import (MoveCartesianArgs,
                                 MoveCartesianCollisionFreeOperation,
                                 MoveCartesianLinearOperation,
@@ -32,6 +32,10 @@ from .motion_operations import (MoveCartesianArgs,
                                 MoveJointsCollisionFreeOperation,
                                 MoveJointsOperation)
 from .motion_service import MotionService, SteppedMotionClient
+
+# TODO: please add Deprecated to Rosvita depndencies
+
+from deprecated import deprecated 
 
 
 class MoveGroup(object):
@@ -42,30 +46,30 @@ class MoveGroup(object):
     Methods
     -------
     set_default_end_effector(end_effector_name)
-        set one of the end effector from the list of available ones as default
+        Set one of the end effector from the list of available ones as default
     get_end_effector(name)
         Get the end effector specified by name or the default end effector
     get_current_joint_states()
         Returns the current joint states of the move group joints
     get_current_joint_positions()
         Returns the current joint positions of the move group joints
-    plan_move_joints(target, velocity_scaling=None, collision_check=None,
-                     max_deviation=None, acceleration_scaling=None)
+    plan_move_joints(target, velocity_scaling=None, collision_check: Union[None, bool]=None,
+                     max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
         Plans a trajectory from current state to target joint positions
     plan_move_joints_collision_free(
-        target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+        target, velocity_scaling=None, collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
         Plans a collision free trajectory from current to target joint positions
     move_joints_collision_free(target, velocity_scaling=None,
-                               collision_check=None, max_deviation=None, acceleration_scaling=None)
+                               collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
         Asynchronous plan and execute collision free joint trajectory
     move_joints_collision_free_supervised(
-        target, velocity_scaling=None, collision_check=None, max_deviation=None, acceleration_scaling=None)
+        target, velocity_scaling=None, collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
         Plan collision free joint trajectory and creates a supervised executor
-    move_joints(target, velocity_scaling=None, collision_check=None,
-                max_deviation=None, acceleration_scaling=None)
+    move_joints(target, velocity_scaling=None, collision_check: Union[None, bool]=None,
+                max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
         Asynchronous plan and execute joint trajectory
-    move_joints_supervised(target, velocity_scaling=None, collision_check=None,
-                           max_deviation=None, acceleration_scaling=None)
+    move_joints_supervised(target, velocity_scaling=None, collision_check: Union[None, bool]=None,
+                           max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
         Plan joint trajectory and creates a supervised executor
     """
 
@@ -437,7 +441,7 @@ class MoveGroup(object):
 
     def set_default_end_effector(self, end_effector_name):
         """
-        set one of the end effector from the list of available ones as default
+        Set one of the end effector from the list of available ones as default
 
         Parameters
         ----------
@@ -469,14 +473,14 @@ class MoveGroup(object):
             collision_check=False)
         self.__task_space_plan_parameters = p
 
-    def get_end_effector(self, name=None):
+    def get_end_effector(self, name: Union[None, str]=None) -> "EndEffector":
         """
         Get the end effector specified by name or
         the default end effector if name is not provided
 
         Parameters
         ---------
-        name : str convertable (optinal)
+        name : Union[None, str]
             Name of the end effector which should be returned
 
         Returns
@@ -504,7 +508,7 @@ class MoveGroup(object):
                 raise RuntimeError('move group: ' + self.__name +
                                    ' does not have any end effectors') from exc
 
-    def get_current_joint_states(self):
+    def get_current_joint_states(self) -> JointStates:
         """
         Returns the current joint states of the move group joints
 
@@ -522,7 +526,7 @@ class MoveGroup(object):
 
         return self.__m_service.query_joint_states(self.joint_set)
 
-    def get_current_joint_positions(self):
+    def get_current_joint_positions(self) -> JointValues:
         """
         Returns the current joint positions of the move group joints
 
@@ -540,8 +544,8 @@ class MoveGroup(object):
 
         return self.get_current_joint_states().positions
 
-    def _build_plan_parameters(self, velocity_scaling=None, collision_check=None,
-                               max_deviation=None, acceleration_scaling=None,
+    def _build_plan_parameters(self, velocity_scaling=None, collision_check: Union[None, bool]=None,
+                               max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None,
                                sample_resolution=None):
         """
         Build an instance of PlanParameters from input and default values
@@ -602,9 +606,9 @@ class MoveGroup(object):
 
     # TODO NERVER USED ANYWHERE
     def _build_task_space_plan_parameters(self, velocity_scaling=None,
-                                          collision_check=None,
-                                          max_deviation=None,
-                                          acceleration_scaling=None,
+                                          collision_check: Union[None, bool]=None,
+                                          max_deviation: Union[None, float]=None,
+                                          acceleration_scaling: Union[None, float]=None,
                                           sample_resolution=None,
                                           ik_jump_threshold=None,
                                           end_effector_name=None):
@@ -693,11 +697,12 @@ class MoveGroup(object):
 
         return builder.build()
 
-    def plan_move_joints(self, target, 
-                         velocity_scaling=None,
-                         collision_check=None,
-                         max_deviation=None, 
-                         acceleration_scaling=None):
+
+    @deprecated(reason="Use the move_joints_operation(...).plan() to receive a Plan object")
+    def plan_move_joints(self, target, velocity_scaling=None,
+                         collision_check: Union[None, bool]=None,
+                         max_deviation: Union[None, float]=None, 
+                         acceleration_scaling: Union[None, float]=None):
         """
         TODO: Might be deprecated, since a the Plan class already contains the information
         TODO: Also test if this behaves as intended
@@ -737,9 +742,6 @@ class MoveGroup(object):
             If underlying services from motion server are not available
             or finish not successfully
         """ 
-        # TODO: Verify this
-        print("Deprecated. Use the move_joints_operation(...).plan() to receive a Plan object")
-
         plan =  self.move_joints_operation(target=target, 
                                           velocity_scaling=velocity_scaling,
                                           collision_check=collision_check,
@@ -749,10 +751,11 @@ class MoveGroup(object):
         
         return plan.trajectory, plan.parameters
 
+    @deprecated(reason="Deprecated. Use the move_joints_collision_free_operation(...).plan() to receive a Plan object")
     def plan_move_joints_collision_free(self, target,       
                                         velocity_scaling=None,
-                                        max_deviation=None,
-                                        acceleration_scaling=None):
+                                        max_deviation: Union[None, float]=None,
+                                        acceleration_scaling: Union[None, float]=None):
         """
         TODO: Might be deprecated, since a the Plan class already contains the information
         TODO: Also test if this behaves as intended
@@ -787,9 +790,6 @@ class MoveGroup(object):
             If underlying services from motion server are not available
             or finish not successfully
         """
-        # TODO: Verify this
-        print("Deprecated. Use the move_joints_collision_free_operation(...).plan() to receive a Plan object")
-
         plan =  self.move_joints_collision_free_operation(target=target, 
                                           velocity_scaling=velocity_scaling,
                                           max_deviation=max_deviation,
@@ -798,12 +798,12 @@ class MoveGroup(object):
         
         return plan.trajectory, plan.parameters
 
-
+    @deprecated(reason="Please use move_cartesian")
     async def move_joints(self, target, 
                           velocity_scaling: Union[None, float]=None,
-                          collision_check=None,
-                          max_deviation=None,
-                          acceleration_scaling=None):
+                          collision_check: Union[None, bool]=None,
+                          max_deviation: Union[None, float]=None,
+                          acceleration_scaling: Union[None, float]=None):
         """
         Asynchronous plan and execute joint trajectory from joint space input
         Parameters
@@ -1002,8 +1002,8 @@ class MoveGroup(object):
     async def move_joints_collision_free(self, target, 
                                          velocity_scaling=None,
                                          collision_check: Union[None, bool]=None,
-                                         max_deviation=None,
-                                         acceleration_scaling=None):
+                                         max_deviation: Union[None, float]=None,
+                                         acceleration_scaling: Union[None, float]=None):
         """
         Asynchronous plan and execute collision free joint trajectory from joint space input
         Parameters
@@ -1122,22 +1122,22 @@ class EndEffector(object):
         cartesian_path, collision_check, seed, timeout, const_seed)
         inverse kinematic solutions for many poses
     move_poses(target, seed=None, velocity_scaling=None,
-               collision_check=None, max_deviation=None, acceleration_scaling=None)
+               collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
         Asynchronous plan and execute trajectory from task space input
     move_poses_supervised(target, seed=None, velocity_scaling=None,
-                          collision_check=None, max_deviation=None, acceleration_scaling=None)
+                          collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
         Plan trajectory from task space input and create executor
     move_poses_collision_free(target, seed=None, velocity_scaling=None,
-                              max_deviation=None, acceleration_scaling=None)
+                              max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
         Asynchronous plan and execute collision free trajectory from task space input
     move_poses_collision_free_supervised(
-        target, seed=None, velocity_scaling=None, max_deviation=None, acceleration_scaling=None)
+        target, seed=None, velocity_scaling=None, max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
         Plan collision free trajectory from task space input and create executor
-    plan_poses_linear(target, velocity_scaling=None, collision_check=None,
-                      max_deviation=None, acceleration_scaling=None)
+    plan_poses_linear(target, velocity_scaling=None, collision_check: Union[None, bool]=None,
+                      max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
         Plans a trajectory with linear movements from task space input
-    move_poses_linear(target, velocity_scaling=None, collision_check=None,
-                      max_deviation=None, acceleration_scaling=None)
+    move_poses_linear(target, velocity_scaling=None, collision_check: Union[None, bool]=None,
+                      max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
         Plans and executes a trajectory with linear movements from task space input
     """
 
@@ -1281,63 +1281,63 @@ class EndEffector(object):
 
 
 
-    # TODO: NEVER CALLED FROM WITHIN THE CLASS
-    #def _build_task_space_plan_parameters(self, velocity_scaling=None,
-    #                                      collision_check=None,
-    #                                      max_deviation=None,
-    #                                      acceleration_scaling=None,
-    #                                      sample_resolution=None,
-    #                                      ik_jump_threshold=None):
-    #    """
-    #    Build an instance of TaskSpacePlanParameters from input
-    #    and default values
-    #
-    #    All attributes with value None are ignored and instead the default
-    #    values are used defined in default_task_space_plan_parameters
-    #    are used
-    #
-    #    Parameters
-    #    ----------
-    #    velocity_scaling : None or float convertable
-    #        Scaling factor which is applied on the maximal
-    #        possible joint velocities
-    #    collision_check : None or bool convertable
-    #        If true the trajectory planing try to plan a
-    #        collision free trajectory and before executing
-    #        a trajectory a collision check is performed
-    #    max_deviation : None or float convertable
-    #        Defines the maximal deviation from trajectory points
-    #        when it is a fly-by-point in joint space
-    #    acceleration_scaling : None or float convertable
-    #        Scaling factor which is applied on the maximal
-    #        possible joint accelerations
-    #    sample_resolution : None or float
-    #        target sample frequency in Hz
-    #    ik_jump_threshold : None or float
-    #        Maximal joint value jump between two consecutively
-    #        following trajectory points
-    #
-    #    Returns
-    #    -------
-    #    task_space_plan_parameters
-    #        New instance of PlanParameters with requested changes
-    #        from the default instance
-    #
-    #    Raises
-    #    ------
-    #    TypeError
-    #        If input values are not convertable to specified types
-    #    ValueError
-    #        If scaling inputs are not between 0.0 and 1.0
-    #    """
-    #
-    #    return self.__move_group._build_task_space_plan_parameters(velocity_scaling,
-    #                                                               collision_check,
-    #                                                               max_deviation,
-    #                                                               acceleration_scaling,
-    #                                                               sample_resolution,
-    #                                                               ik_jump_threshold,
-    #                                                               self.__name)
+
+    def _build_task_space_plan_parameters(self, velocity_scaling=None,
+                                          collision_check: Union[None, bool]=None,
+                                          max_deviation: Union[None, float]=None,
+                                          acceleration_scaling: Union[None, float]=None,
+                                          sample_resolution=None,
+                                          ik_jump_threshold=None):
+        """
+        Build an instance of TaskSpacePlanParameters from input
+        and default values
+    
+        All attributes with value None are ignored and instead the default
+        values are used defined in default_task_space_plan_parameters
+        are used
+    
+        Parameters
+        ----------
+        velocity_scaling : None or float convertable
+            Scaling factor which is applied on the maximal
+            possible joint velocities
+        collision_check : None or bool convertable
+            If true the trajectory planing try to plan a
+            collision free trajectory and before executing
+            a trajectory a collision check is performed
+        max_deviation : None or float convertable
+            Defines the maximal deviation from trajectory points
+            when it is a fly-by-point in joint space
+        acceleration_scaling : None or float convertable
+            Scaling factor which is applied on the maximal
+            possible joint accelerations
+        sample_resolution : None or float
+            target sample frequency in Hz
+        ik_jump_threshold : None or float
+            Maximal joint value jump between two consecutively
+            following trajectory points
+    
+        Returns
+        -------
+        task_space_plan_parameters
+            New instance of PlanParameters with requested changes
+            from the default instance
+    
+        Raises
+        ------
+        TypeError
+            If input values are not convertable to specified types
+        ValueError
+            If scaling inputs are not between 0.0 and 1.0
+        """
+    
+        return self.__move_group._build_task_space_plan_parameters(velocity_scaling,
+                                                                   collision_check,
+                                                                   max_deviation,
+                                                                   acceleration_scaling,
+                                                                   sample_resolution,
+                                                                   ik_jump_threshold,
+                                                                   self.__name)
 
     def compute_pose(self, joint_values):
         """
@@ -1493,17 +1493,19 @@ class EndEffector(object):
 
         return ik
 
+    @deprecated(reason="Please use move_cartesian")
     async def move_poses(self, target, 
                             velocity_scaling=None,
-                            collision_check=None, 
-                            max_deviation=None,
-                            acceleration_scaling=None):
-        print("Deprecated! Please use move_cartesian")
+                            collision_check: Union[None, bool]=None, 
+                            max_deviation: Union[None, float]=None,
+                            acceleration_scaling: Union[None, float]=None):
         await self.move_cartesian(target=target, 
                                     velocity_scaling=velocity_scaling,
                                     collision_check=collision_check, 
                                     max_deviation=max_deviation,
                                     acceleration_scaling=acceleration_scaling)
+
+    @deprecated(reason="Please use move_cartesian_operation(...).plan().execute_supervised()")   
     def move_poses_supervised(self, target: (Pose, CartesianPath),
                               seed: (None, JointValues)=None,
                               velocity_scaling: (None, float)=None,
@@ -1547,7 +1549,6 @@ class EndEffector(object):
             If underlying services from motion server are not available
             or finish not successfully
         """
-        print("Deprecated! Please use move_cartesian_operation(...).plan().execute_supervised()")
 
         return self.move_cartesian_operation(target=target, 
                                      seed=seed,
@@ -1647,19 +1648,19 @@ class EndEffector(object):
 
         return MoveCartesianOperation(args)
 
-
-    async def move_poses__collision_free(self, target, 
+    @deprecated(reason="Please use move_cartesian")
+    async def move_poses_collision_free(self, target, 
                             velocity_scaling=None,
-                            collision_check=None, 
-                            max_deviation=None,
-                            acceleration_scaling=None):
-        print("Deprecated! Please use move_cartesian")
+                            collision_check: Union[None, bool]=None, 
+                            max_deviation: Union[None, float]=None,
+                            acceleration_scaling: Union[None, float]=None):
+
         await self.move_cartesian_collision_free(target=target, 
                                     velocity_scaling=velocity_scaling,
                                     collision_check=collision_check, 
                                     max_deviation=max_deviation,
                                     acceleration_scaling=acceleration_scaling)
-
+    @deprecated(reason="Please use move_cartesian_collision_free_operation(...).plan().execute_supervised()")
     def move_poses_collision_free_supervised(self, target: (Pose, CartesianPath),   
                                              seed: (None, JointValues)=None,
                                              velocity_scaling: (None, float)=None,
@@ -1703,7 +1704,6 @@ class EndEffector(object):
             If underlying services from motion server are not available
             or finish not successfully
         """
-        print("Deprecated! Please use move_cartesian_collision_free_operation(...).plan().execute_supervised()")
 
         return self.move_cartesian_collision_free_operation(target=target, 
                                      seed=seed,
@@ -1801,13 +1801,13 @@ class EndEffector(object):
 
         return MoveCartesianCollisionFreeOperation(args)
 
-
+    @deprecated("Please use move_cartesian_linear_operation(...).plan()")
     def plan_poses_linear(self, target, 
                           seed: Union[None, JointValues]=None,
-                          velocity_scaling=None,
-                          collision_check=None, 
-                          max_deviation=None,
-                          acceleration_scaling=None):
+                          velocity_scaling: Union[None, float]=None,
+                          collision_check: Union[None, bool]=None,
+                          max_deviation: Union[None, float]=None,
+                          acceleration_scaling: Union[None, float]=None):
         """
         Plans a trajectory with linear movements from task space input
         Parameters
@@ -1838,7 +1838,6 @@ class EndEffector(object):
             If underlying services from motion server are not available
             or finish not successfully
         """
-        print("Deprecated! Please use move_cartesian_linear_operation(...).plan()")
 
         plan =  self.move_cartesian_linear_operation(target=target, 
                     seed=seed,
@@ -1849,15 +1848,14 @@ class EndEffector(object):
             .plan()
         return plan.trajectory, plan.parameters
 
-
-
+    @deprecated(reason="Please use move_cartesian_linear")
     async def move_poses_linear(self, target, 
                                 seed: Union[None, JointValues]=None,
                                 velocity_scaling=None,
-                                collision_check=None, 
-                                max_deviation=None,
-                                acceleration_scaling=None):
-        print("Deprecated! Please use move_cartesian_linear")
+                                collision_check: Union[None, bool]=None, 
+                                max_deviation: Union[None, float]=None,
+                                acceleration_scaling: Union[None, float]=None):
+
         await self.move_cartesian_linear(target=target, 
                                      seed=seed,
                                      velocity_scaling=velocity_scaling,
