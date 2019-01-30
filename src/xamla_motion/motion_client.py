@@ -1803,6 +1803,7 @@ class EndEffector(object):
 
 
     def plan_poses_linear(self, target, 
+                          seed: Union[None, JointValues]=None,
                           velocity_scaling=None,
                           collision_check=None, 
                           max_deviation=None,
@@ -1851,12 +1852,14 @@ class EndEffector(object):
 
 
     async def move_poses_linear(self, target, 
+                                seed: Union[None, JointValues]=None,
                                 velocity_scaling=None,
                                 collision_check=None, 
                                 max_deviation=None,
                                 acceleration_scaling=None):
         print("Deprecated! Please use move_cartesian_linear")
         await self.move_cartesian_linear(target=target, 
+                                     seed=seed,
                                      velocity_scaling=velocity_scaling,
                                      collision_check=collision_check, 
                                      max_deviation=max_deviation,
