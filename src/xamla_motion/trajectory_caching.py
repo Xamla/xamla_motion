@@ -1,17 +1,20 @@
+import datetime
+import enum
 from abc import ABC, abstractmethod
 from typing import Callable, Dict, Iterable, Union
-import datetime
+
 import numpy as np
+import rospy
 from pyquaternion import Quaternion
 from sklearn.neighbors import BallTree
-from . import EndEffector, MoveGroup
-from .data_types import CartesianPath, JointValues, Pose, JointTrajectory
+from xamlamoveit_msgs.srv import SetJointPosture, SetJointPostureRequest
+
+from .motion_client import EndEffector, MoveGroup
+from .data_types import (CartesianPath, JointPath, JointTrajectory,
+                         JointValues, Pose)
 
 
-import enum
-
-
-class SampleArea(ABC):
+class SampleVolume(ABC):
 
     """
     This class defines a sample area.
@@ -49,7 +52,7 @@ class SampleArea(ABC):
         pass
 
 
-class SampleRectangle(SampleArea):
+class SampleBox(SampleVolume):
 
     """
     This class defines an area where positions are sampled
@@ -75,7 +78,7 @@ class SampleRectangle(SampleArea):
 
         """
 
-        super(SampleRectangle, self).__init__(
+        super(SampleBox, self).__init__(
             origin, size, resolution, quaternions)
 
     def _check_input(self):
@@ -176,7 +179,24 @@ class TaskTrajectoryCache(object):
                        max_position_diff_radius: float):
 
         if self._cache_type == TrajectoryCacheType.ONETOONE:
-            return self._trajectory, start, target
+
+            if start != self._start:
+                raise RuntimeError('requested start {} and cached start {}'
+                                   ' are not equal'.format(start,
+                                                           self._start))
+
+            if target != self._target:
+                raise RuntimeError('requested target {} and cached target {}'
+                                   ' are not equal'.format(target,
+                                                           self._target))
+
+            start_pose = start
+            target_pose = target
+            start_joint_values = self._trajectory[0].positions
+            target_joint_values = self._trajectory[-1].positions
+
+            return (self._trajectory, start_pose, target_pose,
+                    start_joint_values, target_joint_values)
 
         elif self._cache_type == TrajectoryCacheType.ONETOMANY:
             if start != self._start:
@@ -201,7 +221,13 @@ class TaskTrajectoryCache(object):
                                                                                           poses,
                                                                                           trajectories)
 
-            return cached_trajectory, start, cached_target
+            start_pose = start
+            target_pose = cached_target
+            start_joint_values = cached_trajectory[0].positions
+            target_joint_values = cached_trajectory[-1].positions
+
+            return (cached_trajectory, start_pose, target_pose,
+                    start_joint_values, target_joint_values)
 
         elif self._cache_type == TrajectoryCacheType.MANYTOONE:
             if target != self._target:
@@ -226,7 +252,13 @@ class TaskTrajectoryCache(object):
                                                                                          poses,
                                                                                          trajectories)
 
-            return cached_trajectory, cached_start, target
+            start_pose = cached_start
+            target_pose = target
+            start_joint_values = cached_trajectory[0].positions
+            target_joint_values = cached_trajectory[-1].positions
+
+            return (cached_trajectory, start_pose, target_pose,
+                    start_joint_values, target_joint_values)
 
         else:
             raise NotImplementedError('many to many cached trajectories are '
@@ -261,10 +293,31 @@ def _generate_trajectory(start: Pose, target: Pose,
     return trajectory
 
 
+def _set_robot_state(pose, end_effector, seed):
+    new_robot_state = end_effector.inverse_kinematics(pose=pose,
+                                                      collision_check=True,
+                                                      seed=seed,
+                                                      timeout=datetime.timedelta(
+                                                          seconds=5),
+                                                      const_seed=False)
+
+    set_state_service_handle = rospy.ServiceProxy('/sda10d/xamlaSda10dController/set_state',
+                                                  SetJointPosture)
+
+    request = SetJointPostureRequest()
+    request.joint_names = new_robot_state.joint_set.names
+    request.point.positions = new_robot_state.values
+
+    response = set_state_service_handle(request)
+
+    if not response.success:
+        raise RuntimeError('set robot state was not successful')
+
+
 def create_trajectory_cache(end_effector: EndEffector,
                             seed: JointValues,
-                            start: Union[Pose, SampleArea],
-                            target: Union[Pose, SampleArea]) -> TaskTrajectoryCache:
+                            start: Union[Pose, SampleVolume],
+                            target: Union[Pose, SampleVolume]) -> TaskTrajectoryCache:
     """
     Factory function to create a TaskTrajectoryCache instance
 
@@ -274,10 +327,10 @@ def create_trajectory_cache(end_effector: EndEffector,
         The end effector being used
     seed : JointValues
         A seed being a template for the trajectories
-    start : Union[Pose, SampleArea]
-        A Pose or a SampleArea, defining the start of the trajectory(/ies)
-    target: Union[Pose, SampleArea]
-        A Pose or a SampleArea, defining the end of the trajectory(/ies)
+    start : Union[Pose, SampleVolume]
+        A Pose or a SampleVolume, defining the start of the trajectory(/ies)
+    target: Union[Pose, SampleVolume]
+        A Pose or a SampleVolume, defining the end of the trajectory(/ies)
 
     Returns
         -------
@@ -285,20 +338,24 @@ def create_trajectory_cache(end_effector: EndEffector,
         The trajectory cache created.
     """
 
-    if isinstance(start, SampleArea) and isinstance(start, SampleArea):
+    if isinstance(start, SampleVolume) and isinstance(target, SampleVolume):
         raise NotImplementedError('start and target as areas is'
                                   ' currently not supported')
-    elif isinstance(start, SampleArea) and isinstance(target, Pose):
+    elif isinstance(start, SampleVolume) and isinstance(target, Pose):
         # MANYTOONE
         starts = []
         executables = []
         excludes = []
+        lenght = start.sample_positions.shape[1]
         for i, v in enumerate(start.sample_positions.T):
+            print('generate trajectories for position {}'
+                  ' of {} positions'.format(i+1, lenght))
             poses = []
             trajectories = []
             try:
-                for a in target.quaternions:
+                for a in start.quaternions:
                     pose = Pose(v, a)
+                    _set_robot_state(pose, end_effector, seed)
                     trajectories.append(_generate_trajectory(pose, target,
                                                              end_effector,
                                                              seed))
@@ -325,8 +382,10 @@ def create_trajectory_cache(end_effector: EndEffector,
                                    end_effector_name=end_effector.name,
                                    cache_type=TrajectoryCacheType.MANYTOONE)
 
-    elif isinstance(target, SampleArea) and isinstance(start, Pose):
+    elif isinstance(target, SampleVolume) and isinstance(start, Pose):
         # ONETOMANY
+        _set_robot_state(start, end_effector, seed)
+
         targets = []
         executables = []
         excludes = []
@@ -378,9 +437,11 @@ def create_trajectory_cache(end_effector: EndEffector,
 
 
 async def move_with_trajectory_cache(cache: TaskTrajectoryCache, end_effector: EndEffector,
-                                     start: Union[None, Pose], target: Pose,
+                                     start_joint_values: Union[None, JointValues], target_pose: Pose,
                                      max_position_diff_radius: float, logger=None,
                                      collision_check: bool=True):
+
+    move_group = end_effector.move_group
 
     if end_effector.name != cache.end_effector_name:
         try:
@@ -392,24 +453,31 @@ async def move_with_trajectory_cache(cache: TaskTrajectoryCache, end_effector: E
         raise RuntimeError('provided trajectory cache not contains trajectories'
                            ' for end effector: {}'.format(end_effector.name))
 
-    if start is None:
+    if start_joint_values is None:
         try:
-            logger.debug('move with cache: start is None use current'
+            logger.error('move with cache: start is None use current'
                          ' end effector: {} pose as start pose'.format(end_effector.name))
         except:
             pass
 
-        start = end_effector.get_current_pose()
+        start_joint_values = move_group.get_current_joint_positions()
 
-    cached_trajectory, cached_start, cached_target = cache.get_trajectory(start, target,
-                                                                          max_position_diff_radius)
+    start_pose = end_effector.compute_pose(start_joint_values)
+
+    (cached_trajectory,
+     cached_start_pose,
+     cached_target_pose,
+     cached_start_joint_values,
+     cached_target_joint_values) = cache.get_trajectory(start_pose, target_pose,
+                                                        max_position_diff_radius)
 
     if cache.cache_type == TrajectoryCacheType.MANYTOONE:
-        end_effector.move_poses(CartesianPath([start, cached_start]),
-                                collision_check=collision_check)
+        await move_group.move_joints(JointPath(cached_start_joint_values.joint_set,
+                                               [start_joint_values, cached_start_joint_values]),
+                                     collision_check=collision_check)
 
     services = end_effector.motion_service
 
     await services.execute_joint_trajectory(cached_trajectory, collision_check)
 
-    return cached_target
+    return cached_start_pose, cached_target_pose, cached_start_joint_values, cached_target_joint_values
