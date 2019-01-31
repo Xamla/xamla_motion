@@ -1,4 +1,5 @@
 import datetime
+import time
 import enum
 from abc import ABC, abstractmethod
 from typing import Callable, Dict, Iterable, Union
@@ -312,6 +313,8 @@ def _set_robot_state(pose, end_effector, seed):
 
     if not response.success:
         raise RuntimeError('set robot state was not successful')
+
+    time.sleep(0.2)
 
 
 def create_trajectory_cache(end_effector: EndEffector,
