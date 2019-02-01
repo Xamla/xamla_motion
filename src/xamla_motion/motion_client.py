@@ -1348,14 +1348,14 @@ class EndEffector(object):
     
         Parameters
         ----------
-        velocity_scaling : : Union[None, float]
+        velocity_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint velocities
-        collision_check : : Union[None, bool]
+        collision_check : Union[None, bool]
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
-        max_deviation : : Union[None, float]
+        max_deviation : Union[None, float]
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
         acceleration_scaling : Union[None, float]
@@ -1481,8 +1481,8 @@ class EndEffector(object):
 
     def inverse_kinematics_many(self, poses: Union[Pose, CartesianPath],
                                 collision_check: Union[None, bool],
-                                seed: : Union[None, JointValues]=None,
-                                timeout: : Union[None, timedelta]=None,
+                                seed: Union[None, JointValues]=None,
+                                timeout: Union[None, timedelta]=None,
                                 const_seed: bool=False,
                                 attempts: int=1) -> IkResults:
         """
