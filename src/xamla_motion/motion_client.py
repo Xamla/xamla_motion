@@ -19,12 +19,13 @@
 #!/usr/bin/env python3
 
 from datetime import timedelta
-from typing import Union
+from typing import Union, Tuple
 
 import numpy as np
 
-from .data_types import (CartesianPath, EndEffectorPose, IkResults, JointPath,
-                         JointSet, JointValues, JointStates, Pose)
+from .data_types import (Pose, CartesianPath, EndEffectorPose, IkResults, 
+                        JointPath, JointSet, JointValues, JointStates, JointTrajectory,
+                        PlanParameters, TaskSpacePlanParameters)
 from .motion_operations import (MoveCartesianArgs,
                                 MoveCartesianCollisionFreeOperation,
                                 MoveCartesianLinearOperation,
@@ -35,7 +36,6 @@ from .motion_service import MotionService, SteppedMotionClient
 
 from deprecated import deprecated 
 
-
 class MoveGroup(object):
 
     """
@@ -43,46 +43,66 @@ class MoveGroup(object):
 
     Methods
     -------
-    set_default_end_effector(end_effector_name)
+    set_default_end_effector(end_effector_name: str)
         Set one of the end effector from the list of available ones as default
-    get_end_effector(name)
+    get_end_effector(name: Union[None, str]) -> EndEffector
         Get the end effector specified by name or the default end effector
-    get_current_joint_states()
+    get_current_joint_states() -> JointStates
         Returns the current joint states of the move group joints
-    get_current_joint_positions()
+    get_current_joint_positions() -> JointValues
         Returns the current joint positions of the move group joints
-    plan_move_joints(target, velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-                     max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
+    plan_move_joints(
+            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None, 
+            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, 
+            acceleration_scaling: Union[None, float]=None
+        ) -> Tuple[JointTrajectory, PlanParameters]
         Plans a trajectory from current state to target joint positions
         Deprecated
-    plan_move_joints_collision_free(target, velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None, 
-                                    max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
+    plan_move_joints_collision_free(
+            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None, 
+            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, 
+            acceleration_scaling: Union[None, float]=None
+        ) -> Tuple[JointTrajectory, PlanParameters]
         Plans a collision free trajectory from current to target joint positions.
         Deprecated
-    move_joints(target, velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-                max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
+    move_joints(
+            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None, 
+            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, 
+            acceleration_scaling: Union[None, float]=None)
         Asynchronous plan and execute joint trajectory
-    move_joints_supervised(target, velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-                           max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
+    move_joints_supervised(
+            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
+            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, 
+            acceleration_scaling: Union[None, float]=None
+        ) -> SteppedMotionClient
         Plan joint trajectory and creates a supervised executor
-    move_joints_operation(target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-                max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
+    move_joints_operation(
+            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None, 
+            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, 
+            acceleration_scaling: Union[None, float]=None
+        ) -> MoveJointsOperation
         Create MoveJointsOperation for target joint positions
-    move_joints_collision_free(target, velocity_scaling: Union[None, float]=None,
-                               collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
+    move_joints_collision_free(
+            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
+            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, 
+            acceleration_scaling: Union[None, float]=None)
         Asynchronous plan and execute collision free joint trajectory
     move_joints_collision_free_supervised(
-        target, velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
+            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None, 
+            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None, 
+            acceleration_scaling: Union[None, float]=None
+        ) -> SteppedMotionClient
         Plan collision free joint trajectory and creates a supervised executor
-    move_joints_collision_free_operation(target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-                max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
+    move_joints_collision_free_operation(
+            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None, 
+            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
+            acceleration_scaling: Union[None, float]=None
+        ) -> MoveJointsCollisionFreeOperation
         Create MoveJointsCollisionFreeOperation for target joint positions
-       
-
     """
 
-    def __init__(self, move_group_name=None,
-                 end_effector_name=None, motion_service=None):
+    def __init__(self, move_group_name: Union[None, str]=None,
+                 end_effector_name: Union[None, str]=None, motion_service=None):
         """
         Initialize MoveGroup class
 
@@ -114,13 +134,13 @@ class MoveGroup(object):
 
         Parameters
         ----------
-        move_group_name : str convertable or None
+        move_group_name : Union[None, str]
             If defined name of the move group which this
             instance should represent
-        end_effector_name or None
+        end_effector_name : Union[None, str]
             If defined name of the end_effector which should
             be used as default end_effector
-        motion_service : MotionService or None
+        motion_service : Union[None, MotionService]
             An instance of MotionService which is used to
             communicate with the motion server if None a
             new instance of MotionService is created
@@ -304,7 +324,7 @@ class MoveGroup(object):
         return self.__plan_parameters.collision_check
 
     @collision_check.setter
-    def collision_check(self, value):
+    def collision_check(self, value: bool):
         """
         Set collision check on or of
 
@@ -329,7 +349,7 @@ class MoveGroup(object):
         return self.__plan_parameters.sample_resolution
 
     @sample_resolution.setter
-    def sample_resolution(self, value):
+    def sample_resolution(self, value: float):
         """
         Set trajectory point sampling frequency
 
@@ -355,7 +375,7 @@ class MoveGroup(object):
         return self.__plan_parameters.max_deviation
 
     @max_deviation.setter
-    def max_deviation(self, value):
+    def max_deviation(self, value: float):
         """
         Set maximal devitation
 
@@ -382,7 +402,7 @@ class MoveGroup(object):
                                ' because move group has no end effector')
 
     @ik_jump_threshold.setter
-    def ik_jump_threshold(self, value):
+    def ik_jump_threshold(self, value: float):
         """
         Set maximal allowed inverse kinematics jump threshold
 
@@ -406,7 +426,7 @@ class MoveGroup(object):
         return self.__velocity_scaling
 
     @velocity_scaling.setter
-    def velocity_scaling(self, value):
+    def velocity_scaling(self, value: float):
         """
         Set default velocity scaling which is applied if no custom value is provided
 
@@ -431,7 +451,7 @@ class MoveGroup(object):
         return self.__acceleration_scaling
 
     @acceleration_scaling.setter
-    def acceleration_scaling(self, value):
+    def acceleration_scaling(self, value: float):
         """
         Set default acceleration scaling which is applied if no custom value is provided
 
@@ -447,7 +467,7 @@ class MoveGroup(object):
 
         self.__acceleration_scaling = value
 
-    def set_default_end_effector(self, end_effector_name):
+    def set_default_end_effector(self, end_effector_name: str):
         """
         Set one of the end effector from the list of available ones as default
 
@@ -552,9 +572,13 @@ class MoveGroup(object):
 
         return self.get_current_joint_states().positions
 
-    def _build_plan_parameters(self, velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-                               max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None,
-                               sample_resolution=None):
+    def _build_plan_parameters(self, 
+            velocity_scaling: Union[None, float]=None, 
+            collision_check: Union[None, bool]=None,
+            max_deviation: Union[None, float]=None, 
+            acceleration_scaling: Union[None, float]=None,
+            sample_resolution: Union[None, float]=None
+        ) -> PlanParameters:
         """
         Build an instance of PlanParameters from input and default values
 
@@ -563,25 +587,25 @@ class MoveGroup(object):
 
         Parameters
         ----------
-        velocity_scaling : None or float convertable
+        velocity_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint velocities
-        collision_check : None or bool convertable
+        collision_check : Union[None, bool]
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
-        max_deviation : None or float convertable
+        max_deviation : Union[None, float]
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
-        acceleration_scaling : None or float convertable
+        acceleration_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint accelerations
-        sample_resolution : None or float
+        sample_resolution : Union[None, float]
             target sample frequency in Hz
 
         Returns
         -------
-        plan_parameters
+        PlanParameters
             New instance of PlanParameters with requested changes
             from the default instance
 
@@ -613,15 +637,16 @@ class MoveGroup(object):
         return builder.build()
 
     # TODO NERVER USED ANYWHERE
-    def _build_task_space_plan_parameters(self, velocity_scaling: Union[None, float]=None,
-                                          collision_check: Union[None, bool]=None,
-                                          max_deviation: Union[None, float]=None,
-                                          acceleration_scaling: Union[None, float]=None,
-                                          sample_resolution=None,
-                                          ik_jump_threshold=None,
-                                          end_effector_name=None):
+    def _build_task_space_plan_parameters(self, 
+            velocity_scaling: Union[None, float]=None,
+            collision_check: Union[None, bool]=None,
+            max_deviation: Union[None, float]=None,
+            acceleration_scaling: Union[None, float]=None,
+            sample_resolution: Union[None, float]=None,
+            ik_jump_threshold: Union[None, float]=None,
+            end_effector_name: Union[None, str]=None
+        ) -> TaskSpacePlanParameters:
         """
-        
         Build an instance of TaskSpacePlanParameters from input
         and default values
 
@@ -631,31 +656,31 @@ class MoveGroup(object):
 
         Parameters
         ----------
-        velocity_scaling : None or float convertable
+        velocity_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint velocities
-        collision_check : None or bool convertable
+        collision_check : Union[None, bool]
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
-        max_deviation : None or float convertable
+        max_deviation : Union[None, float]
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
-        acceleration_scaling : None or float convertable
+        acceleration_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint accelerations
-        sample_resolution : None or float
+        sample_resolution : Union[None, float]
             target sample frequency in Hz
-        ik_jump_threshold : None or float
+        ik_jump_threshold : Union[None, float]
             Maximal joint value jump between two consecutively
             following trajectory points
-        end_effector_name : None or str convertable
+        end_effector_name : Union[None, str]
             Name of end effector which should be used
 
         Returns
         -------
-        task_space_plan_parameters
-            New instance of PlanParameters with requested changes
+        TaskSpacePlanParameters
+            New instance of TaskSpacePlanParameters with requested changes
             from the default instance
 
         Raises
@@ -707,11 +732,13 @@ class MoveGroup(object):
 
 
     @deprecated(reason="Use the move_joints_operation(...).plan() to receive a Plan object")
-    def plan_move_joints(self, target, 
-                         velocity_scaling: Union[None, float]=None,
-                         collision_check: Union[None, bool]=None,
-                         max_deviation: Union[None, float]=None, 
-                         acceleration_scaling: Union[None, float]=None):
+    def plan_move_joints(self, 
+            target: Union[JointValues, JointPath], 
+            velocity_scaling: Union[None, float]=None,
+            collision_check: Union[None, bool]=None,
+            max_deviation: Union[None, float]=None, 
+            acceleration_scaling: Union[None, float]=None
+        ) -> Tuple[JointTrajectory, PlanParameters]:
         """
         TODO: Might be deprecated, since a the Plan class already contains the information
         TODO: Also test if this behaves as intended
@@ -719,27 +746,29 @@ class MoveGroup(object):
         Plans a trajectory from current state to target joint positions
         Parameters
         ----------
-        target : JointValues or JointPath
+        target : Union[JointValues, JointPath]
             Target joint positions or target JointPath
-        velocity_scaling : None or float convertable
+        velocity_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint velocities
-        collision_check : None or bool convertable
+        collision_check : Union[None, bool]
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
-        max_deviation : None or float convertable
+        max_deviation : Union[None, float]
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
-        acceleration_scaling : None or float convertable
+        acceleration_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint accelerations
+
         Returns
         -------
         trajectory, parameters : Tuple[JointTrajectory, PlanParameters]
             Returns a tuple where the firt argument is the planed
             trajectory and the second argument the parameters which are
             used for it
+
         Raises
         ------
         TypeError
@@ -760,33 +789,44 @@ class MoveGroup(object):
         return plan.trajectory, plan.parameters
 
     @deprecated(reason="Deprecated. Use the move_joints_collision_free_operation(...).plan() to receive a Plan object")
-    def plan_move_joints_collision_free(self, target,       
-                                        velocity_scaling: Union[None, float]=None,
-                                        max_deviation: Union[None, float]=None,
-                                        acceleration_scaling: Union[None, float]=None):
+    def plan_move_joints_collision_free(self, 
+            target: Union[JointValues, JointPath],       
+            velocity_scaling: Union[None, float]=None,
+            collision_check: Union[None, bool]=None,
+            max_deviation: Union[None, float]=None,
+            acceleration_scaling: Union[None, float]=None
+        ) -> Tuple[JointTrajectory, PlanParameters]:
         """
         TODO: Might be deprecated, since a the Plan class already contains the information
         TODO: Also test if this behaves as intended
+        TODO: Added collision check
         Plans a collision free trajectory from current to target joint positions
+        
         Parameters
         ----------
-        target : JointValues or JointPath
+        target : Union[JointValues, JointPath]
             Target joint positions or joint path
-        velocity_scaling : None or float convertable
+        velocity_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint velocities
-        max_deviation : None or float convertable
+        max_deviation : Union[None, float]
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
-        acceleration_scaling : None or float convertable
+        collision_check : Union[None, bool]
+            If true the trajectory planing try to plan a
+            collision free trajectory and before executing
+            a trajectory a collision check is performed
+        acceleration_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint accelerations
+        
         Returns
         -------
         trajectory, parameters : Tuple[JointTrajectory, PlanParameters]
             Returns a tuple where the firt argument is the planed
             trajectory and the second argument the parameters which are
             used for it
+        
         Raises
         ------
         TypeError
@@ -798,37 +838,40 @@ class MoveGroup(object):
             If underlying services from motion server are not available
             or finish not successfully
         """
-        move_joints_op =  self.move_joints_collision_free_operation(target=target, 
-                                          velocity_scaling=velocity_scaling,
-                                          max_deviation=max_deviation,
-                                          acceleration_scaling=acceleration_scaling)
+        move_joints_op =  self.move_joints_collision_free_operation(
+            target=target, velocity_scaling=velocity_scaling, collision_check=collision_check,
+            max_deviation=max_deviation, acceleration_scaling=acceleration_scaling)
         plan = move_joints_op.plan()
         return plan.trajectory, plan.parameters
 
-    async def move_joints(self, target: Union[JointValues, JointPath], 
-                          velocity_scaling: Union[None, float]=None,
-                          collision_check: Union[None, bool]=None,
-                          max_deviation: Union[None, float]=None,
-                          acceleration_scaling: Union[None, float]=None):
+    async def move_joints(self, 
+            target: Union[JointValues, JointPath], 
+            velocity_scaling: Union[None, float]=None,
+            collision_check: Union[None, bool]=None,
+            max_deviation: Union[None, float]=None,
+            acceleration_scaling: Union[None, float]=None
+        ):
         """
         Asynchronous plan and execute joint trajectory from joint space input
+        
         Parameters
         ----------
-        target : JointValues or JointPath
+        target : Union[JointValues, JointPath]
             Target joint positions or joint path
-        velocity_scaling : None or float convertable
+        velocity_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint velocities
-        collision_check : None or bool convertable
+        collision_check : Union[None, bool]
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
-        max_deviation : None or float convertable
+        max_deviation : Union[None, float]
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
-        acceleration_scaling : None or float convertable
+        acceleration_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint accelerations
+        
         Raises
         ------
         TypeError
@@ -841,42 +884,45 @@ class MoveGroup(object):
             or finish not successfully
         """
 
-        move_joints_op =  self.move_joints_operation(target=target, 
-                                          velocity_scaling=velocity_scaling,
-                                          collision_check=collision_check,
-                                          max_deviation=max_deviation,
-                                          acceleration_scaling=acceleration_scaling)
+        move_joints_op =  self.move_joints_operation(
+            target=target, velocity_scaling=velocity_scaling, collision_check=collision_check,
+            max_deviation=max_deviation, acceleration_scaling=acceleration_scaling)
         plan =  move_joints_op.plan()
         await plan.execute_async()
 
-    def move_joints_supervised(self, target: (JointValues, JointPath),
-                               velocity_scaling: (None, float)=None,
-                               collision_check: (None, bool)=None,
-                               max_deviation: (None, float)=None,
-                               acceleration_scaling: (None, float)=None) -> SteppedMotionClient:
+    def move_joints_supervised(self, 
+            target: Union[JointValues, JointPath],
+            velocity_scaling: Union[None, float]=None,
+            collision_check: Union[None, bool]=None,
+            max_deviation: Union[None, float]=None,
+            acceleration_scaling: Union[None, float]=None
+        ) -> SteppedMotionClient:
         """
         Plan joint trajectory and creates a supervised executor
+        
         Parameters
         ----------
-        target : JointValues or JointPath
+        target : Union[JointValues, JointPath]
             Target joint positions or joint path
-        velocity_scaling : None or float convertable
+        velocity_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint velocities
-        collision_check : None or bool convertable
+        collision_check : Union[None, bool]
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
-        max_deviation : None or float convertable
+        max_deviation : Union[None, float]
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
-        acceleration_scaling : None or float convertable
+        acceleration_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint accelerations
+        
         Returns
         -------
         executor : SteppedMotionClient
             Executor for supervised execution of trajectory
+        
         Raises
         ------
         TypeError
@@ -889,41 +935,41 @@ class MoveGroup(object):
             or finish not successfully
         """
 
-        move_joints_op = self.move_joints_operation(target=target, 
-                                    velocity_scaling=velocity_scaling,
-                                    collision_check=collision_check,
-                                    max_deviation=max_deviation,
-                                    acceleration_scaling=acceleration_scaling)
+        move_joints_op = self.move_joints_operation(
+            target=target, velocity_scaling=velocity_scaling, collision_check=collision_check,
+            max_deviation=max_deviation, acceleration_scaling=acceleration_scaling)
         plan = move_joints_op.plan()
         return plan.execute_supervised()
 
 
-    def move_joints_operation(self, target: Union[JointValues, JointPath],
-                    velocity_scaling: Union[None, float]=None,
-                    collision_check: Union[None, bool]=None,
-                    max_deviation: Union[None, float]=None,
-                    acceleration_scaling: Union[None, float]=None):
+    def move_joints_operation(self, 
+            target: Union[JointValues, JointPath],
+            velocity_scaling: Union[None, float]=None,
+            collision_check: Union[None, bool]=None,
+            max_deviation: Union[None, float]=None,
+            acceleration_scaling: Union[None, float]=None
+        ) -> MoveJointsOperation:
         """
         Create MoveJointsOperation for target joint positions
 
         Parameters
         ----------
-        target : JointValues or JointPath
+        target : Union[JointValues, JointPath]
             Target joint positions or target JointPath
-        velocity_scaling : None or float convertable (default None)
+        velocity_scaling : Union[None, float] (default None)
             Scaling factor which is applied on the maximal
             possible joint velocities
             If None the MoveGroup default is used
-        collision_check : None or bool convertable (default None)
+        collision_check : Union[None, bool] (default None)
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
             If None the MoveGroup default is used
-        max_deviation : None or float convertable (default None)
+        max_deviation : Union[None, float] (default None)
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
             If None the MoveGroup default is used
-        acceleration_scaling : None or float convertable (default None)
+        acceleration_scaling : Union[None, float] (default None)
             Scaling factor which is applied on the maximal
             possible joint accelerations
             If None the MoveGroup default is used
@@ -960,26 +1006,30 @@ class MoveGroup(object):
         return MoveJointsOperation(args)
 
 
-    async def move_joints_collision_free(self, target, 
-                                         velocity_scaling: Union[None, float]=None,
-                                         collision_check: Union[None, bool]=None,
-                                         max_deviation: Union[None, float]=None,
-                                         acceleration_scaling: Union[None, float]=None):
+    async def move_joints_collision_free(self, 
+            target: Union[JointValues, JointPath], 
+            velocity_scaling: Union[None, float]=None,
+            collision_check: Union[None, bool]=None,
+            max_deviation: Union[None, float]=None,
+            acceleration_scaling: Union[None, float]=None
+        ):
         """
         Asynchronous plan and execute collision free joint trajectory from joint space input
+        
         Parameters
         ----------
-        target : JointValues or JointPath
+        target : Union[JointValues, JointPath]
             Target joint positions or joint path
-        velocity_scaling : None or float convertable
+        velocity_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint velocities
-        max_deviation : None or float convertable
+        max_deviation : Union[None, float]
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
-        acceleration_scaling : None or float convertable
+        acceleration_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint accelerations
+        
         Raises
         ------
         TypeError
@@ -992,40 +1042,41 @@ class MoveGroup(object):
             or finish not successfully
         """
 
-        move_joints_op = self.move_joints_collision_free_operation(target=target, 
-                                                         velocity_scaling=velocity_scaling,
-                                                         collision_check=collision_check,
-                                                         max_deviation=max_deviation,
-                                                         acceleration_scaling=acceleration_scaling)
+        move_joints_op = self.move_joints_collision_free_operation(
+            target=target, velocity_scaling=velocity_scaling,collision_check=collision_check,
+            max_deviation=max_deviation, acceleration_scaling=acceleration_scaling)
         plan = move_joints_op.plan()
         await plan.execute_async()
 
     def move_joints_collision_free_supervised(self, 
-            target: (JointValues, JointPath),
-            velocity_scaling: (None, float)=None,
+            target: Union[JointValues, JointPath],
+            velocity_scaling: Union[None, float]=None,
             collision_check: Union[None, bool]=None,
-            max_deviation: (None, float)=None,
-            acceleration_scaling: (None, float)=None
+            max_deviation: Union[None, float]=None,
+            acceleration_scaling: Union[None, float]=None
         ) -> SteppedMotionClient:
         """
         plan collision free joint trajectory and creates a supervised executor
+        
         Parameters
         ----------
-        target : JointValues or JointPath
+        target : Union[JointValues, JointPath]
             Target joint positions or joint path
-        velocity_scaling : None or float convertable
+        velocity_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint velocities
-        max_deviation : None or float convertable
+        max_deviation : Union[None, float]
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
-        acceleration_scaling : None or float convertable
+        acceleration_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint accelerations
+        
         Returns
         -------
         executor : SteppedMotionClient
             Executor for supervised execution of trajectory
+        
         Raises
         ------
         TypeError
@@ -1038,11 +1089,9 @@ class MoveGroup(object):
             or finish not successfully
         """
 
-        move_joints_op = self.move_joints_collision_free_operation(target=target, 
-                                                         velocity_scaling=velocity_scaling,
-                                                         collision_check=collision_check,
-                                                         max_deviation=max_deviation,
-                                                         acceleration_scaling=acceleration_scaling)
+        move_joints_op = self.move_joints_collision_free_operation(
+            target=target, velocity_scaling=velocity_scaling, collision_check=collision_check,
+            max_deviation=max_deviation, acceleration_scaling=acceleration_scaling)
         plan = move_joints_op.plan()
         return plan.execute_supervised()
 
@@ -1056,29 +1105,29 @@ class MoveGroup(object):
 
         Parameters
         ----------
-        target : JointValues or JointPath
+        target : Union[JointValues, JointPath]
             Target joint positions or target JointPath
-        velocity_scaling : None or float convertable (default None)
+        velocity_scaling : Union[None, float] (default None)
             Scaling factor which is applied on the maximal
             possible joint velocities
             If None the MoveGroup default is used
-        collision_check : None or bool convertable (default None)
+        collision_check : Union[None, bool] (default None)
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
             If None the MoveGroup default is used
-        max_deviation : None or float convertable (default None)
+        max_deviation : Union[None, float] (default None)
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
             If None the MoveGroup default is used
-        acceleration_scaling : None or float convertable (default None)
+        acceleration_scaling : Union[None, float] (default None)
             Scaling factor which is applied on the maximal
             possible joint accelerations
             If None the MoveGroup default is used
 
         Returns
         -------
-        move_joint_operations : MoveJointsCollisionFreeOperation
+        MoveJointsCollisionFreeOperation
             Instance of MoveJointsCollisionFreeOperation
 
         Raises
@@ -1431,7 +1480,7 @@ class EndEffector(object):
         ----------
         poses : pose
             Pose to transform to joint space
-        collision_check : None or bool convertable
+        collision_check : Union[None, bool]
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
@@ -1489,7 +1538,7 @@ class EndEffector(object):
         ----------
         poses : Pose or CartesianPath
             Poses to transform to joint space
-        collision_check : None or bool convertable
+        collision_check : Union[None, bool]
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
@@ -1556,10 +1605,10 @@ class EndEffector(object):
     @deprecated(reason="Please use move_cartesian_operation(...).plan().execute_supervised()")   
     def move_poses_supervised(self, target: (Pose, CartesianPath),
                               seed: (None, JointValues)=None,
-                              velocity_scaling: (None, float)=None,
-                              collision_check: (None, bool)=None,
-                              max_deviation: (None, float)=None,
-                              acceleration_scaling: (None, float)=None):
+                              velocity_scaling: Union[None, float]=None,
+                              collision_check: Union[None, bool]=None,
+                              max_deviation: Union[None, float]=None,
+                              acceleration_scaling: Union[None, float]=None):
         """
         Plan trajectory from task space input and create executor
         Parameters
@@ -1684,10 +1733,10 @@ class EndEffector(object):
     @deprecated(reason="Please use move_cartesian_collision_free_operation(...).plan().execute_supervised()")
     def move_poses_collision_free_supervised(self, target: (Pose, CartesianPath),   
                                              seed: (None, JointValues)=None,
-                                             velocity_scaling: (None, float)=None,
-                                             collision_check: (None, bool)=None,
-                                             max_deviation: (None, float)=None,
-                                             acceleration_scaling: (None, float)=None):
+                                             velocity_scaling: Union[None, float]=None,
+                                             collision_check: Union[None, bool]=None,
+                                             max_deviation: Union[None, float]=None,
+                                             acceleration_scaling: Union[None, float]=None):
 
         return self.move_cartesian_collision_free_supervised(target=target, 
                                      seed=seed,
@@ -1814,20 +1863,20 @@ class EndEffector(object):
             Target Pose or target CartesianPath
         seed : JointValues (default None)
             Numerical seed to control joint configuration  
-        velocity_scaling : None or float convertable (default None)
+        velocity_scaling : Union[None, float] (default None)
             Scaling factor which is applied on the maximal
             possible joint and task velocities
             If None the MoveGroup default is used
-        collision_check : None or bool convertable (default None)
+        collision_check : Union[None, bool] (default None)
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
             If None the MoveGroup default is used
-        max_deviation : None or float convertable (default None)
+        max_deviation : Union[None, float] (default None)
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
             If None the MoveGroup default is used
-        acceleration_scaling : None or float convertable (default None)
+        acceleration_scaling : Union[None, float] (default None)
             Scaling factor which is applied on the maximal
             possible joint and task accelerations
             If None the MoveGroup default is used
@@ -1883,17 +1932,17 @@ class EndEffector(object):
         ----------
         target : Pose or CartesianPath
             Target joint positions
-        velocity_scaling : None or float convertable
+        velocity_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint velocities
-        collision_check : None or bool convertable
+        collision_check : Union[None, bool]
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
-        max_deviation : None or float convertable
+        max_deviation : Union[None, float]
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
-        acceleration_scaling : None or float convertable
+        acceleration_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint accelerations
         Raises
@@ -1944,17 +1993,17 @@ class EndEffector(object):
         ----------
         target : Pose or CartesianPath
             Target joint positions
-        velocity_scaling : None or float convertable
+        velocity_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint velocities
-        collision_check : None or bool convertable
+        collision_check : Union[None, bool]
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
-        max_deviation : None or float convertable
+        max_deviation : Union[None, float]
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
-        acceleration_scaling : None or float convertable
+        acceleration_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint accelerations
         Raises
@@ -1993,20 +2042,20 @@ class EndEffector(object):
             Target Pose or target CartesianPath
         seed : JointValues (default None)
             Numerical seed to control joint configuration  
-        velocity_scaling : None or float convertable (default None)
+        velocity_scaling : Union[None, float] (default None)
             Scaling factor which is applied on the maximal
             possible joint and task velocities
             If None the MoveGroup default is used
-        collision_check : None or bool convertable (default None)
+        collision_check : Union[None, bool] (default None)
             If true the trajectory planing try to plan a
             collision free trajectory and before executing
             a trajectory a collision check is performed
             If None the MoveGroup default is used
-        max_deviation : None or float convertable (default None)
+        max_deviation : Union[None, float] (default None)
             Defines the maximal deviation from trajectory points
             when it is a fly-by-point in joint space
             If None the MoveGroup default is used
-        acceleration_scaling : None or float convertable (default None)
+        acceleration_scaling : Union[None, float] (default None)
             Scaling factor which is applied on the maximal
             possible joint and task accelerations
             If None the MoveGroup default is used
