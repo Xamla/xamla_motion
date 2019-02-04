@@ -1209,12 +1209,11 @@ class MoveCartesianLinearOperation(MoveCartesianOperation):
         """
         seed = self._seed or self._move_group.get_current_joint_positions()
 
-        start = self._start
+        start = self._start or self._end_effector.get_current_pose()
 
         path = self._target
 
-        if isinstance(start, Pose):
-            path = path.prepend(start)
+        path = path.prepend(start)
 
         t = self._move_group.motion_service.plan_move_pose_linear(path, seed,
                                                                   self._task_space_plan_parameters)

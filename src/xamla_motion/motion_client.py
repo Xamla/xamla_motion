@@ -52,49 +52,13 @@ class MoveGroup(object):
         Returns the current joint states of the move group joints
     get_current_joint_positions() -> JointValues
         Returns the current joint positions of the move group joints
-    plan_move_joints(
-            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
-            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
-            acceleration_scaling: Union[None, float]=None
-        ) -> Tuple[JointTrajectory, PlanParameters]
-        Plans a trajectory from current state to target joint positions
-        Deprecated
-    plan_move_joints_collision_free(
-            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
-            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
-            acceleration_scaling: Union[None, float]=None
-        ) -> Tuple[JointTrajectory, PlanParameters]
-        Plans a collision free trajectory from current to target joint positions.
-        Deprecated
     move_joints(
-            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
-            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
-            acceleration_scaling: Union[None, float]=None)
-        Asynchronous plan and execute joint trajectory
-    move_joints_supervised(
-            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
-            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
-            acceleration_scaling: Union[None, float]=None
-        ) -> SteppedMotionClient
-        Plan joint trajectory and creates a supervised executor
-    move_joints_operation(
             target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
             collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
             acceleration_scaling: Union[None, float]=None
         ) -> MoveJointsOperation
         Create MoveJointsOperation for target joint positions
     move_joints_collision_free(
-            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
-            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
-            acceleration_scaling: Union[None, float]=None)
-        Asynchronous plan and execute collision free joint trajectory
-    move_joints_collision_free_supervised(
-            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
-            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
-            acceleration_scaling: Union[None, float]=None
-        ) -> SteppedMotionClient
-        Plan collision free joint trajectory and creates a supervised executor
-    move_joints_collision_free_operation(
             target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
             collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
             acceleration_scaling: Union[None, float]=None
@@ -730,224 +694,13 @@ class MoveGroup(object):
 
         return builder.build()
 
-    @deprecated(reason="Use the move_joints_operation(...).plan() to receive a Plan object")
-    def plan_move_joints(self,
-                         target: Union[JointValues, JointPath],
-                         velocity_scaling: Union[None, float] = None,
-                         collision_check: Union[None, bool] = None,
-                         max_deviation: Union[None, float] = None,
-                         acceleration_scaling: Union[None, float] = None
-                         ) -> Tuple[JointTrajectory, PlanParameters]:
-        """
-        TODO: Might be deprecated, since a the Plan class already contains the information
-        TODO: Also test if this behaves as intended
-
-        Plans a trajectory from current state to target joint positions
-        Parameters
-        ----------
-        target : Union[JointValues, JointPath]
-            Target joint positions or target JointPath
-        velocity_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint velocities
-        collision_check : Union[None, bool]
-            If true the trajectory planing try to plan a
-            collision free trajectory and before executing
-            a trajectory a collision check is performed
-        max_deviation : Union[None, float]
-            Defines the maximal deviation from trajectory points
-            when it is a fly-by-point in joint space
-        acceleration_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint accelerations
-
-        Returns
-        -------
-        trajectory, parameters : Tuple[JointTrajectory, PlanParameters]
-            Returns a tuple where the firt argument is the planed
-            trajectory and the second argument the parameters which are
-            used for it
-
-        Raises
-        ------
-        TypeError
-            If target is not one of types JointValues, JointPath
-            If all other inputs are not convertable to specified types
-        ValueError
-            If scaling inputs are not between 0.0 and 1.0
-        ServiceError
-            If underlying services from motion server are not available
-            or finish not successfully
-        """
-        move_joints_op = self.move_joints_operation(target=target,
-                                                    velocity_scaling=velocity_scaling,
-                                                    collision_check=collision_check,
-                                                    max_deviation=max_deviation,
-                                                    acceleration_scaling=acceleration_scaling)
-        plan = move_joints_op.plan()
-        return plan.trajectory, plan.parameters
-
-    @deprecated(reason="Deprecated. Use the move_joints_collision_free_operation(...).plan() to receive a Plan object")
-    def plan_move_joints_collision_free(self,
-                                        target: Union[JointValues, JointPath],
-                                        velocity_scaling: Union[None, float] = None,
-                                        collision_check: Union[None, bool] = None,
-                                        max_deviation: Union[None, float] = None,
-                                        acceleration_scaling: Union[None,
-                                                                    float] = None
-                                        ) -> Tuple[JointTrajectory, PlanParameters]:
-        """
-        TODO: Might be deprecated, since a the Plan class already contains the information
-        TODO: Also test if this behaves as intended
-        TODO: Added collision check
-        Plans a collision free trajectory from current to target joint positions
-
-        Parameters
-        ----------
-        target : Union[JointValues, JointPath]
-            Target joint positions or joint path
-        velocity_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint velocities
-        max_deviation : Union[None, float]
-            Defines the maximal deviation from trajectory points
-            when it is a fly-by-point in joint space
-        collision_check : Union[None, bool]
-            If true the trajectory planing try to plan a
-            collision free trajectory and before executing
-            a trajectory a collision check is performed
-        acceleration_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint accelerations
-
-        Returns
-        -------
-        trajectory, parameters : Tuple[JointTrajectory, PlanParameters]
-            Returns a tuple where the firt argument is the planed
-            trajectory and the second argument the parameters which are
-            used for it
-
-        Raises
-        ------
-        TypeError
-            If target is not one of types JointValues, JointPath
-            If all other inputs are not convertable to specified types
-        ValueError
-            If scaling inputs are not between 0.0 and 1.0
-        ServiceError
-            If underlying services from motion server are not available
-            or finish not successfully
-        """
-        move_joints_op = self.move_joints_collision_free_operation(
-            target=target, velocity_scaling=velocity_scaling, collision_check=collision_check,
-            max_deviation=max_deviation, acceleration_scaling=acceleration_scaling)
-        plan = move_joints_op.plan()
-        return plan.trajectory, plan.parameters
-
-    async def move_joints(self,
-                          target: Union[JointValues, JointPath],
-                          velocity_scaling: Union[None, float] = None,
-                          collision_check: Union[None, bool] = None,
-                          max_deviation: Union[None, float] = None,
-                          acceleration_scaling: Union[None, float] = None
-                          ):
-        """
-        Asynchronous plan and execute joint trajectory from joint space input
-
-        Parameters
-        ----------
-        target : Union[JointValues, JointPath]
-            Target joint positions or joint path
-        velocity_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint velocities
-        collision_check : Union[None, bool]
-            If true the trajectory planing try to plan a
-            collision free trajectory and before executing
-            a trajectory a collision check is performed
-        max_deviation : Union[None, float]
-            Defines the maximal deviation from trajectory points
-            when it is a fly-by-point in joint space
-        acceleration_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint accelerations
-
-        Raises
-        ------
-        TypeError
-            If target is not one of types JointValues, JointPath
-            If all other inputs are not convertable to specified types
-        ValueError
-            If scaling inputs are not between 0.0 and 1.0
-        ServiceError
-            If underlying services from motion server are not available
-            or finish not successfully
-        """
-
-        move_joints_op = self.move_joints_operation(
-            target=target, velocity_scaling=velocity_scaling, collision_check=collision_check,
-            max_deviation=max_deviation, acceleration_scaling=acceleration_scaling)
-        plan = move_joints_op.plan()
-        await plan.execute_async()
-
-    def move_joints_supervised(self,
-                               target: Union[JointValues, JointPath],
-                               velocity_scaling: Union[None, float] = None,
-                               collision_check: Union[None, bool] = None,
-                               max_deviation: Union[None, float] = None,
-                               acceleration_scaling: Union[None, float] = None
-                               ) -> SteppedMotionClient:
-        """
-        Plan joint trajectory and creates a supervised executor
-
-        Parameters
-        ----------
-        target : Union[JointValues, JointPath]
-            Target joint positions or joint path
-        velocity_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint velocities
-        collision_check : Union[None, bool]
-            If true the trajectory planing try to plan a
-            collision free trajectory and before executing
-            a trajectory a collision check is performed
-        max_deviation : Union[None, float]
-            Defines the maximal deviation from trajectory points
-            when it is a fly-by-point in joint space
-        acceleration_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint accelerations
-
-        Returns
-        -------
-        executor : SteppedMotionClient
-            Executor for supervised execution of trajectory
-
-        Raises
-        ------
-        TypeError
-            If target is not one of types JointValues, JointPath
-            If all other inputs are not convertable to specified types
-        ValueError
-            If scaling inputs are not between 0.0 and 1.0
-        ServiceError
-            If underlying services from motion server are not available
-            or finish not successfully
-        """
-
-        move_joints_op = self.move_joints_operation(
-            target=target, velocity_scaling=velocity_scaling, collision_check=collision_check,
-            max_deviation=max_deviation, acceleration_scaling=acceleration_scaling)
-        plan = move_joints_op.plan()
-        return plan.execute_supervised()
-
-    def move_joints_operation(self,
-                              target: Union[JointValues, JointPath],
-                              velocity_scaling: Union[None, float] = None,
-                              collision_check: Union[None, bool] = None,
-                              max_deviation: Union[None, float] = None,
-                              acceleration_scaling: Union[None, float] = None
-                              ) -> MoveJointsOperation:
+    def move_joints(self,
+                    target: Union[JointValues, JointPath],
+                    velocity_scaling: Union[None, float] = None,
+                    collision_check: Union[None, bool] = None,
+                    max_deviation: Union[None, float] = None,
+                    acceleration_scaling: Union[None, float] = None
+                    ) -> MoveJointsOperation:
         """
         Create MoveJointsOperation for target joint positions
 
@@ -1004,102 +757,11 @@ class MoveGroup(object):
 
         return MoveJointsOperation(args)
 
-    async def move_joints_collision_free(self,
-                                         target: Union[JointValues, JointPath],
-                                         velocity_scaling: Union[None, float] = None,
-                                         collision_check: Union[None, bool] = None,
-                                         max_deviation: Union[None, float] = None,
-                                         acceleration_scaling: Union[None,
-                                                                     float] = None
-                                         ):
-        """
-        Asynchronous plan and execute collision free joint trajectory from joint space input
-
-        Parameters
-        ----------
-        target : Union[JointValues, JointPath]
-            Target joint positions or joint path
-        velocity_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint velocities
-        max_deviation : Union[None, float]
-            Defines the maximal deviation from trajectory points
-            when it is a fly-by-point in joint space
-        acceleration_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint accelerations
-
-        Raises
-        ------
-        TypeError
-            If target is not one of types JointValues, JointPath
-            If all other inputs are not convertable to specified types
-        ValueError
-            If scaling inputs are not between 0.0 and 1.0
-        ServiceError
-            If underlying services from motion server are not available
-            or finish not successfully
-        """
-
-        move_joints_op = self.move_joints_collision_free_operation(
-            target=target, velocity_scaling=velocity_scaling, collision_check=collision_check,
-            max_deviation=max_deviation, acceleration_scaling=acceleration_scaling)
-        plan = move_joints_op.plan()
-        await plan.execute_async()
-
-    def move_joints_collision_free_supervised(self,
-                                              target: Union[JointValues, JointPath],
-                                              velocity_scaling: Union[None, float] = None,
-                                              collision_check: Union[None, bool] = None,
-                                              max_deviation: Union[None, float] = None,
-                                              acceleration_scaling: Union[None,
-                                                                          float] = None
-                                              ) -> SteppedMotionClient:
-        """
-        plan collision free joint trajectory and creates a supervised executor
-
-        Parameters
-        ----------
-        target : Union[JointValues, JointPath]
-            Target joint positions or joint path
-        velocity_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint velocities
-        max_deviation : Union[None, float]
-            Defines the maximal deviation from trajectory points
-            when it is a fly-by-point in joint space
-        acceleration_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint accelerations
-
-        Returns
-        -------
-        executor : SteppedMotionClient
-            Executor for supervised execution of trajectory
-
-        Raises
-        ------
-        TypeError
-            If target is not one of types JointValues, JointPath
-            If all other inputs are not convertable to specified types
-        ValueError
-            If scaling inputs are not between 0.0 and 1.0
-        ServiceError
-            If underlying services from motion server are not available
-            or finish not successfully
-        """
-
-        move_joints_op = self.move_joints_collision_free_operation(
-            target=target, velocity_scaling=velocity_scaling, collision_check=collision_check,
-            max_deviation=max_deviation, acceleration_scaling=acceleration_scaling)
-        plan = move_joints_op.plan()
-        return plan.execute_supervised()
-
-    def move_joints_collision_free_operation(self, target: Union[JointValues, JointPath],
-                                             velocity_scaling: Union[None, float] = None,
-                                             collision_check: Union[None, bool] = None,
-                                             max_deviation: Union[None, float] = None,
-                                             acceleration_scaling: Union[None, float] = None):
+    def move_joints_collision_free(self, target: Union[JointValues, JointPath],
+                                   velocity_scaling: Union[None, float] = None,
+                                   collision_check: Union[None, bool] = None,
+                                   max_deviation: Union[None, float] = None,
+                                   acceleration_scaling: Union[None, float] = None):
         """
         Create MoveJointsCollisionFreeOperation for target joint positions
 
@@ -1182,84 +844,18 @@ class EndEffector(object):
             timeout:  Union[None, datatime.timedelta], const_seed: bool, attempts: int
         ) -> IkResults:
         inverse kinematic solutions for many poses
-    move_poses(
-            target: Union[Pose, CartesianPath], seed: Union[None, JointValues]=None,
-            velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-            max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
-        Asynchronous plan and execute trajectory from task space input
-        Deprecated. Use move_cartesian.
-    move_poses_supervised(
-            target: Union[Pose, CartesianPath], seed: Union[None, JointValues]=None,
-            velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-            max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None
-        ) -> SteppedMotionClient
-        Plan trajectory from task space input and create executor
-        Deprecated. Use move_cartesian_supervised.
     move_cartesian(
-            target: Union[Pose, CartesianPath], seed: Union[None, JointValues]=None,
-            velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-            max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
-        Asynchronous plan and execute trajectory from task space input
-    move_cartesian_supervised(
-            target: Union[Pose, CartesianPath], seed: Union[None, JointValues]=None,
-            velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-            max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None
-        ) -> SteppedMotionClient
-        Plan trajectory from task space input and create executor
-    move_cartesian_operation(
             target: Union[Pose, CartesianPath], seed: Union[None, JointValues]=None,
             velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
             max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None
         ) -> MoveCartesianOperation
         Create MoveCartesianOperation for target joint positions
-    move_poses_collision_free(
-            target: Union[Pose, CartesianPath], seed: Union[None, JointValues]=None,
-            velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-            max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
-        Asynchronous plan and execute collision free trajectory from task space input
-        Deprecated. Use move_cartesian_collision_free
-    move_poses_collision_free_supervised(
-            target: Union[Pose, CartesianPath], seed: Union[None, JointValues]=None,
-            velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-            max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None
-        ) -> SteppedMotionClient
-        Plan collision free trajectory from task space input and create executor
-        Deprecated. Use move_cartesian_collision_free_supervised
     move_cartesian_collision_free(
-            target: Union[Pose, CartesianPath], seed: Union[None, JointValues]=None,
-            velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-            max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None)
-        Asynchronous plan and execute collision free trajectory from task space input
-    move_cartesian_collision_free_supervised(
-            target: Union[Pose, CartesianPath], seed: Union[None, JointValues]=None,
-            velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-            max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None
-        ) -> SteppedMotionClient
-        Plan collision free trajectory from task space input and create executor
-    move_cartesian_collision_free_operation(
             target: Union[Pose, CartesianPath], seed=Union[None, JointValues], velocity_scaling: Union[None, float]=None,
             max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None
         ) -> MoveCartesianCollisionFreeOperation
         Create MoveCartesianCollisionFreeOperation for target joint positions
-    plan_poses_linear(
-            target: Union[Pose, CartesianPath], velocity_scaling: Union[None, float]=None,
-            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
-            acceleration_scaling: Union[None, float]=None
-        ) -> Tuple[JointTrajectory, PlanParameters]
-        Plans a trajectory with linear movements from task space input
-        Deprecated. Please use move_cartesian_linear_operation(...).plan()
     move_poses_linear(
-            target: Union[Pose, CartesianPath], velocity_scaling: Union[None, float]=None,
-            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
-            acceleration_scaling: Union[None, float]=None)
-        Plans and executes a trajectory with linear movements from task space input
-        Deprecated. Please use move_cartesian_linear
-    move_poses_linear(
-            target: Union[Pose, CartesianPath], velocity_scaling: Union[None, float]=None,
-            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
-            acceleration_scaling: Union[None, float]=None)
-        Plans and executes a trajectory with linear movements from task space input
-    move_poses_linear_operation(
             target: Union[Pose, CartesianPath], velocity_scaling: Union[None, float]=None,
             collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
             acceleration_scaling: Union[None, float]=None
@@ -1615,143 +1211,12 @@ class EndEffector(object):
 
         return ik
 
-    @deprecated(reason="Please use move_cartesian")
-    async def move_poses(self, target: Union[Pose, CartesianPath],
-                         seed: Union[None, JointValues] = None,
-                         velocity_scaling: Union[None, float] = None,
-                         collision_check: Union[None, bool] = None,
-                         max_deviation: Union[None, float] = None,
-                         acceleration_scaling: Union[None, float] = None):
-        await self.move_cartesian(
-            target=target, seed=seed, velocity_scaling=velocity_scaling,
-            collision_check=collision_check, max_deviation=max_deviation,
-            acceleration_scaling=acceleration_scaling)
-
-    @deprecated(reason="Please use move_cartesian_operation(...).plan().execute_supervised()")
-    def move_poses_supervised(self, target: (Pose, CartesianPath),
-                              seed: (None, JointValues) = None,
-                              velocity_scaling: Union[None, float] = None,
-                              collision_check: Union[None, bool] = None,
-                              max_deviation: Union[None, float] = None,
-                              acceleration_scaling: Union[None, float] = None
-                              ) -> SteppedMotionClient:
-
-        return self.move_cartesian_supervised(
-            target=target, seed=seed, velocity_scaling=velocity_scaling,
-            collision_check=collision_check, max_deviation=max_deviation,
-            acceleration_scaling=acceleration_scaling)
-
-    async def move_cartesian(self, target: Union[Pose, CartesianPath],
-                             seed: Union[None, JointValues] = None,
-                             velocity_scaling: Union[None, float] = None,
-                             collision_check: Union[None, bool] = None,
-                             max_deviation: Union[None, float] = None,
-                             acceleration_scaling: Union[None, float] = None):
-        """
-        Asynchronous plan and execute trajectory from task space input
-
-        Parameters
-        ----------
-        target : Union[Pose, CartesianPath]
-            Target joint positions
-        seed : Union[None, JointValues] (optional)
-            Numerical seed to control joint configuration
-        velocity_scaling : Union[None, float]  (optional)
-            Scaling factor which is applied on the maximal
-            possible joint velocities
-        collision_check : Union[None, bool]   (optional)
-            If true the trajectory planing try to plan a
-            collision free trajectory and before executing
-            a trajectory a collision check is performed
-        max_deviation : Union[None, float]  (optional)
-            Defines the maximal deviation from trajectory points
-            when it is a fly-by-point in joint space
-        acceleration_scaling : Union[None, float]  (optional)
-            Scaling factor which is applied on the maximal
-            possible joint accelerations
-
-        Raises
-        ------
-        TypeError
-            If target is not one of types Union[Pose, CartesianPath]
-            If seed is defined and not of type JointValues
-            If all other inputs are not convertable to specified types
-        ValueError
-            If scaling inputs are not between 0.0 and 1.0
-        ServiceError
-            If underlying services from motion server are not available
-            or finish not successfully
-        """
-
-        move_joints_op = self.move_cartesian_operation(
-            target=target, seed=seed, velocity_scaling=velocity_scaling,
-            collision_check=collision_check, max_deviation=max_deviation,
-            acceleration_scaling=acceleration_scaling)
-        plan = move_joints_op.plan()
-        await plan.execute_async()
-
-    def move_cartesian_supervised(self, target: Union[Pose, CartesianPath],
-                                  seed: Union[None, JointValues] = None,
-                                  velocity_scaling: Union[None, float] = None,
-                                  collision_check: Union[None, bool] = None,
-                                  max_deviation: Union[None, float] = None,
-                                  acceleration_scaling: Union[None, float] = None):
-        """
-        Plan trajectory from task space input and create executor
-
-        Parameters
-        ----------
-        target : Union[Pose, CartesianPath]
-            Target joint positions
-        seed : Union[None, JointValues] (optional)
-            Numerical seed to control joint configuration
-        velocity_scaling : Union[None, float]  (optional)
-            Scaling factor which is applied on the maximal
-            possible joint velocities
-        collision_check : Union[None, bool]   (optional)
-            If true the trajectory planing try to plan a
-            collision free trajectory and before executing
-            a trajectory a collision check is performed
-        max_deviation : Union[None, float]  (optional)
-            Defines the maximal deviation from trajectory points
-            when it is a fly-by-point in joint space
-        acceleration_scaling : Union[None, float]  (optional)
-            Scaling factor which is applied on the maximal
-            possible joint accelerations
-
-        Returns
-        -------
-        executor : SteppedMotionClient
-            Executor for supervised execution of trajectory
-
-        Raises
-        ------
-        TypeError
-            If target is not one of types Union[Pose, CartesianPath]
-            If seed is defined and not of type JointValues
-            If all other inputs are not convertable to specified types
-        ValueError
-            If scaling inputs are not between 0.0 and 1.0
-        ServiceError
-            If underlying services from motion server are not available
-            or finish not successfully
-        """
-
-        move_joints_op = self.move_cartesian_operation(target=target,
-                                                       seed=seed,
-                                                       velocity_scaling=velocity_scaling,
-                                                       collision_check=collision_check,
-                                                       max_deviation=max_deviation,
-                                                       acceleration_scaling=acceleration_scaling)
-        plan = move_joints_op.plan()
-        return plan.execute_supervised()
-
-    def move_cartesian_operation(self, target: Union[Pose, CartesianPath],
-                                 seed: Union[None, JointValues] = None,
-                                 velocity_scaling: Union[None, float] = None,
-                                 collision_check: Union[None, bool] = None,
-                                 max_deviation: Union[None, float] = None,
-                                 acceleration_scaling: Union[None, float] = None):
+    def move_cartesian(self, target: Union[Pose, CartesianPath],
+                       seed: Union[None, JointValues] = None,
+                       velocity_scaling: Union[None, float] = None,
+                       collision_check: Union[None, bool] = None,
+                       max_deviation: Union[None, float] = None,
+                       acceleration_scaling: Union[None, float] = None):
         """
         Create MoveCartesianOperation for target joint positions
 
@@ -1815,143 +1280,14 @@ class EndEffector(object):
 
         return MoveCartesianOperation(args)
 
-    @deprecated(reason="Please use move_cartesian")
-    async def move_poses_collision_free(self, target,
-                                        velocity_scaling: Union[None, float] = None,
-                                        collision_check: Union[None, bool] = None,
-                                        max_deviation: Union[None, float] = None,
-                                        acceleration_scaling: Union[None, float] = None):
-
-        await self.move_cartesian_collision_free(target=target,
-                                                 velocity_scaling=velocity_scaling,
-                                                 collision_check=collision_check,
-                                                 max_deviation=max_deviation,
-                                                 acceleration_scaling=acceleration_scaling)
-
-    @deprecated(reason="Please use move_cartesian_collision_free_operation(...).plan().execute_supervised()")
-    def move_poses_collision_free_supervised(self, target: (Pose, CartesianPath),
-                                             seed: (None, JointValues) = None,
-                                             velocity_scaling: Union[None, float] = None,
-                                             collision_check: Union[None, bool] = None,
-                                             max_deviation: Union[None, float] = None,
-                                             acceleration_scaling: Union[None, float] = None):
-
-        return self.move_cartesian_collision_free_supervised(
-            target=target, seed=seed, velocity_scaling=velocity_scaling,
-            collision_check=collision_check, max_deviation=max_deviation,
-            acceleration_scaling=acceleration_scaling)
-
-    async def move_cartesian_collision_free(self, target: Union[Pose, CartesianPath],
-                                            seed: Union[None, JointValues] = None,
-                                            velocity_scaling: Union[None, float] = None,
-                                            collision_check: Union[None, bool] = None,
-                                            max_deviation: Union[None, float] = None,
-                                            acceleration_scaling: Union[None, float] = None):
-        """
-        Asynchronous plan and execute collision free trajectory from task space input
-        Parameters
-        ----------
-        target : Union[Pose, CartesianPath]
-            Target joint positions
-        seed : Union[None, JointValues] (optional)
-            Numerical seed to control joint configuration
-        velocity_scaling : Union[None, float]  (optional)
-            Scaling factor which is applied on the maximal
-            possible joint velocities
-        collision_check : Union[None, bool] (optional)
-            If true the trajectory planing try to plan a
-            collision free trajectory and before executing
-            a trajectory a collision check is performed
-        max_deviation : Union[None, float] (optional)
-            Defines the maximal deviation from trajectory points
-            when it is a fly-by-point in joint space
-        acceleration_scaling : Union[None, float]  (optional)
-            Scaling factor which is applied on the maximal
-            possible joint accelerations
-        Raises
-        ------
-        TypeError
-            If target is not one of types Union[Pose, CartesianPath]
-            If seed is defined and not of type JointValues
-            If all other inputs are not convertable to specified types
-        ValueError
-            If scaling inputs are not between 0.0 and 1.0
-        ServiceError
-            If underlying services from motion server are not available
-            or finish not successfully
-        """
-
-        move_joints_op = self.move_cartesian_linear_operation(
-            target=target, seed=seed, velocity_scaling=velocity_scaling,
-            collision_check=collision_check, max_deviation=max_deviation,
-            acceleration_scaling=acceleration_scaling)
-        plan = move_joints_op.plan()
-        await plan.execute_async()
-
-    def move_cartesian_collision_free_supervised(self, target: Union[Pose, CartesianPath],
-                                                 seed: Union[None, JointValues] = None,
-                                                 velocity_scaling: Union[None, float] = None,
-                                                 collision_check: Union[None, bool] = None,
-                                                 max_deviation: Union[None, float] = None,
-                                                 acceleration_scaling: Union[None,
-                                                     float] = None
-                                                 ) -> SteppedMotionClient:
-        """
-        Plan collision free trajectory from task space input and create executor
-
-        Parameters
-        ----------
-        target : Union[Pose, CartesianPath]
-            Target joint positions
-        seed : Union[None, JointValues] (optional)
-            Numerical seed to control joint configuration
-        velocity_scaling : Union[None, float]  (optional)
-            Scaling factor which is applied on the maximal
-            possible joint velocities
-        collision_check : Union[None, bool] (optional)
-            If true the trajectory planing try to plan a
-            collision free trajectory and before executing
-            a trajectory a collision check is performed
-        max_deviation : Union[None, float] (optional)
-            Defines the maximal deviation from trajectory points
-            when it is a fly-by-point in joint space
-        acceleration_scaling : Union[None, float]  (optional)
-            Scaling factor which is applied on the maximal
-            possible joint accelerations
-
-        Returns
-        -------
-        executor : SteppedMotionClient
-            Executor for supervised execution of collision free trajectory
-
-        Raises
-        ------
-        TypeError
-            If target is not one of types Union[Pose, CartesianPath]
-            If seed is defined and not of type JointValues
-            If all other inputs are not convertable to specified types
-        ValueError
-            If scaling inputs are not between 0.0 and 1.0
-        ServiceError
-            If underlying services from motion server are not available
-            or finish not successfully
-        """
-
-        move_joints_op = self.move_cartesian_linear_operation(
-            target=target, seed=seed, velocity_scaling=velocity_scaling,
-            collision_check=collision_check, max_deviation=max_deviation,
-            acceleration_scaling=acceleration_scaling)
-        plan = move_joints_op.plan()
-        return plan.execute_supervised()
-
-    def move_cartesian_collision_free_operation(self, target: Union[Pose, CartesianPath],
-                                                seed: Union[None, JointValues] = None,
-                                                velocity_scaling: Union[None, float] = None,
-                                                collision_check: Union[None, bool] = None,
-                                                max_deviation: Union[None, float] = None,
-                                                acceleration_scaling: Union[None,
-                                                    float] = None
-                                                ) -> MoveCartesianCollisionFreeOperation:
+    def move_cartesian_collision_free(self, target: Union[Pose, CartesianPath],
+                                      seed: Union[None, JointValues] = None,
+                                      velocity_scaling: Union[None, float] = None,
+                                      collision_check: Union[None, bool] = None,
+                                      max_deviation: Union[None, float] = None,
+                                      acceleration_scaling: Union[None,
+                                                                  float] = None
+                                      ) -> MoveCartesianCollisionFreeOperation:
         """
         Create MoveCartesianCollisionFreeOperation for target joint positions
 
@@ -2016,123 +1352,12 @@ class EndEffector(object):
 
         return MoveCartesianCollisionFreeOperation(args)
 
-    @deprecated("Please use move_cartesian_linear_operation(...).plan()")
-    def plan_poses_linear(self, target: Union[Pose, CartesianPath],
-                          seed: Union[None, JointValues] = None,
-                          velocity_scaling: Union[None, float] = None,
-                          collision_check: Union[None, bool] = None,
-                          max_deviation: Union[None, float] = None,
-                          acceleration_scaling: Union[None, float] = None
-                          ) -> Tuple[JointTrajectory, PlanParameters]:
-        """
-        Plans a trajectory with linear movements from task space input
-
-        Parameters
-        ----------
-        target : Union[Pose, CartesianPath]
-            Target joint positions
-        velocity_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint velocities
-        collision_check : Union[None, bool]
-            If true the trajectory planing try to plan a
-            collision free trajectory and before executing
-            a trajectory a collision check is performed
-        max_deviation : Union[None, float]
-            Defines the maximal deviation from trajectory points
-            when it is a fly-by-point in joint space
-        acceleration_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint accelerations
-
-        Returns
-        -------
-        Tuple[JointTrajectory, PlanParameters]
-            A tuple containing the trajectory and the plan parameters
-
-        Raises
-        ------
-        TypeError
-            If target is not one of types Union[Pose, CartesianPath]
-            If all other inputs are not convertable to specified types
-        ValueError
-            If scaling inputs are not between 0.0 and 1.0
-        ServiceError
-            If underlying services from motion server are not available
-            or finish not successfully
-        """
-
-        move_joints_op = self.move_cartesian_linear_operation(
-            target=target, seed=seed, velocity_scaling=velocity_scaling,
-            collision_check=collision_check, max_deviation=max_deviation,
-            acceleration_scaling=acceleration_scaling)
-        plan = move_joints_op.plan()
-        return plan.trajectory, plan.parameters
-
-    @deprecated(reason="Please use move_cartesian_linear")
-    async def move_poses_linear(self, target,
-                                seed: Union[None, JointValues] = None,
-                                velocity_scaling: Union[None, float] = None,
-                                collision_check: Union[None, bool] = None,
-                                max_deviation: Union[None, float] = None,
-                                acceleration_scaling: Union[None, float] = None):
-
-        await self.move_cartesian_linear(
-            target=target, seed=seed, velocity_scaling=velocity_scaling,
-            collision_check=collision_check, max_deviation=max_deviation,
-            acceleration_scaling=acceleration_scaling)
-
-    async def move_cartesian_linear(self, target: Union[Pose, CartesianPath],
-                                    seed: Union[None, JointValues]=None,
-                                    velocity_scaling: Union[None, float]=None,
-                                    collision_check: Union[None, bool]=None,
-                                    max_deviation: Union[None, float]=None,
-                                    acceleration_scaling: Union[None, float]=None):
-        """
-        Plans and executes a trajectory with linear movements from task space input
-
-        Parameters
-        ----------
-        target : Union[Pose, CartesianPath]
-            Target joint positions
-        velocity_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint velocities
-        collision_check : Union[None, bool]
-            If true the trajectory planing try to plan a
-            collision free trajectory and before executing
-            a trajectory a collision check is performed
-        max_deviation : Union[None, float]
-            Defines the maximal deviation from trajectory points
-            when it is a fly-by-point in joint space
-        acceleration_scaling : Union[None, float]
-            Scaling factor which is applied on the maximal
-            possible joint accelerations
-
-        Raises
-        ------
-        TypeError
-            If target is not one of types Union[Pose, CartesianPath]
-            If all other inputs are not convertable to specified types
-        ValueError
-            If scaling inputs are not between 0.0 and 1.0
-        ServiceError
-            If underlying services from motion server are not available
-            or finish not successfully
-        """
-
-        move_joints_op=self.move_cartesian_linear_operation(
-            target=target, seed=seed, velocity_scaling=velocity_scaling, collision_check=collision_check,
-            max_deviation=max_deviation, acceleration_scaling=acceleration_scaling)
-        plan=move_joints_op.plan()
-        await plan.execute_async()
-
-    def move_cartesian_linear_operation(self, target: Union[Pose, CartesianPath],
-                                        seed: Union[None, JointValues]=None,
-                                        velocity_scaling: Union[None, float]=None,
-                                        collision_check: Union[None, bool]=None,
-                                        max_deviation: Union[None, float]=None,
-                                        acceleration_scaling: Union[None, float]=None):
+    def move_cartesian_linear(self, target: Union[Pose, CartesianPath],
+                              seed: Union[None, JointValues]=None,
+                              velocity_scaling: Union[None, float]=None,
+                              collision_check: Union[None, bool]=None,
+                              max_deviation: Union[None, float]=None,
+                              acceleration_scaling: Union[None, float]=None):
         """
         Create MoveCartesianLinearOperation for target joint positions
 
@@ -2179,18 +1404,18 @@ class EndEffector(object):
         if not isinstance(seed, (type(None), JointValues)):
             raise TypeError('seed is not of expected type JointValues')
 
-        args=MoveCartesianArgs()
-        args.end_effector=self
-        args.move_group=self.__move_group
-        args.seed=seed
-        args.target=target
-        args.velocity_scaling=float(velocity_scaling or
+        args = MoveCartesianArgs()
+        args.end_effector = self
+        args.move_group = self.__move_group
+        args.seed = seed
+        args.target = target
+        args.velocity_scaling = float(velocity_scaling or
                                       self.__move_group.velocity_scaling)
-        args.acceleration_scaling=float(acceleration_scaling or
+        args.acceleration_scaling = float(acceleration_scaling or
                                           self.__move_group.acceleration_scaling)
-        args.collision_check=bool(collision_check or
+        args.collision_check = bool(collision_check or
                                     self.__move_group.collision_check)
-        args.max_deviation=float(max_deviation or
+        args.max_deviation = float(max_deviation or
                                    self.__move_group.max_deviation)
 
         return MoveCartesianLinearOperation(args)
