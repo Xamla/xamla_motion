@@ -1350,7 +1350,7 @@ class MotionService(object):
                                                    path)
 
     @classmethod
-    def plan_move_pose_linear(cls, path, seed, parameters):
+    def plan_move_cartesian_linear(cls, path, seed, parameters):
         """
         Plans trajectory with linear movements from a cartesian path
 
@@ -1956,7 +1956,7 @@ class MotionService(object):
 
     #     source = self.query_pose(group.name, seed, end_effector_link)
     #     path = CartesianPath.from_start_stop_point(source, target)
-    #     trajectory = self.plan_move_pose_linear(path, seed, parameters)
+    #     trajectory = self.plan_move_cartesian_linear(path, seed, parameters)
     #     await self.execute_joint_trajectory(trajectory,
     #                                         parameters.collision_check)
 

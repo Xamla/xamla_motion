@@ -9,7 +9,7 @@ from xamla_motion.motion_client import MoveGroup as NewMoveGroup
 from xamla_motion.motion_service import MotionService, SteppedMotionClient
 
 
-@deprecated(reason="xamla_motion.legacy.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
+@deprecated(reason="xamla_motion.v1.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
 class MoveGroup(NewMoveGroup):
 
     """
@@ -209,7 +209,7 @@ class MoveGroup(NewMoveGroup):
         self.__velocity_scaling = 1.0
         self.__acceleration_scaling = 1.0
 
-    @deprecated(reason="xamla_motion.legacy.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
+    @deprecated(reason="xamla_motion.v1.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
     def plan_move_joints(self,
                          target: Union[JointValues, JointPath],
                          velocity_scaling: Union[None, float] = None,
@@ -266,7 +266,7 @@ class MoveGroup(NewMoveGroup):
         plan = move_joints_op.plan()
         return plan.trajectory, plan.parameters
 
-    @deprecated(reason="xamla_motion.legacy.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
+    @deprecated(reason="xamla_motion.v1.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
     def plan_move_joints_collision_free(self,
                                         target: Union[JointValues, JointPath],
                                         velocity_scaling: Union[None, float] = None,
@@ -326,7 +326,7 @@ class MoveGroup(NewMoveGroup):
         plan = move_joints_op.plan()
         return plan.trajectory, plan.parameters
 
-    @deprecated(reason="xamla_motion.legacy.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
+    @deprecated(reason="xamla_motion.v1.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
     async def move_joints(self,
                           target: Union[JointValues, JointPath],
                           velocity_scaling: Union[None, float] = None,
@@ -376,7 +376,7 @@ class MoveGroup(NewMoveGroup):
         plan = move_joints_op.plan()
         await plan.execute_async()
 
-    @deprecated(reason="xamla_motion.legacy.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
+    @deprecated(reason="xamla_motion.v1.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
     def move_joints_supervised(self,
                                target: Union[JointValues, JointPath],
                                velocity_scaling: Union[None, float] = None,
@@ -430,7 +430,7 @@ class MoveGroup(NewMoveGroup):
         plan = move_joints_op.plan()
         return plan.execute_supervised()
 
-    @deprecated(reason="xamla_motion.legacy.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
+    @deprecated(reason="xamla_motion.v1.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
     async def move_joints_collision_free(self,
                                          target: Union[JointValues, JointPath],
                                          velocity_scaling: Union[None, float] = None,
@@ -477,7 +477,7 @@ class MoveGroup(NewMoveGroup):
         plan = move_joints_op.plan()
         await plan.execute_async()
 
-    @deprecated(reason="xamla_motion.legacy.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
+    @deprecated(reason="xamla_motion.v1.MoveGroup, please use the new api implemented in xamla_motion.MoveGroup")
     def move_joints_collision_free_supervised(self,
                                               target: Union[JointValues, JointPath],
                                               velocity_scaling: Union[None, float] = None,
@@ -600,7 +600,7 @@ class EndEffector(NewEndEffector):
         Deprecated. Please use move_cartesian_linear
     """
 
-    @deprecated(reason="xamla_motion.legacy.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
+    @deprecated(reason="xamla_motion.v1.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
     def __init__(self, move_group: MoveGroup, end_effector_name: str,
                  end_effector_link_name: str):
         """
@@ -642,7 +642,7 @@ class EndEffector(NewEndEffector):
         self.__m_service = move_group.motion_service
 
     @staticmethod
-    @deprecated(reason="xamla_motion.legacy.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
+    @deprecated(reason="xamla_motion.v1.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
     def from_end_effector_name(end_effector_name: str) -> "EndEffector":
         """
         Creates an instance of MoveGroup and select the correct instance of EndEffector
@@ -681,7 +681,7 @@ class EndEffector(NewEndEffector):
 
         return move_group.get_end_effector()
 
-    @deprecated(reason="xamla_motion.legacy.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
+    @deprecated(reason="xamla_motion.v1.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
     async def move_poses(self, target: Union[Pose, CartesianPath],
                          seed: Union[None, JointValues] = None,
                          velocity_scaling: Union[None, float] = None,
@@ -698,7 +698,7 @@ class EndEffector(NewEndEffector):
         plan = move_joints_op.plan()
         await plan.execute_async()
 
-    @deprecated(reason="xamla_motion.legacy.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
+    @deprecated(reason="xamla_motion.v1.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
     def move_poses_supervised(self, target: (Pose, CartesianPath),
                               seed: (None, JointValues) = None,
                               velocity_scaling: Union[None, float] = None,
@@ -717,7 +717,7 @@ class EndEffector(NewEndEffector):
         plan = move_joints_op.plan()
         return plan.execute_supervised()
 
-    @deprecated(reason="xamla_motion.legacy.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
+    @deprecated(reason="xamla_motion.v1.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
     async def move_poses_collision_free(self, target: Union[Pose, CartesianPath],
                                         seed: Union[None, JointValues] = None,
                                         velocity_scaling: Union[None, float] = None,
@@ -768,7 +768,7 @@ class EndEffector(NewEndEffector):
         plan = move_joints_op.plan()
         await plan.execute_async()
 
-    @deprecated(reason="xamla_motion.legacy.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
+    @deprecated(reason="xamla_motion.v1.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
     def move_poses_collision_free_supervised(self, target: Union[Pose, CartesianPath],
                                              seed: Union[None, JointValues] = None,
                                              velocity_scaling: Union[None, float] = None,
@@ -827,7 +827,7 @@ class EndEffector(NewEndEffector):
         plan = move_joints_op.plan()
         return plan.execute_supervised()
 
-    @deprecated(reason="xamla_motion.legacy.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
+    @deprecated(reason="xamla_motion.v1.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
     def plan_poses_linear(self, target: Union[Pose, CartesianPath],
                           seed: Union[None, JointValues] = None,
                           velocity_scaling: Union[None, float] = None,
@@ -883,7 +883,7 @@ class EndEffector(NewEndEffector):
         plan = move_joints_op.plan()
         return plan.trajectory, plan.parameters
 
-    @deprecated(reason="xamla_motion.legacy.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
+    @deprecated(reason="xamla_motion.v1.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
     async def move_poses_linear(self, target: Union[Pose, CartesianPath],
                                 seed: Union[None, JointValues]=None,
                                 velocity_scaling: Union[None, float]=None,
@@ -933,7 +933,7 @@ class EndEffector(NewEndEffector):
         plan = move_joints_op.plan()
         await plan.execute_async()
 
-    @deprecated(reason="xamla_motion.legacy.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
+    @deprecated(reason="xamla_motion.v1.EndEffector, please use the new api implemented in xamla_motion.EndEffector")
     def move_poses_linear_supervised(self, target: Union[Pose, CartesianPath],
                                      seed: Union[None, JointValues]=None,
                                      velocity_scaling: Union[None, float]=None,
