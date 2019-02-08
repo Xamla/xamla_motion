@@ -1125,6 +1125,7 @@ class EndEffector(object):
         ServiceError
             If query service is not available
         """
+
         if not isinstance(pose, Pose):
             raise TypeError('target is not one of expected '
                             'types Pose')
@@ -1213,7 +1214,7 @@ class EndEffector(object):
                        velocity_scaling: Union[None, float] = None,
                        collision_check: Union[None, bool] = None,
                        max_deviation: Union[None, float] = None,
-                       acceleration_scaling: Union[None, float] = None):
+                       acceleration_scaling: Union[None, float] = None) -> MoveCartesianOperation:
         """
         Create MoveCartesianOperation for target joint positions
 

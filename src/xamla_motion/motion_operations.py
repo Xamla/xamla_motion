@@ -1215,7 +1215,7 @@ class MoveCartesianLinearOperation(MoveCartesianOperation):
 
         path = path.prepend(start)
 
-        t = self._move_group.motion_service.plan_move_cartesian_linear(path, seed,
+        t = self._move_group.motion_service.plan_move_pose_linear(path, seed,
                                                                        self._task_space_plan_parameters)
 
         return Plan(self._move_group, t, self._plan_parameters)

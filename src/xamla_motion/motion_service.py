@@ -1004,6 +1004,7 @@ class MotionService(object):
         ik_jump_threshold = float(ik_jump_threshold)
         max_deviation = float(max_deviation)
         collision_check = bool(collision_check)
+
         delta_t = float(delta_t)
 
         delta_t = 1 / delta_t if delta_t > 1.0 else delta_t
@@ -1350,7 +1351,7 @@ class MotionService(object):
                                                    path)
 
     @classmethod
-    def plan_move_cartesian_linear(cls, path, seed, parameters):
+    def plan_move_pose_linear(cls, path, seed, parameters):
         """
         Plans trajectory with linear movements from a cartesian path
 
