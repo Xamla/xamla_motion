@@ -10,7 +10,7 @@ from pyquaternion import Quaternion
 from sklearn.neighbors import BallTree
 from xamlamoveit_msgs.srv import SetJointPosture, SetJointPostureRequest
 
-from .motion_client import EndEffector, MoveGroup
+from .motion_client import EndEffector
 from .data_types import (CartesianPath, JointPath, JointTrajectory,
                          JointValues, Pose)
 

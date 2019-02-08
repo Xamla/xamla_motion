@@ -32,7 +32,7 @@ from .motion_service import SteppedMotionClient
 from .xamla_motion_exceptions import ServiceException
 
 if TYPE_CHECKING:
-    from .motion_client import EndEffector, MoveGroup
+    from xamla_motion.v2.motion_client import EndEffector, MoveGroup
 
 
 class MoveArgs(object):
