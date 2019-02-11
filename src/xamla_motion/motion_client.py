@@ -826,10 +826,10 @@ class MoveGroup(object):
             raise TypeError('target is not one of expected types'
                             ' JointValues, JointPath')
 
-        parameters = self._build_plan_parameters(velocity_scaling,
-                                                 False,
-                                                 max_deviation,
-                                                 acceleration_scaling)
+        parameters = self._build_plan_parameters(velocity_scaling=velocity_scaling,
+                                                 collision_check=False,
+                                                 max_deviation=max_deviation,
+                                                 acceleration_scaling=acceleration_scaling)
 
         path_cf = self.__m_service.plan_collision_free_joint_path(joint_path,
                                                                   parameters)
@@ -932,13 +932,12 @@ class MoveGroup(object):
             raise TypeError('target is not one of expected types'
                             ' JointValues, JointPath')
 
-        trajectory, parameters = self.plan_move_joints_collision_free(target,
-                                                                      velocity_scaling,
-                                                                      max_deviation,
-                                                                      acceleration_scaling)
-
+        trajectory, parameters = self.plan_move_joints_collision_free(target=target,
+                                                                      velocity_scaling=velocity_scaling,
+                                                                      max_deviation=max_deviation,
+                                                                      acceleration_scaling=acceleration_scaling)
         return self.__m_service.execute_joint_trajectory_supervised(trajectory,
-                                                                    parameters.velocity_scaling,
+                                                                    velocity_scaling,
                                                                     False)
 
     async def move_joints(self,
