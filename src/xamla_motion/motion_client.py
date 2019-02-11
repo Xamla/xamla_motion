@@ -1102,7 +1102,7 @@ class EndEffector(object):
     plan_poses_linear(
             target: Union[Pose, CartesianPath], velocity_scaling: Union[None, float]=None,
             collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
-            acceleration_scaling: Union[None, float]=None
+            acceleration_scaling: Union[None, float]=None, seed: Union[None, JointValues]=None
         ) -> Tuple[JointTrajectory, PlanParameters]
         Plans a trajectory with linear movements from task space input
     move_poses_linear(
@@ -1782,11 +1782,11 @@ class EndEffector(object):
                                                                     plan_parameters.collision_check)
 
     def plan_poses_linear(self, target: Union[Pose, CartesianPath],
-                          seed: Union[None, JointValues] = None,
                           velocity_scaling: Union[None, float] = None,
                           collision_check: Union[None, bool] = None,
                           max_deviation: Union[None, float] = None,
-                          acceleration_scaling: Union[None, float] = None
+                          acceleration_scaling: Union[None, float] = None,
+                          seed: Union[None, JointValues] = None,
                           ) -> Tuple[JointTrajectory, PlanParameters]:
         """
         Plans a trajectory with linear movements from task space input
@@ -1808,6 +1808,9 @@ class EndEffector(object):
         acceleration_scaling : Union[None, float]
             Scaling factor which is applied on the maximal
             possible joint accelerations
+        seed : Union[None, JointValues]
+            Numerical seed to control joint configuration
+
 
         Returns
         -------
@@ -1892,11 +1895,11 @@ class EndEffector(object):
             raise TypeError('target is not one of expected types'
                             ' Pose, CartesianPath')
 
-        trajectory, parameters = self.plan_poses_linear(target,
-                                                        velocity_scaling,
-                                                        collision_check,
-                                                        max_deviation,
-                                                        acceleration_scaling)
+        trajectory, parameters = self.plan_poses_linear(target=target,
+                                                        velocity_scaling=velocity_scaling,
+                                                        collision_check=collision_check,
+                                                        max_deviation=max_deviation,
+                                                        acceleration_scaling=acceleration_scaling)
 
         await self.__m_service.execute_joint_trajectory(trajectory,
                                                         parameters.collision_check)
