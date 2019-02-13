@@ -33,8 +33,7 @@ class WsgCommand(Enum):
 
 @unique
 class WsgState(Enum):
-
-    Idle = 0,
+    Idle = 0
     Grasping = 1
     NoPartFound = 2
     PartLost = 3
@@ -52,7 +51,11 @@ class WsgResult(object):
 
     def __init__(self, state: WsgState, width: float,
                  force: float, status: str):
-        self.__state = state
+        if isinstance(state, WsgState):
+            self.__state = state
+        else:
+            self.__state = WsgState(state)
+
         self.__width = width
         self.__force = force
         self.__status = status
@@ -72,7 +75,7 @@ class WsgResult(object):
     def width(self):
         """
         width : float
-            The current gripper gap size (in meters) 
+            The current gripper gap size (in meters)
         """
         return self.__width
 

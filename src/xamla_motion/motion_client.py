@@ -83,7 +83,7 @@ class MoveGroup(object):
 
     def __init__(self, move_group_name: Union[None, str] = None,
                  end_effector_name: Union[None, str] = None, motion_service=None):
-                 
+
         """
         Initialize MoveGroup class
 
@@ -312,12 +312,9 @@ class MoveGroup(object):
             activate collision check or deactivate it
         """
 
-        if np.isclose(value, self.__plan_parameters.collision_check):
-            return
-
-        self.__plan_parameters.collision_check = value
+        self.__plan_parameters.with_collision_check(value)
         if self.__task_space_plan_parameters:
-            self.__task_space_plan_parameters.collision_check = value
+            self.__task_space_plan_parameters.with_collision_check(value)
 
     @property
     def sample_resolution(self):
@@ -340,13 +337,10 @@ class MoveGroup(object):
             If value smaller one interpreted as in
             seconds else in Hz
         """
-
-        if np.isclose(value, self.__plan_parameters.sample_resolution):
-            return
-
-        self.__plan_parameters.sample_resolution = value
+        self.__plan_parameters.with_sample_resolution(value)
         if self.__task_space_plan_parameters:
-            self.__task_space_plan_parameters.sample_resolution = value
+            self.__task_space_plan_parameters.with_sample_resolution(value)
+
 
     @property
     def max_deviation(self):
@@ -369,12 +363,9 @@ class MoveGroup(object):
             maximal deviation
         """
 
-        if np.isclose(value, self.__plan_parameters.max_deviation):
-            return
-
-        self.__plan_parameters.max_deviation = value
+        self.__plan_parameters.with_max_deviation(value)
         if self.__task_space_plan_parameters:
-            self.__task_space_plan_parameters.max_deviation = value
+            self.__task_space_plan_parameters.with_max_deviation(value)
 
     @property
     def ik_jump_threshold(self):
@@ -399,10 +390,10 @@ class MoveGroup(object):
             new maximal allowed inverse kinematics jump threshold
         """
         if not self.__task_space_plan_parameters:
-            return
+            raise RuntimeError('task space plan parameters not defined'
+                               ' because move group has no end effector')
 
-        if not np.isclose(value, self.__task_space_plan_parameters.ik_jump_threshold):
-            self.__task_space_plan_parameters.ik_jump_threshold = value
+        self.__task_space_plan_parameters.with_ik_jump_threshold(value)
 
     @property
     def velocity_scaling(self):
@@ -421,12 +412,11 @@ class MoveGroup(object):
     @velocity_scaling.setter
     def velocity_scaling(self, value):
 
-        value = float(value)
+        if value > 1.0 or value < 0.0:
+            raise ValueError('value is not'
+                             ' between 0.0 and 1.0')
 
-        if not np.isclose(value, self.velocity_scaling):
-            self.__plan_parameters.velocity_scaling = value
-            if self.__task_space_plan_parameters:
-                self.__task_space_plan_parameters.velocity_scaling = value
+        self.__velocity_scaling = value
 
     @property
     def acceleration_scaling(self):
@@ -445,12 +435,11 @@ class MoveGroup(object):
     @acceleration_scaling.setter
     def acceleration_scaling(self, value):
 
-        value = float(value)
+        if value > 1.0 or value < 0.0:
+            raise ValueError('value is not'
+                             ' between 0.0 and 1.0')
 
-        if not np.isclose(value, self.acceleration_scaling):
-            self.__plan_parameters.acceleration_scaling = value
-            if self.__task_space_plan_parameters:
-                self.__task_space_plan_parameters.acceleration_scaling = value
+        self.__acceleration_scaling = value
 
     def set_default_end_effector(self, end_effector_name):
         """
@@ -780,7 +769,7 @@ class MoveGroup(object):
                                         acceleration_scaling: Union[None,
                                                                     float] = None
                                         ) -> Tuple[JointTrajectory, PlanParameters]:
-        
+
         """
         Plans a collision free trajectory from current to target joint positions
 
@@ -1650,7 +1639,7 @@ class EndEffector(object):
         acceleration_scaling : Union[None, float]  (optional)
             Scaling factor which is applied on the maximal
             possible joint accelerations
-       
+
         Raises
         ------
         TypeError
