@@ -10,7 +10,7 @@ from pyquaternion import Quaternion
 from sklearn.neighbors import BallTree
 from xamlamoveit_msgs.srv import SetJointPosture, SetJointPostureRequest
 
-from .motion_client import EndEffector, MoveGroup
+from .motion_client import EndEffector
 from .data_types import (CartesianPath, JointPath, JointTrajectory,
                          JointValues, Pose)
 
@@ -294,7 +294,7 @@ def _generate_trajectory(start: Pose, target: Pose,
     return trajectory
 
 
-def _set_robot_state(pose, end_effector, seed):
+def _set_robot_state(set_robot_service_name, pose, end_effector, seed):
     new_robot_state = end_effector.inverse_kinematics(pose=pose,
                                                       collision_check=True,
                                                       seed=seed,
@@ -302,7 +302,7 @@ def _set_robot_state(pose, end_effector, seed):
                                                           seconds=5),
                                                       const_seed=False)
 
-    set_state_service_handle = rospy.ServiceProxy('/sda10d/xamlaSda10dController/set_state',
+    set_state_service_handle = rospy.ServiceProxy(set_robot_service_name,
                                                   SetJointPosture)
 
     request = SetJointPostureRequest()
@@ -317,7 +317,8 @@ def _set_robot_state(pose, end_effector, seed):
     time.sleep(0.2)
 
 
-def create_trajectory_cache(end_effector: EndEffector,
+def create_trajectory_cache(set_robot_service_name: str,
+                            end_effector: EndEffector,
                             seed: JointValues,
                             start: Union[Pose, SampleVolume],
                             target: Union[Pose, SampleVolume]) -> TaskTrajectoryCache:
@@ -326,6 +327,9 @@ def create_trajectory_cache(end_effector: EndEffector,
 
     Parameters
     ----------
+    set_robot_service_name: str
+        service name of the robot specific set serivce to
+        set the robot to a specific posture in simulation
     end_effector : EndEffector
         The end effector being used
     seed : JointValues
@@ -358,7 +362,8 @@ def create_trajectory_cache(end_effector: EndEffector,
             try:
                 for a in start.quaternions:
                     pose = Pose(v, a)
-                    _set_robot_state(pose, end_effector, seed)
+                    _set_robot_state(set_robot_service_name,
+                                     pose, end_effector, seed)
                     trajectories.append(_generate_trajectory(pose, target,
                                                              end_effector,
                                                              seed))
@@ -387,7 +392,8 @@ def create_trajectory_cache(end_effector: EndEffector,
 
     elif isinstance(target, SampleVolume) and isinstance(start, Pose):
         # ONETOMANY
-        _set_robot_state(start, end_effector, seed)
+        _set_robot_state(set_robot_service_name, start,
+                         end_effector, seed)
 
         targets = []
         executables = []

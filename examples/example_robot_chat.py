@@ -50,8 +50,10 @@ def main():
 
     cartesian_path = CartesianPath([pose_1, pose_2, pose_3])
 
-    stepped_client = end_effector.move_poses_supervised(cartesian_path,
-                                                        collision_check=True)
+    plan = end_effector.move_cartesian(cartesian_path,
+                                       collision_check=True).plan()
+
+    stepped_client = plan.execute_supervised()
 
     robot_chat = RobotChatClient()
 

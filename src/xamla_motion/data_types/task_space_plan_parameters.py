@@ -54,8 +54,7 @@ class TaskSpacePlanParameters(object):
             The argv dict is used to set parameters which have default values
             this are sample_resolution (default = 0.008 / 125 Hz),
             collision_check (default = True), max_deviation (default = 0.2),
-            ik_jump_threshold (default = 1.2), velocity_scaling (default = 1.0) 
-            and acceleration_scaling (default = 1.0)
+            ik_jump_threshold (default = 1.2)
 
         Returns
         ------
@@ -99,41 +98,8 @@ class TaskSpacePlanParameters(object):
         except TypeError as exc:
             raise TypeError('max_deviation can not be converted to float')
 
-        try:
-            self.__velocity_scaling = float(kwargs.get("velocity_scaling",
-                                                       1.0))
-        except TypeError as exc:
-            raise TypeError('velocity_scaling can not be converted to float')
-        if self.__velocity_scaling < 0.0 or self.__velocity_scaling > 1.0:
-            raise ValueError('velocity_scaling is not in expected range'
-                             'between 0.0 and 1.0')
-
-        try:
-            self.__acceleration_scaling = float(kwargs.get(
-                "acceleration_scaling",
-                1.0))
-        except TypeError as exc:
-            raise TypeError('acceleration_scaling can not'
-                            ' be converted to float')
-        if self.__acceleration_scaling < 0.0 or self.__acceleration_scaling > 1.0:
-            raise ValueError('acceleration_scaling is not in expected range'
-                             'between 0.0 and 1.0')
-
         if isinstance(end_effector_limits, EndEffectorLimits):
-            s_x_velocity = (end_effector_limits.max_xyz_velocity
-                            * self.__velocity_scaling)
-            s_x_acceleration = (end_effector_limits.max_xyz_acceleration
-                                * self.__acceleration_scaling)
-            s_a_velocity = (end_effector_limits.max_angular_velocity
-                            * self.__velocity_scaling)
-            s_a_acceleration = (end_effector_limits.max_angular_acceleration
-                                * self.__acceleration_scaling)
-
-            self.__o_end_effector_limits = end_effector_limits
-            self.__end_effector_limits = EndEffectorLimits(s_x_velocity,
-                                                           s_x_acceleration,
-                                                           s_a_velocity,
-                                                           s_a_acceleration)
+            self.__end_effector_limits = end_effector_limits
         else:
             raise TypeError('end_effector_limits is not of'
                             ' expected type EndEffectorLimits')
@@ -163,8 +129,7 @@ class TaskSpacePlanParameters(object):
             The argv dict is used to set parameters which have default values
             this are sample_resolution (default = 0.008),
             collision_check (default = True), max_deviation (default = 0.2),
-            ik_jump_threshold (default = 1.2), velocity_scaling (default = 1.0) 
-            and acceleration_scaling (default = 1.0)
+            ik_jump_threshold (default = 1.2)
 
         Returns
         -------
@@ -193,6 +158,144 @@ class TaskSpacePlanParameters(object):
                                 ' due to limit type or size') from exc
 
         return cls(end_effector_name, end_effector_limits, **kwargs)
+
+    @classmethod
+    def from_builder(cls, builder):
+        """
+        Initilization of TaskSpacePlanParameters from TaskSpacePlanParameters Builder
+
+        Parameters
+        ----------
+        builder
+            Instance of TaskSpacePlanParameter Builder
+
+
+        Returns
+        ------
+            Instance of TaskSpacePlanParameters
+
+        Raises
+        ------
+        TypeError
+            If builder is not of expected type TaskSpacePlanParameters Builder
+        """
+
+        if not isinstance(builder, cls._Builder):
+            raise TypeError('builder is not of expected type '
+                            'TaskSpacePlanParameters builder')
+
+        return cls(builder.end_effector_name,
+                   builder.e_e_limits,
+                   sample_resolution=builder.sample_resolution,
+                   collision_check=builder.collision_check,
+                   max_deviation=builder.max_deviation,
+                   ik_jump_threshold=builder.ik_jump_threshold)
+
+    class _Builder(object):
+
+        def __init__(self, instance):
+            self.__end_effector_name = instance.end_effector_name
+            self.__e_e_limits = instance.end_effector_limits
+            self.__sample_resolution = instance.sample_resolution
+            self.__max_deviation = instance.max_deviation
+            self.__collision_check = instance.collision_check
+            self.__ik_jump_threshold = instance.ik_jump_threshold
+
+        @property
+        def end_effector_name(self):
+            return self.__end_effector_name
+
+        @property
+        def end_effector_limits(self):
+            return self.__e_e_limits
+
+        @property
+        def sample_resolution(self):
+            return self.__sample_resolution
+
+        @sample_resolution.setter
+        def sample_resolution(self, value):
+            value = float(value)
+
+            self.__sample_resolution = value
+
+        @property
+        def collision_check(self):
+            return self.__collision_check
+
+        @collision_check.setter
+        def collision_check(self, value):
+            value = bool(value)
+
+            self.__collision_check = value
+
+        @property
+        def max_deviation(self):
+            return self.__max_deviation
+
+        @max_deviation.setter
+        def max_deviation(self, value):
+            value = float(value)
+
+            self.__max_deviation = value
+
+        @property
+        def ik_jump_threshold(self):
+            return self.__ik_jump_threshold
+
+        @ik_jump_threshold.setter
+        def ik_jump_threshold(self, value):
+            value = float(value)
+
+            self.__ik_jump_threshold = value
+
+        def scale_velocity(self, value):
+            value = float(value)
+
+            if value > 1.0 or value < 0.0:
+                raise ValueError('velocity_scaling is not'
+                                 ' between 0.0 and 1.0')
+
+            max_xyz_velocity = self.__e_e_limits.max_xyz_velocity
+            max_xyz_velocity *= value
+
+            max_angular_velocity = self.__e_e_limits.max_angular_velocity
+            max_angular_velocity *= value
+
+            limits = EndEffectorLimits(max_xyz_velocity,
+                                       self.__e_e_limits.max_xyz_acceleration,
+                                       max_angular_velocity,
+                                       self.__e_e_limits.max_angular_acceleration)
+
+            self.__e_e_limits = limits
+
+        def scale_acceleration(self, value):
+            value = float(value)
+
+            if value > 1.0 or value < 0.0:
+                raise ValueError('acceleration_scaling is not'
+                                 ' between 0.0 and 1.0')
+
+            max_xyz_acc = self.__e_e_limits.max_xyz_acceleration
+            max_xyz_acc *= value
+
+            max_angular_acc = self.__e_e_limits.max_angular_velocity
+            max_angular_acc *= value
+
+            limits = EndEffectorLimits(self.__e_e_limits.max_xyz_velocity,
+                                       max_xyz_acc,
+                                       self.__e_e_limits.max_angular_velocity,
+                                       max_angular_acc)
+
+            self.__e_e_limits = limits
+
+        def build(self):
+            return TaskSpacePlanParameters(self.__end_effector_name,
+                                           self.__e_e_limits,
+                                           sample_resolution=self.__sample_resolution,
+                                           collision_check=self.__collision_check,
+                                           max_deviation=self.__max_deviation,
+                                           ik_jump_threshold=self.__ik_jump_threshold)
 
     @property
     def end_effector_name(self):
@@ -264,12 +367,6 @@ class TaskSpacePlanParameters(object):
         """
         return self.__collision_check
 
-    @collision_check.setter
-    def collision_check(self, value):
-        value = bool(value)
-
-        self.__collision_check = value
-
     @property
     def max_deviation(self):
         """
@@ -279,12 +376,6 @@ class TaskSpacePlanParameters(object):
         """
         return self.__max_deviation
 
-    @max_deviation.setter
-    def max_deviation(self, value):
-        value = float(value)
-
-        self.__max_deviation = value
-
     @property
     def ik_jump_threshold(self):
         """
@@ -293,73 +384,134 @@ class TaskSpacePlanParameters(object):
         """
         return self.__ik_jump_threshold
 
-    @ik_jump_threshold.setter
-    def ik_jump_threshold(self, value):
+    def with_collision_check(self, value):
+        """
+        Create an instance of TaskSpacePlanParameters with collision check value
+
+        Parameters
+        ----------
+        value : bool
+            New value of collision check
+
+        Returns
+        -------
+        TaskSpacePlanParameters
+            Instance of TaskSpacePlanParameters with new collision check value
+
+        Raises
+        ------
+        TypeError
+            If value is not of type bool
+        """
+
+        if not isinstance(value, bool):
+            raise TypeError('value is not of expected type bool')
+
+        if self.__collision_check == value:
+            return self
+        else:
+            builder = self._Builder(self)
+            builder.collision_check = value
+            return builder.build()
+
+    def with_sample_resolution(self, value):
+        """
+        Create an instance of TaskSpacePlanParameters with sample resolution value
+
+        Parameters
+        ----------
+        value : bool
+            New value of sample resolution
+
+        Returns
+        -------
+        TaskSpacePlanParameters
+            Instance of TaskSpacePlanParameters with new sample resolution value
+
+        Raises
+        ------
+        TypeError
+            If value is not convertable to float
+        """
+
         value = float(value)
 
-        self.__ik_jump_threshold = value
+        if np.isclose(self.__sample_resolution, value):
+            return self
+        else:
+            builder = self._Builder(self)
+            builder.sample_resolution = value
+            return builder.build()
 
-    @property
-    def velocity_scaling(self):
+    def with_max_deviation(self, value):
         """
-        velocity_scaling: float
-            scaling factor which was applied to input velocity limits
-            range between 0.0 and 1.0
-        """
-        return self.__velocity_scaling
+        Create an instance of TaskSpacePlanParameters with max deviation value
 
-    @velocity_scaling.setter
-    def velocity_scaling(self, value):
+        Parameters
+        ----------
+        value : bool
+            New value of max deviation
+
+        Returns
+        -------
+        TaskSpacePlanParameters
+            Instance of TaskSpacePlanParameters with new max deviation value
+
+        Raises
+        ------
+        TypeError
+            If value is not convertable to float
+        """
+
         value = float(value)
 
-        if value > 1.0 or value < 0.0:
-            raise ValueError('velocity_scaling is not between 0.0 and 1.0')
+        if np.isclose(self.__max_deviation, value):
+            return self
+        else:
+            builder = self._Builder(self)
+            builder.max_deviation = value
+            return builder.build()
 
-        orignal_limits = self.__o_end_effector_limits
-        max_xyz_vel = (orignal_limits.max_xyz_velocity
-                       * value)
-        max_angular_vel = (orignal_limits.max_angular_velocity
-                           * value)
-
-        old_limits = self.__end_effector_limits
-        limits = EndEffectorLimits(max_xyz_vel,
-                                   old_limits.max_xyz_acceleration,
-                                   max_angular_vel,
-                                   old_limits.max_angular_acceleration)
-        self.__end_effector_limits = limits
-
-        self.__velocity_scaling = value
-
-    @property
-    def acceleration_scaling(self):
+    def with_ik_jump_threshold(self, value):
         """
-        acceleration_scaling: float
-            scaling factor which was applied to input acceleration limits
-            range between 0.0 and 1.0
-        """
-        return self.__acceleration_scaling
+        Create an instance of TaskSpacePlanParameters with ik jump threshold value
 
-    @acceleration_scaling.setter
-    def acceleration_scaling(self, value):
+        Parameters
+        ----------
+        value : bool
+            New value of ik jump threshold
+
+        Returns
+        -------
+        TaskSpacePlanParameters
+            Instance of TaskSpacePlanParameters with new ik jump threshold value
+
+        Raises
+        ------
+        TypeError
+            If value is not convertable to float
+        """
+
         value = float(value)
 
-        if value > 1.0 or value < 0.0:
-            raise ValueError('acceleration_scaling is not between 0.0 and 1.0')
+        if np.isclose(self.__max_deviation, value):
+            return self
+        else:
+            builder = self._Builder(self)
+            builder.max_deviation = value
+            return builder.build()
 
-        orignal_limits = self.__o_end_effector_limits
-        max_xyz_acc = (orignal_limits.max_xyz_acceleration
-                       * value)
-        max_angular_acc = (orignal_limits.max_angular_acceleration
-                           * value)
+    def to_builder(self):
+        """
+        Create an instance of TaskSpacePlanParameters Builder
 
-        old_limits = self.__end_effector_limits
-        limits = EndEffectorLimits(old_limits.max_xyz_velocity,
-                                   max_xyz_acc,
-                                   old_limits.max_angular_velocity,
-                                   max_angular_acc)
-        self.__end_effector_limits = limits
+        Returns
+        -------
+        TaskSpacePlanParameters Builder
+            Instance of TaskSpacePlanParameters Builder
+        """
 
-        self.__acceleration_scaling = value
+        return self._Builder(self)
 
     def __str__(self):
         j_str = '\n'.join(['sampling_resolution = '+str(self.__sample_resolution),

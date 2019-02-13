@@ -19,6 +19,7 @@
 #!/usr/bin/env python3
 
 from functools import total_ordering
+from typing import Iterable
 
 
 @total_ordering
@@ -90,18 +91,18 @@ class JointSet(object):
 
         """
 
-        self.__names = []
-        self.__names_set = set()
+        self._names = []
+        self._names_set = set()
 
         if isinstance(names, str):
             names = map(lambda x: x.strip(), names.split(','))
 
         for name in names:
-            if name not in self.__names_set:
-                self.__names_set.add(str(name))
-                self.__names.append(str(name))
+            if name not in self._names_set:
+                self._names_set.add(str(name))
+                self._names.append(str(name))
 
-        self.__names = tuple(self.__names)
+        self._names = tuple(self._names)
 
     @staticmethod
     def empty():
@@ -133,7 +134,7 @@ class JointSet(object):
         names : List[str] (readonly)
             List of joint names
         """
-        return list(self.__names)
+        return list(self._names)
 
     def add_prefix(self, prefix):
         """
@@ -169,7 +170,7 @@ class JointSet(object):
         """
         if not isinstance(prefix, str):
             raise TypeError('prefix expected type is str')
-        names = list(map(lambda x: prefix + x, self.__names))
+        names = list(map(lambda x: prefix + x, self._names))
         return self.__class__(names)
 
     def union(self, others):
@@ -184,8 +185,8 @@ class JointSet(object):
         Raises
         ------
         TypeError : type mismatch
-            If input parameter prefix is not of type str
-
+            If others is not one of expected types
+            JointSet or Iterable of JointSet
         Returns
         ------
         JointSet
@@ -206,12 +207,12 @@ class JointSet(object):
 
         """
 
-        names = list(self.__names)
-        names_set = set(self.__names_set)
+        names = list(self._names)
+        names_set = set(self._names_set)
 
         if isinstance(others, JointSet):
             for name in others.names:
-                if name not in self.__names_set:
+                if name not in self._names_set:
                     names.append(name)
         elif all(isinstance(i, JointSet) for i in others):
             for other in others:
@@ -219,6 +220,101 @@ class JointSet(object):
                     if name not in names_set:
                         names.append(name)
                         names_set.add(name)
+        else:
+            raise TypeError('others is not one of expected types'
+                            ' JointSet or Iterable of JointSet')
+
+        return self.__class__(names)
+
+    def intersection(self, others):
+        """
+        Creates new JointSet which contains the intersection of self and others joints
+
+        Parameters
+        ----------
+        others : JointSet or Iterable[JointSet]
+            JointSet with which the union is performed
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If others is not one of expected types
+            JointSet or Iterable of JointSet
+
+        Returns
+        ------
+        JointSet
+            The created JointSet with intersecting joint names
+
+        Examples
+        --------
+        Create new JointSet instance which is the intersection of two existing ones
+
+        >>> from xamla_motion.data_types import JointSet
+        >>> joint_set1 = JointSet('joint1, joint2')
+        >>> joint_set2 = JointSet('joint2')
+        >>> joint_set1.intersection(joint_set2)
+        JointSet:
+        joint2
+
+        """
+
+        names = []
+
+        if isinstance(others, JointSet):
+            intersection_names = self._names_set.intersection(
+                others._names_set)
+        elif all(isinstance(i, JointSet) for i in others):
+            intersection_names = self._names_set.intersection(
+                o._names_set for o in others)
+        else:
+            raise TypeError('others is not one of expected types'
+                            ' JointSet or Iterable of JointSet')
+
+        for name in self._names:
+            if name in intersection_names:
+                names.append(name)
+
+        return self.__class__(names)
+
+    def difference(self, others):
+        """
+        Creates new JointSet which contains the union of self and others joints
+
+        Parameters
+        ----------
+        others : JointSet
+            JointSet with which the union is performed
+
+        Raises
+        ------
+        TypeError : type mismatch
+            If others is not one of expected type JointSet
+        Returns
+        ------
+        JointSet
+            The created JointSet with union joint names
+
+        Examples
+        --------
+        Create new JointSet instance which is the union of two existing ones
+
+        >>> from xamla_motion.data_types import JointSet
+        >>> joint_set1 = JointSet('joint1, joint2, joint3')
+        >>> joint_set2 = JointSet('joint1, joint2')
+        >>> joint_set1.difference(joint_set2)
+        JointSet:
+        joint3
+
+        """
+
+        names = []
+
+        if isinstance(others, JointSet):
+            diff = self._names_set.difference(others._names_set)
+            for name in self._names:
+                if name in diff:
+                    names.append(name)
         else:
             raise TypeError('others is not one of expected types'
                             ' JointSet or Iterable of JointSet')
@@ -262,7 +358,7 @@ class JointSet(object):
         if not isinstance(other, self.__class__):
             raise TypeError('other has not expected type JointSet')
 
-        return self.__names_set.issubset(other.__names_set)
+        return self._names_set.issubset(other._names_set)
 
     def is_superset(self, other):
         """
@@ -301,7 +397,7 @@ class JointSet(object):
         if not isinstance(other, self.__class__):
             raise TypeError('other has not expected type JointSet')
 
-        return self.__names_set.issuperset(other.__names_set)
+        return self._names_set.issuperset(other._names_set)
 
     def is_similar(self, other):
         """
@@ -343,7 +439,7 @@ class JointSet(object):
         if not isinstance(other, self.__class__):
             raise TypeError('other has not expected type JointSet')
 
-        return len(other) == len(self.__names) and self.is_subset(other)
+        return len(other) == len(self._names) and self.is_subset(other)
 
     def try_get_index_of(self, name):
         """
@@ -382,7 +478,7 @@ class JointSet(object):
             raise TypeError('name expected is type str')
 
         try:
-            return True, self.__names.index(name)
+            return True, self._names.index(name)
         except ValueError as exc:
             return False, None
 
@@ -423,12 +519,12 @@ class JointSet(object):
             raise TypeError('name expected type is str')
 
         try:
-            return self.__names.index(name)
+            return self._names.index(name)
         except ValueError as exc:
             raise ValueError('This JointSet not contains a'
                              ' joint with name: ' + name) from exc
 
-    def contains(self, names):
+    def __contains__(self, names):
         """
         Checks if this JointSet contains a specific joint names
 
@@ -454,16 +550,15 @@ class JointSet(object):
 
         >>> from xamla_motion.data_types import JointSet
         >>> joint_set1 = JointSet('joint0')
-        >>> joint_set1.contains('joint0')
+        >>> 'joint0' in joint_set1
         True
-        >>> joint_set1.contains('joint1')
+        >>> 'joint1' in joint_set1
         False
 
         """
+
         if isinstance(names, str):
-            return names in self.__names_set
-        elif all(isinstance(n, str) for n in names):
-            return list(map(lambda x: x in self.__names_set, names))
+            return names in self._names_set
         else:
             raise TypeError('name expected type is str')
 
@@ -492,19 +587,19 @@ class JointSet(object):
             raise TypeError('index expected type is int')
 
         try:
-            return self.__names[index]
+            return self._names[index]
         except IndexError as exc:
             raise IndexError('index out of range')
-        return self.__names[index]
+        return self._names[index]
 
     def __len__(self):
-        return len(self.__names)
+        return len(self._names)
 
     def __iter__(self):
-        return self.__names.__iter__()
+        return self._names.__iter__()
 
     def __str__(self):
-        return 'JointSet:\n'+'\n'.join(self.__names)
+        return 'JointSet:\n'+'\n'.join(self._names)
 
     def __repr__(self):
         return self.__str__()
@@ -516,8 +611,8 @@ class JointSet(object):
         if id(other) == id(self):
             return True
 
-        if (len(self.__names) != len(other.names) or
-                self.__names_set.difference(other.names)):
+        if (len(self._names) != len(other.names) or
+                self._names_set.difference(other.names)):
             return False
 
         return True
@@ -529,7 +624,7 @@ class JointSet(object):
         if not isinstance(other, self.__class__):
             return False
 
-        if len(other) != len(self.__names) and self.is_superset(other):
+        if len(other) != len(self._names) and self.is_superset(other):
             return True
         else:
             return False

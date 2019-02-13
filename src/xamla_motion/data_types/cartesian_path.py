@@ -22,8 +22,7 @@ from .joint_set import JointSet
 from .pose import Pose
 
 import xamlamoveit_msgs.msg as xamla_msg
-from collections import Iterable, deque
-from copy import deepcopy
+from typing import Iterable
 
 
 class CartesianPath(object):
@@ -78,7 +77,7 @@ class CartesianPath(object):
             if any(p.frame_id != frame_id for p in points):
                 raise ValueError('poses have not the same frame_id')
 
-        self.__points = deque(points)
+        self.__points = tuple(points)
 
     @classmethod
     def from_one_point(cls, point):
@@ -202,19 +201,16 @@ class CartesianPath(object):
             Pose or Iterable of Pose
         """
 
-        new_points = deepcopy(self.__points)
         if isinstance(points, Pose):
-            new_points.appendleft(points)
-            return self.__class__(new_points)
+            return type(self)((points,)+self.__points)
 
         if (not isinstance(points, Iterable) or
-                any(not isinstance(j, Pose)
-                    for j in points)):
-            raise TypeError('points is not of expected'
-                            ' type Pose or Iterable of Pose')
+            any(not isinstance(j, Pose)
+                for j in points)):
+            raise TypeError('points is not of one of expected types'
+                            ' Pose or Iterable[Pose]')
 
-        new_points.extendleft(list(reversed(points)))
-        return self.__class__(new_points)
+        return type(self)(tuple(points)+self.__points)
 
     def append(self, points):
         """
@@ -237,19 +233,16 @@ class CartesianPath(object):
             Pose or Iterable of Pose
         """
 
-        new_points = deepcopy(self.__points)
         if isinstance(points, Pose):
-            new_points.append(points)
-            return self.__class__(new_points)
+            return type(self)(self.__points+(points,))
 
         if (not isinstance(points, Iterable) or
                 any(not isinstance(j, Pose)
                     for j in points)):
-            raise TypeError('points is not of expected'
-                            ' type Pose or Iterable of Pose')
+            raise TypeError('points is not of one of expected types'
+                            ' Pose or Iterable[Pose]')
 
-        new_points.extend(points)
-        return self.__class__(new_points)
+        return type(self)(self.__points+tuple(points))
 
     def concat(self, other):
         """
@@ -267,9 +260,7 @@ class CartesianPath(object):
         if not isinstance(other, CartesianPath):
             raise TypeError('other is not of expected type CartesianPath')
 
-        new_points = deepcopy(self.__points)
-        new_points.extend(other.points)
-        return self.__class__(new_points)
+        return type(self)(self.__points+other.points)
 
     def transform(self, transform_function):
         """

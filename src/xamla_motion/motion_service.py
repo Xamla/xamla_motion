@@ -1004,6 +1004,7 @@ class MotionService(object):
         ik_jump_threshold = float(ik_jump_threshold)
         max_deviation = float(max_deviation)
         collision_check = bool(collision_check)
+
         delta_t = float(delta_t)
 
         delta_t = 1 / delta_t if delta_t > 1.0 else delta_t
@@ -1956,7 +1957,7 @@ class MotionService(object):
 
     #     source = self.query_pose(group.name, seed, end_effector_link)
     #     path = CartesianPath.from_start_stop_point(source, target)
-    #     trajectory = self.plan_move_pose_linear(path, seed, parameters)
+    #     trajectory = self.plan_move_cartesian_linear(path, seed, parameters)
     #     await self.execute_joint_trajectory(trajectory,
     #                                         parameters.collision_check)
 

@@ -34,6 +34,7 @@ setup_args = generate_distutils_setup(
         'rospkg >= 1.1.4',
         'catkin_pkg >= 0.4.5',
         'rospy >= 1.12.13',
+        'Deprecated >= 1.2.4'
     ],
 )
 

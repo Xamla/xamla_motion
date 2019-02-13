@@ -172,9 +172,9 @@ def main():
     print('---------plan move pose linear------------')
 
     cartesian_path = CartesianPath.from_start_stop_point(pose, pose1)
-    trajectory = motion_service.plan_move_pose_linear(cartesian_path,
-                                                      joint_states.positions,
-                                                      t_plan_parameters3)
+    trajectory = motion_service.plan_move_cartesian_linear(cartesian_path,
+                                                           joint_states.positions,
+                                                           t_plan_parameters3)
     print(trajectory)
 
     print('---------plan move joints------------')
