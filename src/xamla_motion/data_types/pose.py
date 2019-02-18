@@ -73,7 +73,7 @@ class Pose(object):
             translation or position the pose describes
         rotation : pyquaternion.Quaternion
             rotation the pose describes as Quaternion
-        frame_id : str (optinal defaul = '')
+        frame_id : str (optinal defaul = 'world')
             name of the coordinate system the pose is defined
         normalize_rotation : bool (optinal default = False)
             If true quaternion normalization is performed in the
@@ -409,7 +409,7 @@ class Pose(object):
             raise exc
 
         new_t = self.__translation + translation
-        return type(self)(new_t, self.__quaternion)
+        return type(self)(new_t, self.__quaternion, self.__frame_id)
 
     def rotate(self, rotation):
         """
@@ -449,7 +449,7 @@ class Pose(object):
             raise TypeError('rotation is not one of expected types '
                             'Quaternion or np.ndarray (3x3)')
 
-        return type(self)(self.__translation, new_q)
+        return type(self)(self.__translation, new_q, self.__frame_id)
 
     def to_posestamped_msg(self):
         """
