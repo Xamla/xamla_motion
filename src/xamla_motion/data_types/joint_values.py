@@ -437,6 +437,9 @@ class JointValues(object):
         TypeError : type mismatch
             If others is not one of expected types JointValues
             or Iterable[JointValues]
+        ValueError : merge conflict
+            If values for some joints are defined in multiple instances of JointValues which should
+            be merged
         """
 
         names_set = set(self.joint_set.names)

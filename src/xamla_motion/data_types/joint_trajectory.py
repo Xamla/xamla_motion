@@ -416,12 +416,11 @@ class JointTrajectory(object):
         if time < start_t or time > end_t:
             raise ValueError('time: {} is out of bounds (min: {}, '
                              'max: {}'.format(time, start_t, end_t))
-
         idx = self.get_point_before(time, return_index=True)
 
         next_idx = min(idx+1, len(self))
 
-        return self.__points[idx].interpolate_cubic(self.__points[next_idx])
+        return self.__points[idx].interpolate_cubic(self.__points[next_idx], time)
 
     def merge(self, other: 'JointTrajectory', delay_self: Union[timedelta, None]=None,
               delay_other: Union[timedelta, None]=None):
@@ -449,7 +448,7 @@ class JointTrajectory(object):
         num_points_other = len(other)
 
         duration_self = self.__points[-1].time_from_start
-        duration_other = other.points.time_from_start
+        duration_other = other.points[-1].time_from_start
 
         if delay_self is not None:
             duration_self += delay_self
@@ -475,10 +474,9 @@ class JointTrajectory(object):
                 p_s = self.evaluate_at(t)
 
             if delay_other is not None:
-                p_o = self.evaluate_at(t-delay_other).with_time_from_start(t)
+                p_o = other.evaluate_at(t-delay_other).with_time_from_start(t)
             else:
-                p_o = self.evaluate_at(t)
-
+                p_o = other.evaluate_at(t)
             merged_points.append(p_s.merge(p_o))
 
         return type(self)(union_joint_set, merged_points)

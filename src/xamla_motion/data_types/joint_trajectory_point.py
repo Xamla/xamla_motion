@@ -396,7 +396,7 @@ class JointTrajectoryPoint(object):
 
         delta_t = t1 - t0
 
-        if delta_t < 1e-6:
+        if delta_t.total_seconds() < 1e-6:
             return type(self)(t0+delta_t,
                               other.positions,
                               other.velocities,
@@ -413,10 +413,12 @@ class JointTrajectoryPoint(object):
 
         pos = np.zeros(len(self.positions), dtype=float)
         vel = np.zeros(len(self.velocities), dtype=float)
-        for i, p0, p1, v0, v1 in enumerate(zip(self.positions,
-                                               other.positions,
-                                               self.velocities,
-                                               other.velocities)):
+
+        zipped = zip(self.positions,
+                     other.positions,
+                     self.velocities,
+                     other.velocities)
+        for i, (p0, p1, v0, v1) in enumerate(zipped):
             c = (-3.0*p0 + 3.0*p1 - 2.0*dt*v0 - dt*v1) / dt**2.0
             d = (2.0*p0 - 2.0*p1 + dt*v0 + dt*v1) / dt**3.0
             pos[i] = p0 + v0*t + c*t**2.0 + d*t**3.0
