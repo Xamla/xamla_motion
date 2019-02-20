@@ -11,6 +11,8 @@ from sklearn.neighbors import BallTree
 from xamlamoveit_msgs.srv import SetJointPosture, SetJointPostureRequest
 
 from .motion_client import EndEffector
+from .robot_chat_client import (RobotChatClient,
+                                RobotChatSteppedMotion)
 from .data_types import (CartesianPath, JointPath, JointTrajectory,
                          JointValues, Pose)
 
@@ -448,7 +450,8 @@ def create_trajectory_cache(set_robot_service_name: str,
 async def move_with_trajectory_cache(cache: TaskTrajectoryCache, end_effector: EndEffector,
                                      start_joint_values: Union[None, JointValues], target_pose: Pose,
                                      max_position_diff_radius: float, logger=None,
-                                     collision_check: bool=True):
+                                     collision_check: bool=True,
+                                     supervised_execution: bool=False):
 
     move_group = end_effector.move_group
 
@@ -480,13 +483,38 @@ async def move_with_trajectory_cache(cache: TaskTrajectoryCache, end_effector: E
      cached_target_joint_values) = cache.get_trajectory(start_pose, target_pose,
                                                         max_position_diff_radius)
 
+    robot_chat = RobotChatClient()
+
     if cache.cache_type == TrajectoryCacheType.MANYTOONE:
-        await move_group.move_joints(JointPath(cached_start_joint_values.joint_set,
-                                               [start_joint_values, cached_start_joint_values]),
-                                     collision_check=collision_check)
+        if not supervised_execution:
+            await move_group.move_joints(JointPath(cached_start_joint_values.joint_set,
+                                                   [start_joint_values, cached_start_joint_values]),
+                                         collision_check=collision_check)
+        else:
+
+            stepped_client = move_group.move_joints_supervised(JointPath(cached_start_joint_values.joint_set,
+                                                                         [start_joint_values, cached_start_joint_values]),
+                                                               collision_check=collision_check)
+
+            robot_chat_stepped_motion = RobotChatSteppedMotion(robot_chat,
+                                                               stepped_client,
+                                                               move_group.name)
+
+            await robot_chat_stepped_motion.handle_stepwise_motions()
 
     services = end_effector.motion_service
 
-    await services.execute_joint_trajectory(cached_trajectory, collision_check)
+    if not supervised_execution:
+        await services.execute_joint_trajectory(cached_trajectory, collision_check)
+    else:
+        stepped_client = services.execute_joint_trajectory_supervised(cached_trajectory,
+                                                                      velocity_scaling=1.0,
+                                                                      collision_check=True)
+
+        robot_chat_stepped_motion = RobotChatSteppedMotion(robot_chat,
+                                                           stepped_client,
+                                                           move_group.name)
+
+        await robot_chat_stepped_motion.handle_stepwise_motions()
 
     return cached_start_pose, cached_target_pose, cached_start_joint_values, cached_target_joint_values
