@@ -224,6 +224,9 @@ class MoveGroup(object):
             self.__selected_end_effector = None
             self.__task_space_plan_parameters = None
 
+        self.__velocity_scaling = 1.0
+        self.__acceleration_scaling = 1.0
+
     @property
     def name(self):
         """
@@ -407,7 +410,7 @@ class MoveGroup(object):
             The maximal velocities are provided by the motion server
             and queried from it during the initialization process.
         """
-        return self.__plan_parameters.velocity_scaling
+        return self.__velocity_scaling
 
     @velocity_scaling.setter
     def velocity_scaling(self, value):
@@ -430,7 +433,7 @@ class MoveGroup(object):
             The maximal accelerations are provided by the motion server
             and queried from it during the initialization process.
         """
-        return self.__plan_parameters.acceleration_scaling
+        return self.__acceleration_scaling
 
     @acceleration_scaling.setter
     def acceleration_scaling(self, value):
@@ -867,6 +870,11 @@ class MoveGroup(object):
             raise TypeError('target is not one of expected types'
                             ' JointValues, JointPath')
 
+        velocity_scaling = float(velocity_scaling or
+                                 self.__velocity_scaling)
+        acceleration_scaling = float(acceleration_scaling or
+                                     self.__acceleration_scaling)
+
         trajectory, parameters = self.plan_move_joints_collision_free(target,
                                                                       velocity_scaling,
                                                                       max_deviation,
@@ -921,12 +929,18 @@ class MoveGroup(object):
             raise TypeError('target is not one of expected types'
                             ' JointValues, JointPath')
 
+        velocity_scaling = float(velocity_scaling or
+                                 self.__velocity_scaling)
+        acceleration_scaling = float(acceleration_scaling or
+                                     self.__acceleration_scaling)
+
         trajectory, parameters = self.plan_move_joints_collision_free(target=target,
                                                                       velocity_scaling=velocity_scaling,
                                                                       max_deviation=max_deviation,
                                                                       acceleration_scaling=acceleration_scaling)
+        
         return self.__m_service.execute_joint_trajectory_supervised(trajectory,
-                                                                    velocity_scaling,
+                                                                    1.0,
                                                                     False)
 
     async def move_joints(self,
@@ -1030,15 +1044,19 @@ class MoveGroup(object):
         if not isinstance(target, (JointValues, JointPath)):
             raise TypeError('target is not one of expected types'
                             ' JointValues, JointPath')
+        
+        velocity_scaling = float(velocity_scaling or
+                                 self.__velocity_scaling)
+        acceleration_scaling = float(acceleration_scaling or
+                                     self.__acceleration_scaling)
 
-        trajectory, parameters = self.plan_move_joints(target,
-                                                       velocity_scaling,
-                                                       collision_check,
-                                                       max_deviation,
-                                                       acceleration_scaling)
-
+        trajectory, parameters = self.plan_move_joints(target=target,
+                                                       velocity_scaling=velocity_scaling,
+                                                       collision_check=collision_check,
+                                                       max_deviation=max_deviation,
+                                                       acceleration_scaling=acceleration_scaling)
         return self.__m_service.execute_joint_trajectory_supervised(trajectory,
-                                                                    parameters.velocity_scaling,
+                                                                    1.0,
                                                                     parameters.collision_check)
 
 
@@ -1608,7 +1626,7 @@ class EndEffector(object):
                                                                          acceleration_scaling)
 
         return self.__m_service.execute_joint_trajectory_supervised(trajectory,
-                                                                    plan_parameters.velocity_scaling,
+                                                                    1.0,
                                                                     plan_parameters.collision_check)
 
     async def move_poses_collision_free(self, target: Union[Pose, CartesianPath],
@@ -1766,7 +1784,7 @@ class EndEffector(object):
                                                                                         acceleration_scaling)
 
         return self.__m_service.execute_joint_trajectory_supervised(trajectory,
-                                                                    plan_parameters.velocity_scaling,
+                                                                    1.0,
                                                                     plan_parameters.collision_check)
 
     def plan_poses_linear(self, target: Union[Pose, CartesianPath],
