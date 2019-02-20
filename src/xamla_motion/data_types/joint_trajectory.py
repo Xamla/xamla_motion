@@ -467,16 +467,31 @@ class JointTrajectory(object):
         target_time = [dt*i for i in range(max_points)]
 
         merged_points = []
+
+
         for t in target_time:
             if delay_self is not None:
-                p_s = self.evaluate_at(t-delay_self).with_time_from_start(t)
+                time_s = t-delay_self
             else:
-                p_s = self.evaluate_at(t)
+                time_s = t
+            # Guard to clamp time to allowed intervall
+            start_t = self.time_from_start[0]
+            end_t = self.time_from_start[-1]
+            time_s = max(time_s, start_t)
+            time_s = min(time_s, end_t)
+            p_s = self.evaluate_at(time_s).with_time_from_start(t)
 
             if delay_other is not None:
-                p_o = other.evaluate_at(t-delay_other).with_time_from_start(t)
+                time_o = t-delay_other
             else:
-                p_o = other.evaluate_at(t)
+                time_o = t
+            # Guard to clamp time to allowed intervall
+            start_t = other.time_from_start[0]
+            end_t = other.time_from_start[-1]
+            time_o = max(time_o, start_t)
+            time_o = min(time_o, end_t)
+            p_o = other.evaluate_at(time_o).with_time_from_start(t)
+
             merged_points.append(p_s.merge(p_o))
 
         return type(self)(union_joint_set, merged_points)
