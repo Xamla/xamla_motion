@@ -63,7 +63,7 @@ class WeissWsgGripperProperties(object):
         prefix = '/' + prefix if not prefix.startswith('/') else prefix
         name = str(name)
         self.__status_service_name = prefix + name + '/get_gripper_status'
-        self.__set_acc_service_name = prefix + name + '/set_accelartion'
+        self.__set_acc_service_name = prefix + name + '/set_acceleration'
         self.__control_action_name = prefix + name + '/gripper_control'
 
     @property
@@ -117,7 +117,7 @@ class WeissWsgGripper(object):
         Asynchronous action to release the gripper from a grasp
     stop()
         Asynchronous action to perform stop the gripper
-    set_accelertation(acceleration)
+    set_acceleration(acceleration)
         Set gripper acceleration
     """
 
@@ -397,7 +397,7 @@ class WeissWsgGripper(object):
 
         return r
 
-    def set_accelertation(self, acceleration):
+    def set_acceleration(self, acceleration):
         """
         Set gripper acceleration
 
