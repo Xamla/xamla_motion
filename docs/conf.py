@@ -20,13 +20,13 @@
 # -- Project information -----------------------------------------------------
 
 project = 'xamla_motion'
-copyright = '2018, Xamla'
+copyright = '2019, Xamla'
 author = 'Xamla'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '0.0.2'
 
 
 # -- General configuration ---------------------------------------------------

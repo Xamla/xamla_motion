@@ -14,6 +14,7 @@ Welcome to xamla_motion's documentation!
    source/motion_client
    source/gripper_client
    source/world_view_client
+   source/world_view_client_v2
    source/motion_service
    source/data_types
 

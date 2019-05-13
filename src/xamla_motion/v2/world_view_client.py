@@ -20,50 +20,43 @@
 
 
 import pathlib
-from typing import List, Dict, Union
+from typing import Dict, List, Union
 
 import moveit_msgs.msg as moveit_msgs
 import rospy
-
 from xamlamoveit_msgs.srv import (CreateFolderWorldView,
                                   CreateFolderWorldViewRequest,
-                                  RemoveElementWorldView,
-                                  RemoveElementWorldViewRequest)
-
-from xamlamoveit_msgs.srv import (SetJointPostureWorldView,
-                                  SetJointPostureWorldViewRequest,
-                                  GetJointPostureWorldView,
-                                  GetJointPostureWorldViewRequest,
-                                  UpdateJointPostureWorldView,
-                                  UpdateJointPostureWorldViewRequest,
-                                  QueryJointValuesWorldView,
-                                  QueryJointValuesWorldViewRequest)
-
-from xamlamoveit_msgs.srv import (SetPoseWorldView,
-                                  SetPoseWorldViewRequest,
-                                  GetPoseWorldView,
-                                  GetPoseWorldViewRequest,
-                                  UpdatePoseWorldView,
-                                  UpdatePoseWorldViewRequest,
-                                  QueryPosesWorldView,
-                                  QueryPosesWorldViewRequest)
-
-from xamlamoveit_msgs.srv import (SetCartesianPathWorldView,
-                                  SetCartesianPathWorldViewRequest,
                                   GetCartesianPathWorldView,
                                   GetCartesianPathWorldViewRequest,
-                                  QueryCartesianPathWorldView,
-                                  QueryCartesianPathWorldViewRequest)
-
-from xamlamoveit_msgs.srv import (SetCollisionObjectWorldView,
-                                  SetCollisionObjectWorldViewRequest,
                                   GetCollisionObjectWorldView,
                                   GetCollisionObjectWorldViewRequest,
+                                  GetJointPostureWorldView,
+                                  GetJointPostureWorldViewRequest,
+                                  GetPoseWorldView, GetPoseWorldViewRequest,
+                                  QueryCartesianPathWorldView,
+                                  QueryCartesianPathWorldViewRequest,
                                   QueryCollisionObjectWorldView,
-                                  QueryCollisionObjectWorldViewRequest)
+                                  QueryCollisionObjectWorldViewRequest,
+                                  QueryJointValuesWorldView,
+                                  QueryJointValuesWorldViewRequest,
+                                  QueryPosesWorldView,
+                                  QueryPosesWorldViewRequest,
+                                  RemoveElementWorldView,
+                                  RemoveElementWorldViewRequest,
+                                  SetCartesianPathWorldView,
+                                  SetCartesianPathWorldViewRequest,
+                                  SetCollisionObjectWorldView,
+                                  SetCollisionObjectWorldViewRequest,
+                                  SetJointPostureWorldView,
+                                  SetJointPostureWorldViewRequest,
+                                  SetPoseWorldView, SetPoseWorldViewRequest,
+                                  UpdateJointPostureWorldView,
+                                  UpdateJointPostureWorldViewRequest,
+                                  UpdatePoseWorldView,
+                                  UpdatePoseWorldViewRequest)
 
 from ..data_types import CartesianPath, CollisionObject, JointValues, Pose
-from ..xamla_motion_exceptions import ServiceException, ArgumentError
+from ..xamla_motion_exceptions import ArgumentError, ServiceException
 
 add_joint_values_srv_name = '/rosvita/world_view/add_joint_posture'
 get_joint_values_srv_name = '/rosvita/world_view/get_joint_posture'
@@ -862,7 +855,7 @@ class WorldViewClient(object):
             result = {}
             for n, e, p in zip(response.names,
                                response.element_paths,
-                               response.points):
+                               response.paths):
 
                 path = pathlib.PurePath(e)
                 result[path] = CartesianPath.from_cartesian_path_msg(p)
@@ -988,6 +981,7 @@ class WorldViewClient(object):
                                 ' error: {}'.format(get_collision_object_srv_name,
                                                     response.error))
 
+        print(response.collision_object)
         return CollisionObject.from_collision_object_msg(response.collision_object)
 
     def query_collision_objects(self, folder_path: str, prefix: str='',
@@ -1050,7 +1044,7 @@ class WorldViewClient(object):
             result = {}
             for n, e, p in zip(response.names,
                                response.element_paths,
-                               response.points):
+                               response.collision_objects):
 
                 path = pathlib.PurePath(e)
                 result[path] = CollisionObject.from_collision_object_msg(p)

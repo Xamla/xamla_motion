@@ -162,9 +162,9 @@ class CollisionPrimitive(object):
             raise TypeError('pose is not of expected type Pose')
 
         if self.expected_parameter_count[kind] != len(parameters):
-            raise ValueError('expected ' + self.expected_parameter_count[kind]
+            raise ValueError('expected ' + str(self.expected_parameter_count[kind])
                              + ' parameters for primitive ' + str(kind) +
-                             ' but provide ' + len(parameters))
+                             ' but provide ' + str(len(parameters)))
 
         self.__parameters = np.fromiter(parameters, float)
 
