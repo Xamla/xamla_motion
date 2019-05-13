@@ -103,7 +103,7 @@ class TestPose(object):
         gt[2] += vec[0][2]
         assert new_p == pytest.approx(gt)
 
-    def test_pose_mul_pose(self):
+    def test_pose_mul_pose_2(self):
         pose = self.pose4 * self.pose2
         pose_m = np.matmul(self.pose4.transformation_matrix(),
                            self.pose2.transformation_matrix())

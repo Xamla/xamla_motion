@@ -137,6 +137,27 @@ class Pose(object):
         self.__quaternion.q.flags.writeable = False
 
     @classmethod
+    def identity(cls, frame_id='world'):
+        """
+        Creates a instance of Pose from idenity matrix
+
+        Parameters
+        ----------
+        frame_id : str (optional defaul = 'world')
+            name of the coordinate system the pose is defined
+
+        Returns
+        ------
+        pose : Pose
+            An instance of class Pose
+        """
+
+        translation = [0.0, 0.0, 0.0]
+        quaternion = Quaternion([1.0, 0.0, 0.0, 0.0])
+
+        return cls(translation, quaternion, frame_id)
+
+    @classmethod
     def from_transformation_matrix(cls, matrix, frame_id='world',
                                    normalize_rotation=False):
         """
@@ -146,7 +167,7 @@ class Pose(object):
         ----------
         matrix : numpy.ndarray((4,4),np.dtype=floating)
             A transformation matrix in homogenous coordinates
-        frame_id : str (optional defaul = '')
+        frame_id : str (defaul = 'world')
             name of the coordinate system the pose is defined
         normalize_rotation : bool (optional default = False)
             If true quaternion normalization is performed in the
@@ -517,8 +538,8 @@ class Pose(object):
         return self.__str__()
 
     def __eq__(self, other):
-        r_tol = 1.0e-13
-        a_tol = 1.0e-14
+        r_tol = 1.0e-6
+        a_tol = 1.0e-7
 
         if not isinstance(other, self.__class__):
             return False
