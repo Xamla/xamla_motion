@@ -47,6 +47,7 @@ release = '0.0.2'
 
 extensions = [
     'sphinx.ext.napoleon',
+    'sphinx_autodoc_typehints',
     'sphinx.ext.githubpages',
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',

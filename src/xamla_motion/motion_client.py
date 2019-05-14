@@ -22,13 +22,26 @@ from typing import Dict, List, Tuple, Union
 
 from .motion_service import MotionService, SteppedMotionClient
 from .xamla_motion_exceptions import *
-from .data_types import *
+from xamla_motion.data_types import (Pose,
+                                     CartesianPath,
+                                     EndEffectorPose,
+                                     IkResults,
+                                     JointPath,
+                                     JointSet,
+                                     JointValues,
+                                     JointStates,
+                                     JointTrajectory,
+                                     PlanParameters,
+                                     TaskSpacePlanParameters)
 from datetime import timedelta
+from deprecated import deprecated
 
 import numpy as np
 from copy import deepcopy
 
 
+@deprecated('This version of MoveGroup is deprecated please use '
+            'instead the xamla_motion.v2 version of it')
 class MoveGroup(object):
 
     """
@@ -83,7 +96,6 @@ class MoveGroup(object):
 
     def __init__(self, move_group_name: Union[None, str] = None,
                  end_effector_name: Union[None, str] = None, motion_service=None):
-
         """
         Initialize MoveGroup class
 
@@ -344,7 +356,6 @@ class MoveGroup(object):
         if self.__task_space_plan_parameters:
             self.__task_space_plan_parameters.with_sample_resolution(value)
 
-
     @property
     def max_deviation(self):
         """
@@ -490,7 +501,7 @@ class MoveGroup(object):
 
         Returns
         -------
-        end_effector : EndEffector
+        end_effector : xamla_motion.EndEffector
             Instance of Class EndEffector with requested name
 
         Raises
@@ -609,8 +620,6 @@ class MoveGroup(object):
             builder.sample_resolution = sample_resolution
 
         return builder.build()
-
-
 
     def _build_task_space_plan_parameters(self,
                                           velocity_scaling: Union[None, float] = None,
@@ -772,7 +781,6 @@ class MoveGroup(object):
                                         acceleration_scaling: Union[None,
                                                                     float] = None
                                         ) -> Tuple[JointTrajectory, PlanParameters]:
-
         """
         Plans a collision free trajectory from current to target joint positions
 
@@ -938,7 +946,7 @@ class MoveGroup(object):
                                                                       velocity_scaling=velocity_scaling,
                                                                       max_deviation=max_deviation,
                                                                       acceleration_scaling=acceleration_scaling)
-        
+
         return self.__m_service.execute_joint_trajectory_supervised(trajectory,
                                                                     1.0,
                                                                     False)
@@ -1044,7 +1052,7 @@ class MoveGroup(object):
         if not isinstance(target, (JointValues, JointPath)):
             raise TypeError('target is not one of expected types'
                             ' JointValues, JointPath')
-        
+
         velocity_scaling = float(velocity_scaling or
                                  self.__velocity_scaling)
         acceleration_scaling = float(acceleration_scaling or
@@ -1060,6 +1068,8 @@ class MoveGroup(object):
                                                                     parameters.collision_check)
 
 
+@deprecated('This version of EndEffector is deprecated please use '
+            'instead the xamla_motion.v2 version of it')
 class EndEffector(object):
 
     """
@@ -1125,7 +1135,7 @@ class EndEffector(object):
 
         Parameters
         ----------
-        move_group : MoveGroup
+        move_group : xamla_motion.MoveGroup
             Instance of move group where the endeffector belongs
             to
         end_effector_name : str_convertable
@@ -1159,7 +1169,7 @@ class EndEffector(object):
         self.__m_service = move_group.motion_service
 
     @staticmethod
-    def from_end_effector_name(end_effector_name: str) -> "EndEffector":
+    def from_end_effector_name(end_effector_name: str) -> 'xamla_motion.EndEffector':
         """
         Creates an instance of MoveGroup and select the correct instance of EndEffector
 
@@ -1171,7 +1181,7 @@ class EndEffector(object):
 
         Returns
         -------
-        EndEffector
+        xamla_motion.EndEffector
             Instance of EndEffector for end effector with the name
             specified by end_effector name (instance is also hold
             by the created move_group)
@@ -1208,7 +1218,7 @@ class EndEffector(object):
     @property
     def move_group(self):
         """
-        move_group : MoveGroup
+        move_group : xamla_motion.MoveGroup
             Instance of MoveGroup which manages the
             move group where the end effector belongs to
         """

@@ -23,45 +23,50 @@ from typing import Union, Tuple
 
 import numpy as np
 
-from xamla_motion.data_types import (Pose, CartesianPath, EndEffectorPose, IkResults,
-                         JointPath, JointSet, JointValues, JointStates, JointTrajectory,
-                         PlanParameters, TaskSpacePlanParameters)
+from xamla_motion.data_types import (Pose,
+                                     CartesianPath,
+                                     EndEffectorPose,
+                                     IkResults,
+                                     JointPath,
+                                     JointSet,
+                                     JointValues,
+                                     JointStates,
+                                     JointTrajectory,
+                                     PlanParameters,
+                                     TaskSpacePlanParameters)
 from xamla_motion.motion_operations import (MoveCartesianArgs,
-                                MoveCartesianCollisionFreeOperation,
-                                MoveCartesianLinearOperation,
-                                MoveCartesianOperation, MoveJointsArgs,
-                                MoveJointsCollisionFreeOperation,
-                                MoveJointsOperation)
+                                            MoveCartesianCollisionFreeOperation,
+                                            MoveCartesianLinearOperation,
+                                            MoveCartesianOperation, MoveJointsArgs,
+                                            MoveJointsCollisionFreeOperation,
+                                            MoveJointsOperation)
 from xamla_motion.motion_service import MotionService, SteppedMotionClient
+
 
 class MoveGroup(object):
 
     """
     Class with encapsulate move functionality for a specific move group
-
-    Methods
-    -------
-    set_default_end_effector(end_effector_name: str)
-        Set one of the end effector from the list of available ones as default
-    get_end_effector(name: Union[None, str]) -> EndEffector
-        Get the end effector specified by name or the default end effector
-    get_current_joint_states() -> JointStates
-        Returns the current joint states of the move group joints
-    get_current_joint_positions() -> JointValues
-        Returns the current joint positions of the move group joints
-    move_joints(
-            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
-            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
-            acceleration_scaling: Union[None, float]=None
-        ) -> MoveJointsOperation
-        Create MoveJointsOperation for target joint positions
-    move_joints_collision_free(
-            target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
-            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
-            acceleration_scaling: Union[None, float]=None
-        ) -> MoveJointsCollisionFreeOperation
-        Create MoveJointsCollisionFreeOperation for target joint positions
     """
+
+    # Methods
+    # -------
+    # set_default_end_effector(end_effector_name: str)
+    #     Set one of the end effector from the list of available ones as default
+    # get_end_effector(name: Union[None, str]) -> xamla_motion.v2.EndEffector
+    #     Get the end effector specified by name or the default end effector
+    # get_current_joint_states() -> JointStates
+    #     Returns the current joint states of the move group joints
+    # get_current_joint_positions() -> JointValues
+    #     Returns the current joint positions of the move group joints
+    # move_joints(target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
+    # collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
+    # acceleration_scaling: Union[None, float]=None) -> MoveJointsOperation
+    #     Create MoveJointsOperation for target joint positions
+    # move_joints_collision_free(target: Union[JointValues, JointPath], velocity_scaling: Union[None, float]=None,
+    #         collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
+    #         acceleration_scaling: Union[None, float]=None) -> MoveJointsCollisionFreeOperation
+    #     Create MoveJointsCollisionFreeOperation for target joint positions
 
     def __init__(self, move_group_name: Union[None, str] = None,
                  end_effector_name: Union[None, str] = None, motion_service=None):
@@ -462,7 +467,7 @@ class MoveGroup(object):
             collision_check=False)
         self.__task_space_plan_parameters = p
 
-    def get_end_effector(self, name: Union[None, str] = None) -> "EndEffector":
+    def get_end_effector(self, name: Union[None, str] = None) -> 'xamla_motion.v2.EndEffector':
         """
         Get the end effector specified by name or
         the default end effector if name is not provided
@@ -474,7 +479,7 @@ class MoveGroup(object):
 
         Returns
         -------
-        end_effector : EndEffector
+        end_effector : xamla_motion.v2.EndEffector
             Instance of Class EndEffector with requested name
 
         Raises
@@ -822,43 +827,42 @@ class MoveGroup(object):
 class EndEffector(object):
     """
     Class with encapsulate move functionality for a specific end effector
-
-    Methods
-    -------
-    from_end_effector_name(end_effector_name: str) -> EndEffector
-        Creates an instance of MoveGroup and select the correct instance of EndEffector
-    get_current_pose() -> Pose
-        Returns the current pose of the end effector
-    compute_pose(joint_values: JointValues) -> Pose
-        compute pose from joint values / configuration
-    inverse_kinematics(
-            poses: Union[Pose, CartesianPath], collision_check: Union[None, bool], seed: Union[None, JointValues],
-            timeout:  Union[None, datatime.timedelta], const_seed: bool, attempts: int
-        ) -> JointValues:
-        inverse kinematic solutions for one pose
-    inverse_kinematics_many(
-            poses: Union[Pose, CartesianPath], collision_check: Union[None, bool], seed: Union[None, JointValues],
-            timeout:  Union[None, datatime.timedelta], const_seed: bool, attempts: int
-        ) -> IkResults:
-        inverse kinematic solutions for many poses
-    move_cartesian(
-            target: Union[Pose, CartesianPath], seed: Union[None, JointValues]=None,
-            velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
-            max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None
-        ) -> MoveCartesianOperation
-        Create MoveCartesianOperation for target joint positions
-    move_cartesian_collision_free(
-            target: Union[Pose, CartesianPath], seed=Union[None, JointValues], velocity_scaling: Union[None, float]=None,
-            max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None
-        ) -> MoveCartesianCollisionFreeOperation
-        Create MoveCartesianCollisionFreeOperation for target joint positions
-    move_poses_linear(
-            target: Union[Pose, CartesianPath], velocity_scaling: Union[None, float]=None,
-            collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
-            acceleration_scaling: Union[None, float]=None
-        ) -> MoveCartesianLinearOperation
-        Create MoveCartesianLinearOperation for target joint positions
     """
+    # Methods
+    # -------
+    # from_end_effector_name(end_effector_name: str) -> EndEffector
+    #     Creates an instance of MoveGroup and select the correct instance of EndEffector
+    # get_current_pose() -> Pose
+    #     Returns the current pose of the end effector
+    # compute_pose(joint_values: JointValues) -> Pose
+    #     compute pose from joint values / configuration
+    # inverse_kinematics(
+    #         poses: Union[Pose, CartesianPath], collision_check: Union[None, bool], seed: Union[None, JointValues],
+    #         timeout:  Union[None, datatime.timedelta], const_seed: bool, attempts: int
+    #     ) -> JointValues:
+    #     inverse kinematic solutions for one pose
+    # inverse_kinematics_many(
+    #         poses: Union[Pose, CartesianPath], collision_check: Union[None, bool], seed: Union[None, JointValues],
+    #         timeout:  Union[None, datatime.timedelta], const_seed: bool, attempts: int
+    #     ) -> IkResults:
+    #     inverse kinematic solutions for many poses
+    # move_cartesian(
+    #         target: Union[Pose, CartesianPath], seed: Union[None, JointValues]=None,
+    #         velocity_scaling: Union[None, float]=None, collision_check: Union[None, bool]=None,
+    #         max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None
+    #     ) -> MoveCartesianOperation
+    #     Create MoveCartesianOperation for target joint positions
+    # move_cartesian_collision_free(
+    #         target: Union[Pose, CartesianPath], seed=Union[None, JointValues], velocity_scaling: Union[None, float]=None,
+    #         max_deviation: Union[None, float]=None, acceleration_scaling: Union[None, float]=None
+    #     ) -> MoveCartesianCollisionFreeOperation
+    #     Create MoveCartesianCollisionFreeOperation for target joint positions
+    # move_poses_linear(
+    #         target: Union[Pose, CartesianPath], velocity_scaling: Union[None, float]=None,
+    #         collision_check: Union[None, bool]=None, max_deviation: Union[None, float]=None,
+    #         acceleration_scaling: Union[None, float]=None
+    #     ) -> MoveCartesianLinearOperation
+    #     Create MoveCartesianLinearOperation for target joint positions
 
     def __init__(self, move_group: MoveGroup, end_effector_name: str,
                  end_effector_link_name: str):
@@ -867,7 +871,7 @@ class EndEffector(object):
 
         Parameters
         ----------
-        move_group : MoveGroup
+        move_group : xamla_motion.v2.MoveGroup
             Instance of move group where the endeffector belongs
             to
         end_effector_name : str_convertable
@@ -901,7 +905,7 @@ class EndEffector(object):
         self.__m_service = move_group.motion_service
 
     @staticmethod
-    def from_end_effector_name(end_effector_name: str) -> "EndEffector":
+    def from_end_effector_name(end_effector_name: str) -> 'xamla_motion.v2.EndEffector':
         """
         Creates an instance of MoveGroup and select the correct instance of EndEffector
 
@@ -913,7 +917,7 @@ class EndEffector(object):
 
         Returns
         -------
-        EndEffector
+        xamla_motion.v2.EndEffector
             Instance of EndEffector for end effector with the name
             specified by end_effector name (instance is also hold
             by the created move_group)
@@ -950,7 +954,7 @@ class EndEffector(object):
     @property
     def move_group(self):
         """
-        move_group : MoveGroup
+        move_group : xamla_motion.v2.MoveGroup
             Instance of MoveGroup which manages the
             move group where the end effector belongs to
         """

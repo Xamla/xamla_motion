@@ -12,6 +12,7 @@ Welcome to xamla_motion's documentation!
 
    source/quick_start
    source/motion_client
+   source/motion_client_v2
    source/gripper_client
    source/world_view_client
    source/world_view_client_v2

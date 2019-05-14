@@ -51,11 +51,11 @@ class MoveArgs(object):
         self._max_deviation = None
 
     @property
-    def move_group(self) -> 'MoveGroup':
+    def move_group(self) -> 'xamla_motion.v2.MoveGroup':
         return self._move_group
 
     @move_group.setter
-    def move_group(self, move_group: 'MoveGroup'):
+    def move_group(self, move_group: 'xamla_motion.v2.MoveGroup'):
         self._move_group = move_group
 
     @property
@@ -144,11 +144,11 @@ class MoveCartesianArgs(MoveJointsArgs):
         self._ik_jump_threshold = None
 
     @property
-    def end_effector(self) -> 'EndEffector':
+    def end_effector(self) -> 'xamla_motion.v2.EndEffector':
         return self._end_effector
 
     @end_effector.setter
-    def end_effector(self, end_effector: 'EndEffector'):
+    def end_effector(self, end_effector: 'xamla_motion.v2.EndEffector'):
         self._end_effector = end_effector
 
     @property
@@ -186,10 +186,10 @@ class MoveCartesianArgs(MoveJointsArgs):
 
 class Plan(object):
     """
-    Plan holds a planned trajectory and offer possibilies for path execution
+    Plan holds a planned trajectory and offer methods for path execution
     """
 
-    def __init__(self, move_group: 'MoveGroup',
+    def __init__(self, move_group: 'xamla_motion.v2.MoveGroup',
                  trajectory: JointTrajectory,
                  parameters: PlanParameters):
         """
@@ -197,7 +197,7 @@ class Plan(object):
 
         Parameters
         ----------
-        move_group : MoveGroup
+        move_group : xamla_motion.v2.MoveGroup
             Move group which should execute the trajectory
         trajectory : JointTrajectory
             Planned trajectory which should be executed
@@ -217,7 +217,7 @@ class Plan(object):
     @property
     def move_group(self):
         """
-        move_group : MoveGroup (read only)
+        move_group : xamla_motion.v2.MoveGroup (read only)
             Move group which executes the trajectory
         """
         return self._move_group
@@ -293,9 +293,9 @@ class MoveOperation(ABC):
         self._plan_parameters = p
 
     @property
-    def move_group(self) -> 'MoveGroup':
+    def move_group(self) -> 'xamla_motion.v2.MoveGroup':
         """
-        move_group : MoveGroup (read only)
+        move_group : xamla_motion.v2.MoveGroup (read only)
             selected move group for move operation
         """
         return self._move_group
@@ -1216,6 +1216,6 @@ class MoveCartesianLinearOperation(MoveCartesianOperation):
         path = path.prepend(start)
 
         t = self._move_group.motion_service.plan_move_pose_linear(path, seed,
-                                                                       self._task_space_plan_parameters)
+                                                                  self._task_space_plan_parameters)
 
         return Plan(self._move_group, t, self._plan_parameters)
