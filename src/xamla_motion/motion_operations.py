@@ -252,7 +252,7 @@ class Plan(object):
         TypeError
             If trajectory is not of type JointTrajectory
             or if collision_check is not convertable to bool
-        ServiceError
+        ServiceException
             If execution ends not successful
         """
         services = self._move_group.motion_service
@@ -434,7 +434,7 @@ class MoveJointsOperation(MoveOperation):
 
         Raises
         ------
-        ServiceError
+        ServiceException
             If trajectory planning service is not available or finish
             unsuccessfully
         """
@@ -708,7 +708,7 @@ class MoveJointsCollisionFreeOperation(MoveJointsOperation):
 
         Raises
         ------
-        ServiceError
+        ServiceException
             If trajectory planning service is not available or finish
             unsuccessfully
         """
@@ -771,7 +771,7 @@ class MoveCartesianOperation(MoveOperation):
 
         Raises
         ------
-        ServiceError
+        ServiceException
             If trajectory planning service is not available or finish
             unsuccessfully
         """
@@ -1133,7 +1133,7 @@ class MoveCartesianCollisionFreeOperation(MoveCartesianOperation):
 
         Raises
         ------
-        ServiceError
+        ServiceException
             If trajectory planning service is not available or finish
             unsuccessfully
         """
@@ -1203,7 +1203,7 @@ class MoveCartesianLinearOperation(MoveCartesianOperation):
 
         Raises
         ------
-        ServiceError
+        ServiceException
             If trajectory planning service is not available or finish
             unsuccessfully
         """

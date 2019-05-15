@@ -1158,7 +1158,7 @@ class MotionService(object):
 
         Raises
         ------
-        ServiceError
+        ServiceException
             If query services are not reachable or
             not finish successful
         TypeError
@@ -1256,7 +1256,7 @@ class MotionService(object):
 
         Raises
         ------
-        ServiceError
+        ServiceException
             If query services are not reachable or
             not finish successful
         TypeError
@@ -1331,7 +1331,7 @@ class MotionService(object):
             If parameters joint set is not equal or sub
             set of the path joint set and therefore
             reordering was not possible
-        ServiceError
+        ServiceException
             If query service is not available or finish
             unsuccessfully
         """
@@ -1378,7 +1378,7 @@ class MotionService(object):
             If path is not of type CartesianPath or
             if parameters is not of type TaskSpacePlanParameters or
             if seed is not of type JointValues
-        ServiceError
+        ServiceException
             If query service is not available or finish
             unsuccessfully
         """
@@ -1435,7 +1435,7 @@ class MotionService(object):
             If parameters joint set is not equal or sub
             set of the path joint set and therefore
             reordering was not possible
-        ServiceError
+        ServiceException
             If query service is not available or finish
             unsuccessfully
         """
@@ -1491,7 +1491,7 @@ class MotionService(object):
         TypeError
             If trajectory is not of type JointTrajectory
             or if collision_check is not convertable to bool
-        ServiceError
+        ServiceException
             If execution ends not successful
         """
 
@@ -1584,7 +1584,7 @@ class MotionService(object):
             If parameters joint set is not equal or sub
             set of the seed joint set if defined and therefore
             reordering was not possible
-        ServiceError
+        ServiceException
             If query service is not available
         """
 
@@ -1648,7 +1648,7 @@ class MotionService(object):
             If parameters joint set is not equal or sub
             set of the seed joint set if defined and therefore
             reordering was not possible
-        ServiceError
+        ServiceException
             If query service is not available
         """
 
@@ -1749,7 +1749,7 @@ class MotionService(object):
             If parameters joint set is not equal or sub
             set of the seed joint set and therefore
             reordering was not possible
-        ServiceError
+        ServiceException
             If query services are not available or
             finish unsuccessfully or inverse kinematics
             ends with error
@@ -1790,7 +1790,7 @@ class MotionService(object):
         ------
         TypeError
             If enable is not convertable to bool
-        ServiceError
+        ServiceException
             If query service is not available
         """
 
@@ -1856,7 +1856,7 @@ class MotionService(object):
     #     TypeError
     #         If target is not of type JointValues or
     #         if parameters is not of type PlanParameters
-    #     ServiceError
+    #     ServiceException
     #         If query services are not available or finish
     #         with a fail state
     #     """
@@ -1897,7 +1897,7 @@ class MotionService(object):
     #         If parameters is not of type PlanParameters
     #         If end_effector_link is not convertable to str
     #         If seed is not of type JointValues
-    #     ServiceError
+    #     ServiceException
     #         If query services are not available or finish
     #         with a fail state
     #     """
@@ -1937,7 +1937,7 @@ class MotionService(object):
     #         If parameters is not of type TaskSpacePlanParameters
     #         If end_effector_link is not convertable to str
     #         If seed is not of type JointValues or None
-    #     ServiceError
+    #     ServiceException
     #         If query services are not available or finish
     #         with a fail state
     #     """
@@ -1983,7 +1983,7 @@ class MotionService(object):
         ------
         TypeError
             If inputs are not convertable to specified types
-        ServiceError
+        ServiceException
             If action server is not available
         RuntimeError
             If action returns unexpected result
@@ -2044,7 +2044,7 @@ class MotionService(object):
         TypeError
             If inputs are not convertable to specified types
             or if command is no of type WsgCommand
-        ServiceError
+        ServiceException
             If action server is not available
         RuntimeError
             If action returns unexpected result

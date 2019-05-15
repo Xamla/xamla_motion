@@ -143,7 +143,7 @@ class MoveGroup(object):
         TypeError
             If motion_service is not of type MotionService
             or If the other inputs are not str convertable
-        ServiceError
+        ServiceException
             If necessary services to query available move
             groups and end effectors are not available
         RuntTimeError
@@ -535,7 +535,7 @@ class MoveGroup(object):
 
         Raises
         ------
-        ServiceError
+        ServiceException
             If Service is not available or finish
             not successful
         """
@@ -553,7 +553,7 @@ class MoveGroup(object):
 
         Raises
         ------
-        ServiceError
+        ServiceException
             If Service is not available or finish
             not successful
         """
@@ -751,7 +751,7 @@ class MoveGroup(object):
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
-        ServiceError
+        ServiceException
             If underlying services from motion server are not available
             or finish not successfully
         """
@@ -812,7 +812,7 @@ class MoveGroup(object):
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
-        ServiceError
+        ServiceException
             If underlying services from motion server are not available
             or finish not successfully
         """
@@ -869,7 +869,7 @@ class MoveGroup(object):
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
-        ServiceError
+        ServiceException
             If underlying services from motion server are not available
             or finish not successfully
         """
@@ -928,7 +928,7 @@ class MoveGroup(object):
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
-        ServiceError
+        ServiceException
             If underlying services from motion server are not available
             or finish not successfully
         """
@@ -986,7 +986,7 @@ class MoveGroup(object):
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
-        ServiceError
+        ServiceException
             If underlying services from motion server are not available
             or finish not successfully
         """
@@ -1044,7 +1044,7 @@ class MoveGroup(object):
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
-        ServiceError
+        ServiceException
             If underlying services from motion server are not available
             or finish not successfully
         """
@@ -1151,7 +1151,7 @@ class EndEffector(object):
         TypeError
             If move_group is not of type MoveGroup
             or If the other inputs are not str convertable
-        ServiceError
+        ServiceException
             If necessary services to query available move
             groups and end effectors are not available
         RuntTimeError
@@ -1254,7 +1254,7 @@ class EndEffector(object):
 
         Raises
         ------
-        ServiceError
+        ServiceException
             If query services from motion server are not
             available or finish unsuccessfully
         """
@@ -1285,7 +1285,7 @@ class EndEffector(object):
 
         Raises
         ------
-        ServiceError
+        ServiceException
             If query services from motion server are not
             available or finish unsuccessfully
         TypeError
@@ -1333,7 +1333,7 @@ class EndEffector(object):
         ------
         TypeError
             If poses is not of correct type
-        ServiceError
+        ServiceException
             If query service is not available
         """
 
@@ -1393,7 +1393,7 @@ class EndEffector(object):
         ------
         TypeError
             If poses is not of correct type
-        ServiceError
+        ServiceException
             If query service is not available
         """
 
@@ -1461,7 +1461,7 @@ class EndEffector(object):
     #         If all other inputs are not convertable to specified types
     #     ValueError
     #         If scaling inputs are not between 0.0 and 1.0
-    #     ServiceError
+    #     ServiceException
     #         If underlying services from motion server are not available
     #         or finish not successfully
 
@@ -1513,7 +1513,7 @@ class EndEffector(object):
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
-        ServiceError
+        ServiceException
             If underlying services from motion server are not available
             or finish not successfully
         """
@@ -1599,7 +1599,7 @@ class EndEffector(object):
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
-        ServiceError
+        ServiceException
             If underlying services from motion server are not available
             or finish not successfully
         """
@@ -1676,7 +1676,7 @@ class EndEffector(object):
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
-        ServiceError
+        ServiceException
             If underlying services from motion server are not available
             or finish not successfully
         """
@@ -1758,7 +1758,7 @@ class EndEffector(object):
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
-        ServiceError
+        ServiceException
             If underlying services from motion server are not available
             or finish not successfully
         """
@@ -1840,7 +1840,7 @@ class EndEffector(object):
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
-        ServiceError
+        ServiceException
             If underlying services from motion server are not available
             or finish not successfully
         """
@@ -1902,7 +1902,7 @@ class EndEffector(object):
             If all other inputs are not convertable to specified types
         ValueError
             If scaling inputs are not between 0.0 and 1.0
-        ServiceError
+        ServiceException
             If underlying services from motion server are not available
             or finish not successfully
         """
