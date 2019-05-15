@@ -747,10 +747,12 @@ class MotionService(object):
                 raise ServiceException('service call for query forward'
                                        ' kinematics was not'
                                        ' successful for point: ' + str(i) +
-                                       'service name:' +
+                                       ' service name: ' +
                                        query_forward_kinematics_service +
                                        ' error code: ' +
-                                       str(response.error_code.val))
+                                       str(error.val) +
+                                       ', error message: ' +
+                                       response.error_msgs[i])
 
         return list(map(lambda x: Pose.from_posestamped_msg(x),
                         response.solutions))
@@ -1105,9 +1107,7 @@ class MotionService(object):
             raise ServiceException('service call for query joint'
                                    ' collisions was not successful. '
                                    'service name:' +
-                                   query_joint_path_collisions +
-                                   ' error code: ' +
-                                   str(response.error_code.val))
+                                   query_joint_path_collisions)
 
         result = [JointValuesCollisions(i, response.error_codes[i],
                                         response.messages[i])
