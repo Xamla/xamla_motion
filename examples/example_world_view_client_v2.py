@@ -59,7 +59,7 @@ def main():
     cone = CollisionPrimitive.create_cone(0.2, 0.2, pose3)
 
     collision_object1 = CollisionObject([box])
-    collision_object2 = CollisionObject([sphere, cylinder])
+    collision_object2 = CollisionObject([cylinder])
     collision_object3 = CollisionObject([plane, cone])
 
     # create a instance of WorldViewClient to get access to rosvita world view
@@ -184,7 +184,7 @@ def main():
     print('---------------- update collision object --------------')
     world_view_client.add_collision_object(
         'test/collision_objects/collision_object1',
-        collision_object3
+        collision_object2
     )
 
     print('---------------- get collision object --------------')
