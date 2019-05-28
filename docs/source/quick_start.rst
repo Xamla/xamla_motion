@@ -146,8 +146,8 @@ with help of them. For example we can do simple transformations like translate 0
 In the future more information about the main data types will be added.
 But for know take a look into the other chapters to learn following:
 
-- how to move a robot with help of the :doc:`motion client classes <motion_client>`
-- how to control a gripper with help of the :doc:`gripper client classes <gripper_client>`
-- how to interact with ROSVITA WorldView with help of the :doc:`world view client <world_view_client>`
+- how to move a robot with help of the :doc:`motion client <motion_client_v2>`
+- how to control a gripper with help of the :doc:`gripper client <gripper_client>`
+- how to interact with ROSVITA WorldView with help of the :doc:`world view client <world_view_client_v2>`
 - more details about the xamla_motion :doc:`data types <data_types>`
 

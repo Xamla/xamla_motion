@@ -4,6 +4,8 @@
 Motion client
 =========================
 
+.. important:: The version 1.0 of MotionClient is now deprecated and will be removed in a future release. Please use the new :doc:`MotionClient version 2.0 <motion_client_v2>`
+
 .. automodule:: xamla_motion
 .. currentmodule:: xamla_motion
 

@@ -21,12 +21,12 @@ and :class:`xamla_motion.EndEffector`.
 In version 2.0 a lot of API changes are made to improve the usability. 
 
 The major change between version 1.0 and 2.0 is that all move methods not directly execute
-a trajectory are return a stepped motion client but rather return a move operation. 
-This move operations are property container. It is possible to hand them over and change
+a trajectory or return a stepped motion client but rather return a move operation. 
+This move operations are property containers. It is possible to hand them over and change
 the properties if needed. 
 
-If all properties are correct a trajectory can be planned with help of the plan methods.
-Here again we get the advantage that is possible to hand this plan over to other functions.
+With help of the plan method a operation can be transformed to a executable trajectory.  
+Here again we get the advantage that it is possible to hand this plan over to other functions.
 Furthermore, we now have the freedom to decide on demand if the trajectory should be 
 executed supervised or unsupervised.
 

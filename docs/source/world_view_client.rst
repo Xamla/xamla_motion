@@ -4,6 +4,8 @@
 WorldView client
 =========================
 
+.. important:: The version 1.0 of WorldViewClient is now deprecated and will be removed in a future release. Please use the new :doc:`WorldViewClient version 2.0 <world_view_client_v2>`
+
 .. automodule:: xamla_motion
 .. currentmodule:: xamla_motion
 

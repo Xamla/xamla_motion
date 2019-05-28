@@ -12,9 +12,9 @@ Overview
 One of the main features of ROSVITA is the WorldView.
 The WorldView is the place in which the current configration
 is visualized. But it not only visualize the current state of
-the work cell it is also the place where we can move the robot,
+the work cell it is also the place where we can jog the robot,
 save specific poses or robot joint configurations and add collision objects
-which should be considered when new trajectories are planned.  
+which should be considered when new trajectories are planned and executed.  
 
 .. figure:: ../_static/world_view.jpg
    :scale: 60 %
