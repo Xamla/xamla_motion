@@ -18,7 +18,7 @@
 
 #!/usr/bin/env python3
 
-from typing import List 
+from typing import List
 
 import rospy
 import actionlib
@@ -29,12 +29,13 @@ from xamla_motion.data_types import Pose, JointValues, Twist
 
 from geometry_msgs.msg import PoseStamped, TwistStamped
 from trajectory_msgs.msg import JointTrajectoryPoint, JointTrajectory
-from xamlamoveit_msgs.msg import ControllerState 
+from xamlamoveit_msgs.msg import ControllerState
 from xamlamoveit_msgs.srv import GetSelected, SetString
-from xamlamoveit_msgs.srv import GetFloat, SetFloat 
-from xamlamoveit_msgs.srv import GetFlag, SetFlag 
+from xamlamoveit_msgs.srv import GetFloat, SetFloat
+from xamlamoveit_msgs.srv import GetFlag, SetFlag
 from xamlamoveit_msgs.srv import StatusController
 
+from std_srvs.srv import Trigger
 from std_srvs.srv import SetBool
 
 from xamla_motion.utility import ROSNodeSteward
@@ -75,7 +76,7 @@ class JoggingClientFeedbackState():
         self._scene_collision_check_enabled = scene_collision_check_enabled
 
     @property
-    def joint_distance(self): 
+    def joint_distance(self):
         """
         joint_distance : List[float] (read only)
             The distance of the joints [m]
@@ -83,7 +84,7 @@ class JoggingClientFeedbackState():
         return self._joint_distance
 
     @property
-    def cartesian_distance(self): 
+    def cartesian_distance(self):
         """
         cartesian_distance : List[float] (read only)
             The cartesian Distance [m]
@@ -91,7 +92,7 @@ class JoggingClientFeedbackState():
         return self._cartesian_distance
 
     @property
-    def error_code(self): 
+    def error_code(self):
         """
         error_code : JoggingErrorCode (read only)
             The current error code
@@ -99,7 +100,7 @@ class JoggingClientFeedbackState():
         return self._error_code
 
     @property
-    def converged(self): 
+    def converged(self):
         """
         converged : bool (read only)
             True when converged
@@ -107,7 +108,7 @@ class JoggingClientFeedbackState():
         return self._converged
 
     @property
-    def self_collision_check_enabled(self): 
+    def self_collision_check_enabled(self):
         """
         self_collision_check_enabled : bool (read only)
             True if check for self-collision is enabled
@@ -115,7 +116,7 @@ class JoggingClientFeedbackState():
         return self._self_collision_check_enabled
 
     @property
-    def joint_limits_check_enabled(self): 
+    def joint_limits_check_enabled(self):
         """
         joint_limits_check_enabled : bool (read only)
             True if check for joint limits is enabled
@@ -123,7 +124,7 @@ class JoggingClientFeedbackState():
         return self._joint_limits_check_enabled
 
     @property
-    def scene_collision_check_enabled(self): 
+    def scene_collision_check_enabled(self):
         """
         scene_collision_check_enabled : bool (read only)
             True if check for scene collision is enabled
@@ -132,13 +133,13 @@ class JoggingClientFeedbackState():
 
     def __str__(self):
         ret_string = "JoggingClientFeedbackState: \n"
-        ret_string += "joint_distance: {}\n".format(self._joint_distance) 
-        ret_string += "cartesian_distance: {}\n".format(self._cartesian_distance) 
-        ret_string += "error_code: {}\n".format(self._error_code) 
-        ret_string += "converged: {}\n".format(self._converged) 
-        ret_string += "self_collision_check_enabled: {}\n".format(self._self_collision_check_enabled) 
-        ret_string += "joint_limits_check_enabled: {}\n".format(self._joint_limits_check_enabled) 
-        ret_string += "scene_collision_check_enabled: {}\n".format(self._scene_collision_check_enabled) 
+        ret_string += "joint_distance: {}\n".format(self._joint_distance)
+        ret_string += "cartesian_distance: {}\n".format(self._cartesian_distance)
+        ret_string += "error_code: {}\n".format(self._error_code)
+        ret_string += "converged: {}\n".format(self._converged)
+        ret_string += "self_collision_check_enabled: {}\n".format(self._self_collision_check_enabled)
+        ret_string += "joint_limits_check_enabled: {}\n".format(self._joint_limits_check_enabled)
+        ret_string += "scene_collision_check_enabled: {}\n".format(self._scene_collision_check_enabled)
         return ret_string
 
 
@@ -152,7 +153,7 @@ class JoggingClientFeedbackEvent(object):
     register(callback_function)
         Registers a callback function to be called when state updates
     unregister(callback_function)
-        Unregisters a callback function 
+        Unregisters a callback function
     """
 
     def __init__(self):
@@ -161,7 +162,7 @@ class JoggingClientFeedbackEvent(object):
     def register(self, callback_function) -> None:
         """
         Register a callback function for the feedback
-        
+
         Parameters
         ----------
         callback_function : function
@@ -171,8 +172,8 @@ class JoggingClientFeedbackEvent(object):
 
     def unregister(self, callback_function) -> None:
         """
-        Unregisters a callback function 
-        
+        Unregisters a callback function
+
         Parameters
         ----------
         callback_function : function
@@ -188,15 +189,15 @@ class JoggingClientFeedbackEvent(object):
             except Exception as e:
                 print("Ignoring callback function {}".format(callback_function))
                 print(e)
-                
+
 
 
 class JoggingClient(JoggingClientFeedbackEvent):
-    """ 
+    """
     A jogging client
 
     TODO: One could argue that the feedback event should rather be used by composition than inheritance
-    
+
     Methods
     -------
     send_set_point(setPoint)
@@ -204,7 +205,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
     send_send_velocities(velocities)
         Jogging by applying joint velocities
     send_twist(twist)
-        Jogging by applying a twist 
+        Jogging by applying a twist
     get_velocity_scaling()
         Get velocity scaling
     set_velocity_scaling(value)
@@ -245,6 +246,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
     __set_velocity_scaling_service_id = "/xamlaJointJogging/set_velocity_scaling"
     __get_flag_service_id= "xamlaJointJogging/get_flag"
     __set_flag_service_id= "xamlaJointJogging/set_flag"
+    __reset_error_service_id= "xamlaJointJogging/reset_error"
 
     def __init__(self):
         super(JoggingClient, self).__init__()
@@ -254,14 +256,14 @@ class JoggingClient(JoggingClientFeedbackEvent):
         self._init_services()
 
     def _init_topics(self):
-        self._set_point_pub = rospy.Publisher(self.__setpoint_topic, 
+        self._set_point_pub = rospy.Publisher(self.__setpoint_topic,
                                         PoseStamped,
                                         queue_size=5)
-        self._jogging_command_pub = rospy.Publisher(self.__jogging_command_topic, 
-                                            JointTrajectory, 
+        self._jogging_command_pub = rospy.Publisher(self.__jogging_command_topic,
+                                            JointTrajectory,
                                             queue_size=5)
-        self._jogging_twist_pub = rospy.Publisher(self.__jogging_twist_topic, 
-                                            TwistStamped, 
+        self._jogging_twist_pub = rospy.Publisher(self.__jogging_twist_topic,
+                                            TwistStamped,
                                             queue_size=5)
         self.__feedback_sub = rospy.Subscriber(self.__jogging_feedback_topic,
                                             ControllerState,
@@ -269,7 +271,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
                                             queue_size=1)
 
     def _init_services(self):
-        
+
         def exc_wrap_call(name, msg_type):
             """ utility function for dry purpose
 
@@ -282,7 +284,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
                                    name +
                                    ' could not be established') from exc
 
-        self.__toggle_tracking_service = exc_wrap_call( 
+        self.__toggle_tracking_service = exc_wrap_call(
                 self.__toggle_tracking_service_id, SetBool)
         self.__get_velocity_scaling_service = exc_wrap_call(
                 self.__get_velocity_scaling_service_id, GetFloat)
@@ -300,6 +302,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
                 self.__status_service_id, StatusController)
         self.__get_flag_service = exc_wrap_call(self.__get_flag_service_id, GetFlag)
         self.__set_flag_service = exc_wrap_call(self.__set_flag_service_id, SetFlag)
+        self.__reset_error_service = exc_wrap_call(self.__reset_error_service_id, Trigger)
 
     def send_set_point(self, setPoint: Pose):
         """
@@ -307,11 +310,11 @@ class JoggingClient(JoggingClientFeedbackEvent):
 
         Parameters
         ----------
-        setPoint : Pose 
+        setPoint : Pose
             The Pose to which the end effector should jog to
         """
 
-        pose_msg  = setPoint.to_posestamped_msg() 
+        pose_msg  = setPoint.to_posestamped_msg()
         self._set_point_pub.publish(pose_msg)
 
     def send_velocities(self, velocities: JointValues):
@@ -320,12 +323,12 @@ class JoggingClient(JoggingClientFeedbackEvent):
 
         Parameters
         ----------
-        velocities : JointValues 
+        velocities : JointValues
             The joint velocities as an instance of JointValues
         """
 
         point = JointTrajectoryPoint(
-            time_from_start = rospy.Duration.from_sec(0.008), 
+            time_from_start = rospy.Duration.from_sec(0.008),
             velocities = velocities.values)
         trajectory = JointTrajectory(
             joint_names = velocities.joint_set.names,
@@ -338,8 +341,8 @@ class JoggingClient(JoggingClientFeedbackEvent):
 
         Parameters
         ----------
-        twist : Twist 
-            The twist object which describes the twist 
+        twist : Twist
+            The twist object which describes the twist
         """
 
         twist_stamped = twist.to_twiststamped_msg()
@@ -366,7 +369,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
         Returns
         -------
         float
-            The current velocity scaling 
+            The current velocity scaling
 
         Raises
         ------
@@ -383,7 +386,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
 
         Parameters
         ----------
-        value : float 
+        value : float
             The velocity scaling
 
         Raises
@@ -392,18 +395,18 @@ class JoggingClient(JoggingClientFeedbackEvent):
             If Service not exist or is not callable
         """
 
-        response = self._exc_wrap_service_call(self.__set_velocity_scaling_service, 
+        response = self._exc_wrap_service_call(self.__set_velocity_scaling_service,
                                             ' set velocity scaling ',  value)
 
     def get_move_group_name(self) -> List[str]:
         """
         TODO: verify this, since it is not what one would expected but implemented like this in the csharp jogging client
-        Get a list of the names of all move groups 
+        Get a list of the names of all move groups
 
         Returns
         -------
         List[str]
-            List of the names of all move groups 
+            List of the names of all move groups
 
         Raises
         ------
@@ -411,7 +414,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
             If Service not exist or is not callable
         """
 
-        response = self._exc_wrap_service_call(self.__get_move_group_name_service, 
+        response = self._exc_wrap_service_call(self.__get_move_group_name_service,
                                             ' get move group ')
         response.selected
         return response.collection
@@ -424,7 +427,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
 
         Parameters
         ----------
-        name : str 
+        name : str
             The name of the MoveGroup to be set
 
         Raises
@@ -433,7 +436,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
             If Service not exist or is not callable
         """
 
-        response = self._exc_wrap_service_call(self.__set_move_group_name_service, 
+        response = self._exc_wrap_service_call(self.__set_move_group_name_service,
                                         ' set move group with name {} '.format(name), name)
 
     def get_endeffector_name(self) -> str:
@@ -452,7 +455,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
             If Service not exist or is not callable
         """
 
-        response = self._exc_wrap_service_call(self.__get_endeffector_name_service, 
+        response = self._exc_wrap_service_call(self.__get_endeffector_name_service,
                                             ' get endeffector ')
         response.selected
         return response.collection
@@ -463,7 +466,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
 
         Parameters
         ----------
-        name : str 
+        name : str
             The name of the Move endeffector to be set
 
         Raises
@@ -471,7 +474,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
         xamla_motion_exceptions.ServiceException
             If Service not exist or is not callable
         """
-        response = self._exc_wrap_service_call(self.__set_endeffector_name_service, 
+        response = self._exc_wrap_service_call(self.__set_endeffector_name_service,
                                         ' set endeffector with name {} '.format(name), name)
 
  #  TODO: Implement this function as well as ControllerStatusModel
@@ -484,7 +487,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
 
         Parameters
         ----------
-        name : str 
+        name : str
             The name of the flag
 
         Returns
@@ -498,7 +501,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
             If Service not exist or is not callable
         """
 
-        response = self._exc_wrap_service_call(self.__get_flag_service, 
+        response = self._exc_wrap_service_call(self.__get_flag_service,
                                     ' get flag with name {} '.format(name), name)
         return response.value
 
@@ -508,9 +511,9 @@ class JoggingClient(JoggingClientFeedbackEvent):
 
         Parameters
         ----------
-        name : str 
+        name : str
             The name of the flag
-        value : bool 
+        value : bool
             The value for the flag to be set
 
         Raises
@@ -519,7 +522,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
             If Service not exist or is not callable
         """
 
-        response = self._exc_wrap_service_call(self.__set_flag_service, 
+        response = self._exc_wrap_service_call(self.__set_flag_service,
                                     ' set flag with name {} '.format(name), name, value)
 
     def toggle_tracking(self, toggle: bool) -> None:
@@ -528,7 +531,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
 
         Parameters
         ----------
-        toggle : bool 
+        toggle : bool
             Defines if tracking should be toggled on or off
 
         Raises
@@ -537,7 +540,7 @@ class JoggingClient(JoggingClientFeedbackEvent):
             If Service not exist or is not callable
         """
 
-        response = self._exc_wrap_service_call(self.__toggle_tracking_service, 
+        response = self._exc_wrap_service_call(self.__toggle_tracking_service,
                                     ' toggle tracking ', toggle)
 
     def start(self):
@@ -563,6 +566,10 @@ class JoggingClient(JoggingClientFeedbackEvent):
         """
 
         self.toggle_tracking(False)
+
+    def reset_error(self):
+        response = self._exc_wrap_service_call(self.__reset_error_service,
+                                    ' reset error ')
 
     def _handle_jogging_feedback(self, state: ControllerState):
         jogging_state = JoggingClientFeedbackState(
